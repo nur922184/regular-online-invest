@@ -57,7 +57,7 @@ const UserProfile = () => {
       // Try to fetch latest user data from API
       if (userId) {
         try {
-          const response = await axios.get(`http://localhost:5000/api/users/${userId}`);
+          const response = await axios.get(`https://backend-project-invest.vercel.app/api/users/${userId}`);
           if (response.data) {
             userData = response.data;
             localStorage.setItem("user", JSON.stringify(userData));

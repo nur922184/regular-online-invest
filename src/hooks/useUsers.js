@@ -10,7 +10,7 @@ const useUsers = () => {
     try {
       setLoading(true);
       const res = await axios.get(
-        "http://localhost:5000/api/users/all"
+        "https://backend-project-invest.vercel.app/api/users/all"
       );
       setUsers(res.data.users);
       setError("");

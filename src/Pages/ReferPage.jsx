@@ -66,7 +66,7 @@ const ReferPage = () => {
   // Fetch all users from API
   const fetchAllUsers = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/users/all");
+      const response = await axios.get("https://backend-project-invest.vercel.app/api/users/all");
       if (response.data && response.data.users) {
         setAllUsers(response.data.users);
         return response.data.users;

@@ -144,7 +144,7 @@ const SignUp = () => {
     
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/users/register",
+        "https://backend-project-invest.vercel.app/api/users/register",
         {
           ...form,
           refCode: userRefCode, // Auto-generated referral code
