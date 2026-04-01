@@ -13,7 +13,7 @@ import ReferPage from "../Pages/ReferPage";
 import ErrorPage from "../Pages/ErrorPage";
 import AboutUs from "../Pages/AboutUs";
 
-const router = createBrowserRouter([
+const Router = createBrowserRouter([
   {
     path: "/",
     element: (
@@ -64,4 +64,4 @@ const router = createBrowserRouter([
   }
 ]);
 
-export default router;
+export default Router;
