@@ -168,7 +168,7 @@ const HeroSection = () => {
       </div>
 
       {/* Add animation styles */}
-      <style jsx>{`
+      <style> {`
         @keyframes fade-in-up {
           from {
             opacity: 0;
