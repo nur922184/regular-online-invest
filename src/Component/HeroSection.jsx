@@ -1,5 +1,13 @@
-import { useState, useEffect } from 'react';
-import { FaLeaf, FaTractor } from 'react-icons/fa';
+import { useState, useEffect } from "react";
+import {
+  FaBangladeshiTakaSign,
+  FaChartLine,
+  FaNewspaper,
+  FaBolt,
+  FaUser,
+} from "react-icons/fa6";
+import { MdOutlineAppRegistration } from "react-icons/md";
+import { AiFillGift } from "react-icons/ai";
 
 const HeroSection = () => {
   const [user, setUser] = useState(null);
@@ -12,118 +20,112 @@ const HeroSection = () => {
 
   const [current, setCurrent] = useState(0);
 
+  // slider
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % images.length);
-    }, 4000);
+    }, 3000);
     return () => clearInterval(interval);
   }, []);
 
+  // user data
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem("user"));
     if (userData) setUser(userData);
   }, []);
 
   return (
-    <section className="relative h-[55vh] overflow-hidden">
-      {/* Background Slider */}
-      {images.map((img, index) => (
-        <div
-          key={index}
-          className={`absolute inset-0 transition-opacity duration-1000 ${
-            index === current ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          <img src={img} alt="Agro Fund" className="w-full h-full object-cover" />
-        </div>
-      ))}
+    <section className="p-4 bg-gray-100">
 
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/50 to-black/40" />
+      {/* App Name */}
+      <h2 className="text-xl font-bold text-green-700 mb-3">
+        AgroFund
+      </h2>
 
-      {/* Content */}
-      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-5">
-        
-        {/* Logo */}
-        <div className="mb-5">
-          <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-xl mx-auto mb-3">
-            <img 
-              src="/agro-fund-logo.png" 
-              alt="Agro Fund" 
-              className="w-12 h-12 object-contain"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.parentElement.innerHTML = '<span className="text-white text-3xl">🌾</span>';
-              }}
-            />
-          </div>
-          
-          <h1 className="text-3xl font-bold text-white flex items-center justify-center gap-2">
-            <FaLeaf className="text-green-400" />
-            <span>Agro Fund</span>
-            <FaTractor className="text-green-400" />
-          </h1>
-          <p className="text-green-300 text-sm mt-1 font-medium">কৃষকের বিশ্বস্ত সঙ্গী</p>
-        </div>
+      {/* Banner Card */}
+      <div className="relative rounded-2xl overflow-hidden shadow-lg">
 
-        {/* User Welcome */}
-        {user && (
-          <p className="text-white/90 text-base mb-2">
-            স্বাগতম, {user.name?.split(' ')[0]}! 👋
-          </p>
-        )}
-
-        {/* Tagline */}
-        <p className="text-white/80 text-sm max-w-xs">
-          নিরাপদ ও লাভজনক কৃষি বিনিয়োগ
-        </p>
-
-        {/* Buttons */}
-        <div className="mt-5 flex gap-3">
-          <button className="bg-green-600 hover:bg-green-700 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-lg text-white">
-            {user ? 'বিনিয়োগ বাড়ান' : 'বিনিয়োগ করুন'}
-          </button>
-          
-          <button className="border border-white/40 hover:bg-white/10 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all text-white">
-            {user ? 'পোর্টফোলিও' : 'বিস্তারিত'}
-          </button>
-        </div>
-
-        {/* Stats */}
-        {!user ? (
-          <div className="mt-6 flex gap-8 justify-center">
-            <div className="text-center">
-              <div className="text-xl font-bold text-green-400">৫০০+</div>
-              <div className="text-xs text-white/60">বিনিয়োগকারী</div>
-            </div>
-            <div className="text-center">
-              <div className="text-xl font-bold text-green-400">১৫%</div>
-              <div className="text-xs text-white/60">গড় রিটার্ন</div>
-            </div>
-            <div className="text-center">
-              <div className="text-xl font-bold text-green-400">১০০+</div>
-              <div className="text-xs text-white/60">প্রকল্প</div>
-            </div>
-          </div>
-        ) : user.balance && (
-          <div className="mt-5 bg-white/15 backdrop-blur-md rounded-xl px-5 py-2.5">
-            <p className="text-white/70 text-xs">আপনার ব্যালেন্স</p>
-            <p className="text-white font-bold text-xl">৳ {user.balance?.toLocaleString()}</p>
-          </div>
-        )}
-      </div>
-
-      {/* Slide Dots */}
-      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
-        {images.map((_, index) => (
-          <button
+        {/* Image Slider */}
+        {images.map((img, index) => (
+          <img
             key={index}
-            onClick={() => setCurrent(index)}
-            className={`h-1 rounded-full transition-all ${
-              index === current ? "w-8 bg-green-500" : "w-2 bg-white/40"
+            src={img}
+            alt=""
+            className={`absolute w-full h-52 object-cover transition-opacity duration-1000 ${
+              index === current ? "opacity-100" : "opacity-0"
             }`}
           />
         ))}
+
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-green-900/80 via-black/40 to-transparent" />
+
+        {/* Content */}
+        <div className="relative z-10 p-4 h-52 flex flex-col justify-between text-white">
+
+          {/* Top Title */}
+          <div>
+            <h3 className="text-lg font-bold">AgroFund</h3>
+            <p className="text-xs opacity-80">সবজি প্রকল্প</p>
+          </div>
+
+          {/* User Data */}
+          <div className="space-y-2">
+            <div>
+              <p className="text-xs opacity-80">Name</p>
+              <h2 className="flex items-center gap-1 text-lg font-bold">
+                <FaUser /> {user?.name || 1500}
+              </h2>
+            </div>
+
+            <div>
+              <p className="text-xs opacity-80">TOTAL INCOME</p>
+              <h2 className="flex items-center gap-1 text-lg font-bold text-green-300">
+                <FaBangladeshiTakaSign /> {user?.balance|| 5400}
+              </h2>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Menu */}
+      <div className="grid grid-cols-5 gap-4 mt-6 text-center text-xs">
+
+        <div>
+          <div className="bg-yellow-400 p-3 rounded-xl text-white flex justify-center">
+            <FaNewspaper />
+          </div>
+          <p className="mt-1">নিউজ</p>
+        </div>
+
+        <div>
+          <div className="bg-green-500 p-3 rounded-xl text-white flex justify-center">
+            <FaBolt />
+          </div>
+          <p className="mt-1">জমা</p>
+        </div>
+
+        <div>
+          <div className="bg-lime-500 p-3 rounded-xl text-white flex justify-center">
+            <FaChartLine />
+          </div>
+          <p className="mt-1">বোনাস</p>
+        </div>
+
+        <div>
+          <div className="bg-red-400 p-3 rounded-xl text-white flex justify-center">
+            <AiFillGift />
+          </div>
+          <p className="mt-1">অটচার</p>
+        </div>
+
+        <div>
+          <div className="bg-blue-500 p-3 rounded-xl text-white flex justify-center">
+            <MdOutlineAppRegistration />
+          </div>
+          <p className="mt-1">অ্যাপ</p>
+        </div>
+
       </div>
     </section>
   );
