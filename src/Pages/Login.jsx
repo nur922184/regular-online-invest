@@ -6,14 +6,13 @@ import {
   FaCheckCircle,
   FaEye,
   FaEyeSlash,
-  FaShieldAlt,
   FaLeaf,
   FaTractor,
 } from "react-icons/fa";
 import { MdOutlinePassword } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import { FcIphone } from "react-icons/fc";
-import logo from "../assets/logo.jpg"
+
 const Login = () => {
   const [form, setForm] = useState({ phone: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -21,24 +20,8 @@ const Login = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [bgIndex, setBgIndex] = useState(0);
 
   const navigate = useNavigate();
-
-  // কৃষি/প্রকৃতি সম্পর্কিত ব্যাকগ্রাউন্ড ইমেজ
-  const bgImages = [
-    // "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format",
-    // "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=800&auto=format",
-    "https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=800&auto=format",
-  ];
-
-  // ব্যাকগ্রাউন্ড পরিবর্তন
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setBgIndex((prev) => (prev + 1) % bgImages.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -85,217 +68,187 @@ const Login = () => {
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
   return (
-    <div className="fixed inset-0 flex flex-col justify-end">
-      {/* Background Image */}
-      <div className="absolute inset-0 transition-all duration-1000 ease-in-out">
-        <div
-          className="absolute inset-0 bg-cover bg-top"
-          style={{ backgroundImage: `url(${bgImages[bgIndex]})` }}
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
+      {/* হেডার সেকশন - সাইনআপের মতো একই ইমেজ */}
+      <div className="relative h-72 w-full overflow-hidden">
+        {/* ব্যাকগ্রাউন্ড ইমেজ - সাইনআপের মতো একই */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center scale-105"
+          style={{ 
+            backgroundImage: `url('https://i.ibb.co.com/j1rBJPx/IMG-20260405-133227.png')`,
+          }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/30" />
+        
+        {/* গ্রেডিয়েন্ট ওভারলে */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/70" />
+        
+        {/* প্যাটার্ন ওভারলে */}
+        <div className="absolute inset-0 opacity-20" style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 1px)`,
+          backgroundSize: '32px 32px'
+        }} />
+        
+        {/* কন্টেন্ট */}
+        <div className="absolute bottom-8 left-6 right-6 animate-fadeInUp">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center">
+              <FaLeaf className="text-white text-xl" />
+            </div>
+            <span className="text-white/80 font-extrabold text-lg tracking-wide">AgroFund</span>
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-1">স্বাগতম!</h1>
+          <p className="text-white/80 text-sm">আপনার অ্যাকাউন্টে লগইন করুন</p>
+        </div>
       </div>
 
-      {/* Success Toast */}
-      {showSuccess && (
-        <div className="absolute top-5 left-4 right-4 z-50 animate-in slide-in-from-top-2 fade-in duration-300">
-          <div className="bg-green-500/90 backdrop-blur-md rounded-2xl px-4 py-3 flex items-center gap-3 shadow-xl">
-            <FaCheckCircle className="text-white text-xl" />
-            <p className="text-white font-medium text-sm flex-1">{successMessage}</p>
+      {/* ফর্ম সেকশন - কার্ড স্টাইল */}
+      <div 
+        className="relative -mt-6 mx-4 bg-white rounded-2xl shadow-xl animate-slideUp"
+        style={{ boxShadow: '0 -4px 20px rgba(0,0,0,0.08)' }}
+      >
+        {/* সাকসেস মেসেজ */}
+        {showSuccess && (
+          <div className="absolute -top-12 left-4 right-4 bg-green-500 text-white rounded-xl px-4 py-2 flex items-center gap-2 animate-fadeIn">
+            <FaCheckCircle />
+            <p className="text-sm flex-1">{successMessage}</p>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Login Card - Bottom Sheet Style */}
-      <div className="relative z-10 w-full bg-white rounded-t-3xl shadow-2xl animate-in slide-in-from-bottom-5 duration-300">
-        <div className="px-5 pt-8 pb-10">
-          
-          {/* ========== LOGO SECTION - আপনি এখানে আপনার লোগো বসাবেন ========== */}
-          <div className="text-center mb-6">
-            {/* লোগোর জন্য ডিফল্ট ডিজাইন (আপনার ইমেজ লিঙ্ক দিন) */}
-            <div className="flex justify-center mb-3">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-700 rounded-2xl flex items-center justify-center shadow-lg">
-                {/* আপনার লোগো ইমেজ */}
-                <img 
-                  src={logo}  // ← আপনার লোগোর পাথ দিন
-                  alt="Agro Fund Logo" 
-                  className="w-16 h-16 object-contain"
-                  onError={(e) => {
-                    // ইমেজ না থাকলে ফলের জন্য ফালব্যাক আইকন দেখাবে
-                    e.target.style.display = 'none';
-                    e.target.parentElement.innerHTML = '<FaLeaf className="text-white text-3xl" />';
-                  }}
-                />
-              </div>
+        {/* এরর মেসেজ */}
+        {errorMessage && (
+          <div className="absolute -top-12 left-4 right-4 bg-red-500 text-white rounded-xl px-4 py-2 flex items-center gap-2 animate-fadeIn shadow-lg">
+            <div className="w-1 h-8 bg-white/50 rounded-full"></div>
+            <p className="text-sm flex-1">{errorMessage}</p>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          {/* ফোন ফিল্ড */}
+          <div className="group">
+            <label className="block text-xs font-medium text-gray-600 mb-1 ml-1">ফোন নম্বর</label>
+            <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-1 border border-gray-100 focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-100 transition-all duration-200">
+              <FcIphone className="text-gray-400 text-lg" />
+              <span className="text-gray-500 font-medium text-sm">+88</span>
+              <input
+                type="tel"
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="017XXXXXXXX"
+                className="bg-transparent outline-none w-full text-gray-700 placeholder:text-gray-400 text-sm"
+                autoComplete="tel"
+                inputMode="numeric"
+              />
             </div>
-            
-            {/* ব্র্যান্ড নাম */}
-            <h1 className="text-2xl font-bold text-gray-800 flex items-center justify-center gap-2">
-              <FaLeaf className="text-green-600 text-xl" />
-              Agro Fund
-              <FaTractor className="text-green-600 text-xl" />
-            </h1>
-            <p className="text-gray-500 text-sm mt-1">কৃষকের বিশ্বস্ত সঙ্গী</p>
-          </div>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3 mb-6">
-            <div className="flex-1 h-px bg-gray-200"></div>
-            <span className="text-xs text-gray-400">লগইন করুন</span>
-            <div className="flex-1 h-px bg-gray-200"></div>
           </div>
 
-          <form onSubmit={handleSubmit}>
-            {/* Phone Input */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1.5 ml-1">
-                ফোন নম্বর
-              </label>
-              <div className="flex items-center bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-100 transition-all">
-                <FcIphone className="text-gray-400 text-lg mr-3" />
-                <span className="text-gray-500 font-medium mr-1">+88</span>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={form.phone}
-                  onChange={handleChange}
-                  placeholder="0১XXXXXXXXX"
-                  className="bg-transparent outline-none w-full text-gray-700 placeholder:text-gray-400 text-base"
-                  autoComplete="tel"
-                  inputMode="numeric"
-                />
-              </div>
-            </div>
-
-            {/* Password Input */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1.5 ml-1">
-                পাসওয়ার্ড
-              </label>
-              <div className="flex items-center bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-100 transition-all">
-                <MdOutlinePassword className="text-gray-400 text-lg mr-3" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={form.password}
-                  onChange={handleChange}
-                  placeholder="আপনার পাসওয়ার্ড"
-                  className="bg-transparent outline-none w-full text-gray-700 placeholder:text-gray-400 text-base"
-                  autoComplete="current-password"
-                />
-                <button
-                  type="button"
-                  onClick={togglePasswordVisibility}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
-                </button>
-              </div>
-            </div>
-
-            {/* Login Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3.5 rounded-xl font-semibold flex justify-center items-center gap-2 transition-all active:scale-[0.98] shadow-md ${
-                loading ? "opacity-80" : "hover:shadow-lg"
-              }`}
-            >
-              {loading ? (
-                <>
-                  <FaSpinner className="animate-spin text-lg" />
-                  <span>লগইন হচ্ছে...</span>
-                </>
-              ) : (
-                <>
-                  <FaSignInAlt className="text-lg" />
-                  <span>লগইন করুন</span>
-                </>
-              )}
-            </button>
-
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="px-3 bg-white text-gray-400">নতুন ব্যবহারকারী?</span>
-              </div>
-            </div>
-
-            {/* Signup Button */}
-            <button
-              type="button"
-              onClick={() => navigate("/signup")}
-              className="w-full border border-green-200 bg-green-50 text-green-700 py-3.5 rounded-xl font-semibold transition-all active:scale-[0.98]"
-            >
-              নতুন অ্যাকাউন্ট খুলুন
-            </button>
-
-            {/* Forgot Password */}
-            <div className="text-center mt-5">
-              <button
-                type="button"
-                className="text-gray-400 text-sm hover:text-green-500 transition-colors"
+          {/* পাসওয়ার্ড ফিল্ড */}
+          <div className="group">
+            <label className="block text-xs font-medium text-gray-600 mb-1 ml-1">পাসওয়ার্ড</label>
+            <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-1 border border-gray-100 focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-100 transition-all duration-200">
+              <MdOutlinePassword className="text-gray-400 text-lg" />
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="আপনার পাসওয়ার্ড"
+                className="bg-transparent outline-none w-full text-gray-700 placeholder:text-gray-400 text-sm"
+                autoComplete="current-password"
+              />
+              <button 
+                type="button" 
+                onClick={togglePasswordVisibility} 
+                className="text-gray-400 hover:text-gray-600 transition-colors"
               >
-                পাসওয়ার্ড ভুলে গেছেন?
+                {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
               </button>
             </div>
-          </form>
+          </div>
 
-          {/* Error Message Toast */}
-          {errorMessage && (
-            <div className="fixed bottom-24 left-4 right-4 z-50 animate-in slide-in-from-bottom-2 fade-in duration-200">
-              <div className="bg-red-500/95 backdrop-blur-md rounded-2xl px-4 py-3 flex items-center gap-3 shadow-xl">
-                <div className="w-1 h-8 bg-white/50 rounded-full"></div>
-                <p className="text-white font-medium text-sm flex-1">{errorMessage}</p>
-              </div>
+          {/* ফরগট পাসওয়ার্ড লিংক */}
+          <div className="text-right">
+            <button
+              type="button"
+              className="text-xs text-green-600 hover:text-green-700 font-medium"
+            >
+              পাসওয়ার্ড ভুলে গেছেন?
+            </button>
+          </div>
+
+          {/* লগইন বাটন */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-2 rounded-xl font-semibold flex justify-center items-center gap-2 transition-all duration-200 transform active:scale-98 shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <>
+                <FaSpinner className="animate-spin" size={18} />
+                <span>লগইন হচ্ছে...</span>
+              </>
+            ) : (
+              <>
+                <FaSignInAlt size={14} />
+                <span>লগইন করুন</span>
+              </>
+            )}
+          </button>
+
+          {/* ডিভাইডার */}
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
             </div>
-          )}
-        </div>
+            <div className="relative flex justify-center">
+              <span className="px-3 bg-white text-gray-400 text-xs">নতুন ব্যবহারকারী?</span>
+            </div>
+          </div>
+
+          {/* সাইনআপ লিংক */}
+          <button
+            type="button"
+            onClick={() => navigate("/signup")}
+            className="w-full border-2 border-green-200 bg-green-50 hover:bg-green-100 text-green-700 py-1 rounded-xl font-semibold text-sm transition-all duration-200 transform active:scale-98"
+          >
+            নতুন অ্যাকাউন্ট খুলুন
+          </button>
+        </form>
       </div>
 
-      <style >{`
-        @keyframes slideInFromBottom {
-          from {
-            transform: translateY(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
+      {/* ফুটার */}
+      <div className="text-center py-6">
+        <p className="text-xs text-gray-400">
+          <FaTractor className="inline mr-1 text-gray-400" size={12} />
+         AgroFund - আপনার কৃষি সঙ্গী
+        </p>
+      </div>
+
+      {/* অ্যানিমেশন স্টাইল */}
+      <style>{`
+        @keyframes slideUp {
+          from { transform: translateY(30px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
         }
-        @keyframes slideInFromTop {
-          from {
-            transform: translateY(-20px);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
+        @keyframes fadeInUp {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
         }
         @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-        .animate-in {
-          animation-duration: 0.3s;
-          animation-fill-mode: both;
+        .animate-slideUp {
+          animation: slideUp 0.5s ease-out;
         }
-        .slide-in-from-bottom-5 {
-          animation-name: slideInFromBottom;
+        .animate-fadeInUp {
+          animation: fadeInUp 0.6s ease-out;
         }
-        .slide-in-from-top-2 {
-          animation-name: slideInFromTop;
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
         }
-        .fade-in {
-          animation-name: fadeIn;
+        .active\\:scale-98:active {
+          transform: scale(0.98);
         }
       `}</style>
     </div>

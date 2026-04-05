@@ -5,20 +5,19 @@ import {
   FaPhoneAlt,
   FaLock,
   FaUserFriends,
-  FaCheckCircle,
   FaArrowRight,
   FaSpinner,
   FaEyeSlash,
   FaEye,
   FaGift,
-  FaInfoCircle,
   FaLink,
   FaLeaf,
   FaTractor,
+  FaCheckCircle,
 } from "react-icons/fa";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
-import logo from "../assets/logo.jpg"
+
 const SignUp = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -27,80 +26,41 @@ const SignUp = () => {
     phone: "",
     password: "",
     referredBy: "",
+    confirmPassword: "",
   });
-
   const [loading, setLoading] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [referralFromUrl, setReferralFromUrl] = useState(null);
   const [showReferralMessage, setShowReferralMessage] = useState(false);
-  const [showMissingMessage, setShowMissingMessage] = useState(false);
+  const [isReferralDisabled, setIsReferralDisabled] = useState(false);
 
-  // Get referral code from URL query params
   useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const refCode = queryParams.get("ref");
-    
+    const refCode = new URLSearchParams(location.search).get("ref");
     if (refCode) {
       setReferralFromUrl(refCode);
       setForm(prev => ({ ...prev, referredBy: refCode }));
+      setIsReferralDisabled(true);
+      setShowReferralMessage(true);
     }
   }, [location]);
 
-  
-  // Generate random referral code for new user
   const generateReferralCode = () => {
-    const prefix = "AGRO";
-    const timestamp = Date.now().toString().slice(-6);
-    const random = Math.floor(Math.random() * 1000);
-    return `${prefix}${timestamp}${random}`;
-  };
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
+    return `AGRO${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 1000)}`;
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === "referredBy" && isReferralDisabled) return;
+    
     setForm({ ...form, [name]: value });
+    setErrorMessage("");
+    setSuccessMessage("");
     
-    if (errorMessage) setErrorMessage("");
-    
-    if (name === "referredBy") {
-      if (!value) {
-        setShowMissingMessage(true);
-        setShowReferralMessage(false);
-      } else {
-        setShowMissingMessage(false);
-        if (referralFromUrl && value === referralFromUrl) {
-          setShowReferralMessage(true);
-        } else {
-          setShowReferralMessage(false);
-        }
-      }
-    }
-  };
-
-  const handleBlur = (e) => {
-    const { name, value } = e.target;
-    if (name === "referredBy") {
-      if (!value) {
-        setShowMissingMessage(true);
-        setShowReferralMessage(false);
-      } else {
-        setShowMissingMessage(false);
-      }
-    }
-  };
-
-  const handleFocus = (e) => {
-    const { name, value } = e.target;
-    if (name === "referredBy") {
-      if (value) {
-        setShowMissingMessage(false);
-      }
+    if (name === "referredBy" && value) {
+      setShowReferralMessage(!!(referralFromUrl && value === referralFromUrl));
     }
   };
 
@@ -108,85 +68,71 @@ const SignUp = () => {
     e.preventDefault();
     setLoading(true);
     setErrorMessage("");
-    setShowSuccess(false);
+    setSuccessMessage("");
 
-    if (!form.name || !form.phone || !form.password) {
-      setErrorMessage("দয়া করে নাম, ফোন নম্বর এবং পাসওয়ার্ড দিন");
+    const { name, phone, password, confirmPassword, referredBy } = form;
+
+    if (!name || !phone || !password || !confirmPassword || !referredBy) {
+      setErrorMessage("সব ফিল্ড পূরণ করুন");
       setLoading(false);
       return;
     }
 
-    const phoneRegex = /^(01[3-9]\d{8})|(\+8801[3-9]\d{8})$/;
-    if (!phoneRegex.test(form.phone)) {
-      setErrorMessage("সঠিক ফোন নম্বর দিন (যেমন: 017XXXXXXXX)");
+    if (password !== confirmPassword) {
+      setErrorMessage("পাসওয়ার্ড মেলেনি");
       setLoading(false);
       return;
     }
 
-    if (form.password.length < 6) {
-      setErrorMessage("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে");
+    if (!/^(01[3-9]\d{8})|(\+8801[3-9]\d{8})$/.test(phone)) {
+      setErrorMessage("সঠিক ফোন নম্বর দিন (017XXXXXXXX)");
       setLoading(false);
       return;
     }
 
-    if (!form.referredBy) {
-      setErrorMessage("রেফারেল কোড আবশ্যক! একটি রেফারেল কোড দিন");
+    if (password.length < 6) {
+      setErrorMessage("পাসওয়ার্ড ৬ অক্ষরের হতে হবে");
       setLoading(false);
-      setShowMissingMessage(true);
       return;
     }
 
     const userRefCode = generateReferralCode();
-    
+
     try {
-      const res = await axios.post(
-        "https://backend-project-invest.vercel.app/api/users/register",
-        {
-          ...form,
-          refCode: userRefCode,
-          balance: 50
-        }
-      );
+      const response = await axios.post("https://backend-project-invest.vercel.app/api/users/register", {
+        name, phone, password, referredBy,
+        refCode: userRefCode,
+        balance: 50
+      });
 
-      const msg = res.data.message || "নিবন্ধন সফল হয়েছে!";
-      setSuccessMessage(msg);
-      setShowSuccess(true);
-
-      if (res.data.user) {
-        localStorage.setItem("user", JSON.stringify(res.data.user));
-        localStorage.setItem("userId", res.data.user._id);
+      if (response.data.user) {
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        localStorage.setItem("userId", response.data.user._id);
       }
 
       Swal.fire({
         icon: 'success',
         title: 'স্বাগতম!',
+        background: '#ffffff',
+        backdrop: true,
         html: `
-          <div class="text-left">
-            <p class="mb-2">🌾 আপনার অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!</p>
-            <p class="mb-2">🌟 আপনার রেফারেল কোড: <strong class="text-green-600">${userRefCode}</strong></p>
-            <p>💰 ওয়েলকাম বোনাস: <strong class="text-green-600">৳৫০</strong></p>
+          <div class="text-center">
+            <div class="text-5xl mb-3">🌾</div>
+            <p class="text-lg font-semibold text-gray-800 mb-2">অ্যাকাউন্ট তৈরি হয়েছে!</p>
+            <div class="bg-green-50 rounded-lg p-3 my-3">
+              <p class="text-sm text-gray-600">আপনার রেফারেল কোড</p>
+              <p class="text-xl font-bold text-green-600 tracking-wider">${userRefCode}</p>
+            </div>
+            <p class="text-green-600 font-semibold">🎁 বোনাস: ৳৫০</p>
           </div>
         `,
         confirmButtonText: 'প্রোফাইলে যান',
         confirmButtonColor: '#059669',
-        background: '#fff',
-        iconColor: '#059669'
-      }).then(() => {
-        navigate('/profile');
-      });
-
-      setForm({
-        name: "",
-        phone: "",
-        password: "",
-        referredBy: "",
-      });
-      setShowReferralMessage(false);
-      setShowMissingMessage(false);
+        confirmButtonClass: 'px-6 py-2 rounded-lg',
+      }).then(() => navigate('/profile'));
 
     } catch (err) {
-      const errorMsg = err.response?.data?.message || "নিবন্ধন করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।";
-      setErrorMessage(errorMsg);
+      setErrorMessage(err.response?.data?.message || "নিবন্ধন ব্যর্থ হয়েছে");
       setTimeout(() => setErrorMessage(""), 4000);
     } finally {
       setLoading(false);
@@ -194,308 +140,249 @@ const SignUp = () => {
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col justify-end">
-      {/* Background with gradient (mobile optimized) */}
-       {/* Background Image */}
-      <div className="absolute inset-0 transition-all duration-1000 ease-in-out">
-        <div
-          className="absolute inset-0 bg-cover bg-top"
-          style={{ backgroundImage: `url(https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=800&auto=format)` }}
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
+      {/* হেডার সেকশন - ব্লার ইফেক্ট সহ */}
+      <div className="relative h-72 w-full overflow-hidden">
+        {/* ব্যাকগ্রাউন্ড ইমেজ */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center scale-105"
+          style={{ 
+            backgroundImage: `url('https://i.ibb.co.com/j1rBJPx/IMG-20260405-133227.png')`,
+          }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/30" />
-      </div>
-      
-      {/* Decorative pattern overlay */}
-      <div className="absolute inset-0 opacity-10" style={{
-        backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 1px)`,
-        backgroundSize: '40px 40px'
-      }} />
-
-      {/* Success Toast */}
-      {showSuccess && (
-        <div className="absolute top-5 left-4 right-4 z-50 animate-in slide-in-from-top-2 fade-in duration-300">
-          <div className="bg-green-500/90 backdrop-blur-md rounded-2xl px-4 py-3 flex items-center gap-3 shadow-xl">
-            <FaCheckCircle className="text-white text-xl" />
-            <p className="text-white font-medium text-sm flex-1">{successMessage}</p>
+        
+        {/* গ্রেডিয়েন্ট ওভারলে */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/70" />
+        
+        {/* প্যাটার্ন ওভারলে */}
+        <div className="absolute inset-0 opacity-20" style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 1px)`,
+          backgroundSize: '32px 32px'
+        }} />
+        
+        {/* কন্টেন্ট */}
+        <div className="absolute bottom-8 left-6 right-6 animate-fadeInUp">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center">
+              <FaLeaf className="text-white text-xl" />
+            </div>
+            <span className="text-white/80 font-extrabold text-lg tracking-wide">AgroFund</span>
           </div>
+          <h1 className="text-3xl font-bold text-white mb-1">স্বাগতম!</h1>
+          <p className="text-white/80 text-sm">নতুন অ্যাকাউন্ট তৈরি করুন ও বোনাস পান</p>
         </div>
-      )}
+      </div>
 
-      {/* Error Toast */}
-      {errorMessage && (
-        <div className="absolute top-5 left-4 right-4 z-50 animate-in slide-in-from-top-2 fade-in duration-300">
-          <div className="bg-red-500/90 backdrop-blur-md rounded-2xl px-4 py-3 flex items-center gap-3 shadow-xl">
+      {/* ফর্ম সেকশন - কার্ড স্টাইল */}
+      <div 
+        className="relative -mt-6 mx-4 bg-white rounded-2xl shadow-xl animate-slideUp"
+        style={{ boxShadow: '0 -4px 20px rgba(0,0,0,0.08)' }}
+      >
+        {/* সাকসেস মেসেজ */}
+        {successMessage && (
+          <div className="absolute -top-12 left-4 right-4 bg-green-500 text-white rounded-xl px-4 py-2 flex items-center gap-2 animate-fadeIn">
+            <FaCheckCircle />
+            <p className="text-sm flex-1">{successMessage}</p>
+          </div>
+        )}
+
+        {/* এরর মেসেজ */}
+        {errorMessage && (
+          <div className="absolute -top-12 left-4 right-4 bg-red-500 text-white rounded-xl px-4 py-2 flex items-center gap-2 animate-fadeIn shadow-lg">
             <div className="w-1 h-8 bg-white/50 rounded-full"></div>
-            <p className="text-white font-medium text-sm flex-1">{errorMessage}</p>
+            <p className="text-sm flex-1">{errorMessage}</p>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Sign Up Card - Bottom Sheet Style */}
-      <div className="relative z-10 w-full bg-white rounded-t-3xl  shadow-2xl animate-in slide-in-from-bottom-5 duration-300 overflow-y-auto max-h-[90vh]">
-        <div className="px-5 pt-8 pb-10">
-          
-          {/* ========== LOGO SECTION ========== */}
-          <div className="text-center mb-6">
-            <div className="flex justify-center mb-3">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-700 rounded-2xl flex items-center justify-center shadow-lg">
-                <img 
-                  src={logo}
-                  alt="Agro Fund Logo" 
-                  className="w-16 h-16 object-contain"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.parentElement.innerHTML = '<div class="text-white text-3xl">🌾</div>';
-                  }}
-                />
-              </div>
+        {/* রেফারেল বোনাস মেসেজ */}
+        {showReferralMessage && (
+          <div className="mx-4 mt-4 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-3 animate-fadeIn">
+            <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
+              <FaGift className="text-amber-600" />
             </div>
-            
-            <h1 className="text-2xl font-bold text-gray-800 flex items-center justify-center gap-2">
-              <FaLeaf className="text-green-600 text-xl" />
-              Agro Fund
-              <FaTractor className="text-green-600 text-xl" />
-            </h1>
-            <p className="text-gray-500 text-sm mt-1">নতুন অ্যাকাউন্ট তৈরি করুন</p>
+            <div>
+              <p className="text-amber-800 font-semibold text-sm">রেফারেল লিংক থেকে এসেছেন!</p>
+              <p className="text-amber-600 text-xs">নিবন্ধন সম্পূর্ণ হলে বোনাস পাবেন <strong>৳৫০</strong></p>
+            </div>
           </div>
+        )}
 
-          {/* Divider */}
-          <div className="flex items-center gap-3 mb-6">
-            <div className="flex-1 h-px bg-gray-200"></div>
-            <span className="text-xs text-gray-400">নিবন্ধন তথ্য</span>
-            <div className="flex-1 h-px bg-gray-200"></div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Full Name Input */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5 ml-1">
-                সম্পূর্ণ নাম
-              </label>
-              <div className="flex items-center bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-100 transition-all">
-                <FaUser className="text-gray-400 text-lg mr-3" />
-                <input
-                  type="text"
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  placeholder="আপনার নাম লিখুন"
-                  className="bg-transparent outline-none w-full text-gray-700 placeholder:text-gray-400 text-base"
-                  autoComplete="name"
-                />
-              </div>
-            </div>
-
-            {/* Phone Input */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5 ml-1">
-                ফোন নম্বর
-              </label>
-              <div className="flex items-center bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-100 transition-all">
-                <FaPhoneAlt className="text-gray-400 text-lg mr-3" />
-                <span className="text-gray-500 font-medium mr-1">+88</span>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={form.phone}
-                  onChange={handleChange}
-                  placeholder="0১XXXXXXXXX"
-                  className="bg-transparent outline-none w-full text-gray-700 placeholder:text-gray-400 text-base"
-                  autoComplete="tel"
-                  inputMode="numeric"
-                />
-              </div>
-            </div>
-
-            {/* Password Input */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5 ml-1">
-                পাসওয়ার্ড
-              </label>
-              <div className="flex items-center bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-100 transition-all">
-                <FaLock className="text-gray-400 text-lg mr-3" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={form.password}
-                  onChange={handleChange}
-                  placeholder="কমপক্ষে ৬ অক্ষর"
-                  className="bg-transparent outline-none w-full text-gray-700 placeholder:text-gray-400 text-base"
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  onClick={togglePasswordVisibility}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
-                </button>
-              </div>
-            </div>
-
-            {/* Referral Code Input */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5 ml-1">
-                রেফারেল কোড <span className="text-red-500">*</span>
-              </label>
-              <div className={`flex items-center bg-gray-50 rounded-xl px-4 py-3 border transition-all ${
-                form.referredBy 
-                  ? 'border-green-300 focus-within:border-green-400' 
-                  : 'border-gray-100 focus-within:border-green-400'
-              } focus-within:ring-2 focus-within:ring-green-100`}>
-                <FaUserFriends className="text-gray-400 text-lg mr-3" />
-                <input
-                  type="text"
-                  name="referredBy"
-                  value={form.referredBy}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  onFocus={handleFocus}
-                  placeholder="আপনার রেফারেল কোড"
-                  className="bg-transparent outline-none w-full text-gray-700 placeholder:text-gray-400 text-base uppercase"
-                />
-                {referralFromUrl && form.referredBy === referralFromUrl && (
-                  <FaLink className="text-green-500 text-lg" />
-                )}
-              </div>
-            </div>
-
-            {/* Conditional Messages */}
-            {showReferralMessage && referralFromUrl && form.referredBy === referralFromUrl && (
-              <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-start gap-2">
-                <FaGift className="text-green-500 mt-0.5 flex-shrink-0" />
-                <div className="text-xs text-green-700">
-                  <p className="font-semibold">🎉 রেফারেল লিংক থেকে এসেছেন!</p>
-                  <p>নিবন্ধন সম্পূর্ণ হলে বোনাস পাবেন <strong>৳৫০</strong></p>
-                </div>
-              </div>
-            )}
-            
-            {showMissingMessage && !form.referredBy && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2">
-                <FaInfoCircle className="text-amber-500 mt-0.5 flex-shrink-0" />
-                <div className="text-xs text-amber-700">
-                  <p className="font-semibold">রেফারেল কোড আবশ্যক!</p>
-                  <p>আপনার বন্ধুর কাছ থেকে রেফারেল কোড নিয়ে নিবন্ধন করুন</p>
-                </div>
-              </div>
-            )}
-
-            {/* Terms Checkbox */}
-            <div className="flex items-start gap-2 pt-2">
+        <form onSubmit={handleSubmit} className="p-4 space-y-3">
+          {/* নাম ফিল্ড */}
+          <div className="group">
+            <label className="block text-xs font-medium text-gray-600 mb-1 ml-1">সম্পূর্ণ নাম</label>
+            <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-1 border border-gray-100 focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-100 transition-all duration-200">
+              <FaUser className="text-gray-400 group-focus-within:text-green-500" />
               <input
-                type="checkbox"
-                id="terms"
-                className="mt-1 w-4 h-4 text-green-600 rounded border-gray-300 focus:ring-green-500"
-                required
+                type="text"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="আপনার নাম লিখুন"
+                className="bg-transparent outline-none w-full text-gray-700 placeholder:text-gray-400 text-sm"
               />
-              <label htmlFor="terms" className="text-sm text-gray-600 leading-tight">
-                আমি <span className="text-green-600 font-semibold">শর্তাবলী</span> এবং
-                <span className="text-green-600 font-semibold"> গোপনীয়তা নীতি</span> মেনে নিচ্ছি
-              </label>
             </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3.5 rounded-xl font-semibold flex justify-center items-center gap-2 transition-all active:scale-[0.98] shadow-md disabled:opacity-70"
-            >
-              {loading ? (
-                <>
-                  <FaSpinner className="animate-spin text-lg" />
-                  <span>নিবন্ধন হচ্ছে...</span>
-                </>
-              ) : (
-                <>
-                  <span>নিবন্ধন করুন</span>
-                  <FaArrowRight className="text-lg" />
-                </>
-              )}
-            </button>
-
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="px-3 bg-white text-gray-400">ইতিমধ্যে সদস্য?</span>
-              </div>
-            </div>
-
-            {/* Login Link */}
-            <button
-              type="button"
-              onClick={() => navigate("/login")}
-              className="w-full border border-green-200 bg-green-50 text-green-700 py-3.5 rounded-xl font-semibold transition-all active:scale-[0.98]"
-            >
-              লগইন করুন
-            </button>
-          </form>
-
-          {/* Features Footer */}
-          <div className="mt-6 pt-4 border-t border-gray-100">
-            <p className="text-xs text-gray-400 flex items-center justify-center gap-3 flex-wrap">
-              <span className="inline-flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                ওয়েলকাম বোনাস ৳৫০
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-                ২৪/৭ সাপোর্ট
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-teal-500 rounded-full"></span>
-                বিনামূল্যে অ্যাকাউন্ট
-              </span>
-            </p>
           </div>
-        </div>
+
+          {/* ফোন ফিল্ড */}
+          <div className="group">
+            <label className="block text-xs font-medium text-gray-600 mb-1 ml-1">ফোন নম্বর</label>
+            <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-1 border border-gray-100 focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-100 transition-all duration-200">
+              <FaPhoneAlt className="text-gray-400 group-focus-within:text-green-500" />
+              <span className="text-gray-500 font-medium text-sm">+88</span>
+              <input
+                type="tel"
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="017XXXXXXXX"
+                className="bg-transparent outline-none w-full text-gray-700 placeholder:text-gray-400 text-sm"
+              />
+            </div>
+          </div>
+
+          {/* পাসওয়ার্ড ফিল্ড */}
+          <div className="group">
+            <label className="block text-xs font-medium text-gray-600 mb-1 ml-1">পাসওয়ার্ড</label>
+            <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-1 border border-gray-100 focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-100 transition-all duration-200">
+              <FaLock className="text-gray-400 group-focus-within:text-green-500" />
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="কমপক্ষে ৬ অক্ষর"
+                className="bg-transparent outline-none w-full text-gray-700 placeholder:text-gray-400 text-sm"
+              />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-gray-400 hover:text-gray-600">
+                {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+              </button>
+            </div>
+          </div>
+
+          {/* কনফার্ম পাসওয়ার্ড */}
+          <div className="group">
+            <label className="block text-xs font-medium text-gray-600 mb-1 ml-1">কনফার্ম পাসওয়ার্ড</label>
+            <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-1 border border-gray-100 focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-100 transition-all duration-200">
+              <FaLock className="text-gray-400 group-focus-within:text-green-500" />
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                name="confirmPassword"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                placeholder="পাসওয়ার্ড পুনরায় দিন"
+                className="bg-transparent outline-none w-full text-gray-700 placeholder:text-gray-400 text-sm"
+              />
+              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="text-gray-400 hover:text-gray-600">
+                {showConfirmPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+              </button>
+            </div>
+          </div>
+
+          {/* রেফারেল কোড */}
+          <div className="group">
+            <label className="block text-xs font-medium text-gray-600 mb-1 ml-1">
+              রেফারেল কোড <span className="text-red-400">*</span>
+              {isReferralDisabled && (
+                <span className="ml-2 text-[10px] text-green-600 bg-green-50 px-2 py-0.5 rounded-full">লিংক থেকে</span>
+              )}
+            </label>
+            <div className={`flex items-center gap-3 rounded-xl px-4 py-1 border transition-all duration-200 ${isReferralDisabled ? 'bg-gray-100 border-gray-200' : 'bg-gray-50 border-gray-100 focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-100'}`}>
+              <FaUserFriends className={`text-gray-400 ${!isReferralDisabled && 'group-focus-within:text-green-500'}`} />
+              <input
+                type="text"
+                name="referredBy"
+                value={form.referredBy}
+                onChange={handleChange}
+                placeholder="রেফারেল কোড দিন"
+                disabled={isReferralDisabled}
+                className={`bg-transparent outline-none w-full text-sm uppercase ${isReferralDisabled ? 'text-gray-500' : 'text-gray-700 placeholder:text-gray-400'}`}
+              />
+              {referralFromUrl && form.referredBy === referralFromUrl && <FaLink className="text-green-500" size={14} />}
+            </div>
+          </div>
+
+          {/* টার্মস */}
+          <div className="flex items-center gap-2 pt-2">
+            <input type="checkbox" id="terms" className="w-4 h-4 text-green-600 rounded border-gray-300 focus:ring-green-500" required />
+            <label htmlFor="terms" className="text-xs text-gray-500">
+              আমি <span className="text-green-600 font-medium">শর্তাবলী</span> ও <span className="text-green-600 font-medium">গোপনীয়তা নীতি</span> মেনে নিচ্ছি
+            </label>
+          </div>
+
+          {/* সাবমিট বাটন */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-2 rounded-xl font-semibold flex justify-center items-center gap-2 transition-all duration-200 transform active:scale-98 shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <>
+                <FaSpinner className="animate-spin" size={18} />
+                <span>নিবন্ধন হচ্ছে...</span>
+              </>
+            ) : (
+              <>
+                <span>নিবন্ধন করুন</span>
+                <FaArrowRight size={14} />
+              </>
+            )}
+          </button>
+
+          {/* ডিভাইডার */}
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center">
+              <span className="px-3 bg-white text-gray-400 text-xs">অথবা</span>
+            </div>
+          </div>
+
+          {/* লগইন লিংক */}
+          <button
+            type="button"
+            onClick={() => navigate("/login")}
+            className="w-full border-2 border-green-200 bg-green-50 hover:bg-green-100 text-green-700 py-1 rounded-xl font-semibold text-sm transition-all duration-200 transform active:scale-98"
+          >
+            লগইন করুন
+          </button>
+        </form>
       </div>
 
-      {/* Animation Styles */}
-      <style >{`
-        @keyframes slideInFromBottom {
-          from {
-            transform: translateY(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
+      {/* ফুটার */}
+      <div className="text-center py-6">
+        <p className="text-xs text-gray-400">
+          <FaTractor className="inline mr-1 text-gray-400" size={12} />
+          AgroFund - আপনার কৃষি সঙ্গী
+        </p>
+      </div>
+
+      {/* অ্যানিমেশন স্টাইল */}
+      <style>{`
+        @keyframes slideUp {
+          from { transform: translateY(30px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
         }
-        @keyframes slideInFromTop {
-          from {
-            transform: translateY(-20px);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
+        @keyframes fadeInUp {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
         }
         @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-        .animate-in {
-          animation-duration: 0.3s;
-          animation-fill-mode: both;
+        .animate-slideUp {
+          animation: slideUp 0.5s ease-out;
         }
-        .slide-in-from-bottom-5 {
-          animation-name: slideInFromBottom;
+        .animate-fadeInUp {
+          animation: fadeInUp 0.6s ease-out;
         }
-        .slide-in-from-top-2 {
-          animation-name: slideInFromTop;
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
         }
-        .fade-in {
-          animation-name: fadeIn;
+        .active\\:scale-98:active {
+          transform: scale(0.98);
         }
       `}</style>
     </div>
