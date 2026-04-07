@@ -12,6 +12,7 @@ import UserProfile from "../Pages/UserProfile";
 import ReferPage from "../Pages/ReferPage";
 import ErrorPage from "../Pages/ErrorPage";
 import AboutUs from "../Pages/AboutUs";
+import MyProducts from "../Component/MyProducts";
 
 const Router = createBrowserRouter([
   {
@@ -29,6 +30,10 @@ const Router = createBrowserRouter([
       {
         path: "/about",
         element: <AboutUs/>,
+      },
+      {
+        path: "/myproduct",
+        element: <MyProducts/>,
       },
       {
         path: "/profile",

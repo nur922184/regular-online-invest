@@ -8,13 +8,15 @@ import {
 } from "react-icons/fa6";
 import { MdOutlineAppRegistration } from "react-icons/md";
 import { AiFillGift } from "react-icons/ai";
+import { HiCloudArrowDown } from "react-icons/hi2";
+import { FcAbout } from "react-icons/fc";
 
 const HeroSection = () => {
   const [user, setUser] = useState(null);
 
   const images = [
-    "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format",
-    "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=800&auto=format",
+    "https://i.ibb.co.com/672R4zLk/121.jpg",
+    "https://i.ibb.co.com/twQkhPMr/1a53f950c0c24024bb395bdfd678523b.jpg",
     "https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=800&auto=format",
   ];
 
@@ -51,9 +53,8 @@ const HeroSection = () => {
             key={index}
             src={img}
             alt=""
-            className={`absolute w-full h-52 object-cover transition-opacity duration-1000 ${
-              index === current ? "opacity-100" : "opacity-0"
-            }`}
+            className={`absolute w-full h-52 object-cover transition-opacity duration-1000 ${index === current ? "opacity-100" : "opacity-0"
+              }`}
           />
         ))}
 
@@ -72,61 +73,72 @@ const HeroSection = () => {
           {/* User Data */}
           <div className="space-y-2">
             <div>
-              <p className="text-xs opacity-80">Name</p>
+              <p className="text-xs opacity-80">নাম</p>
               <h2 className="flex items-center gap-1 text-lg font-bold">
                 <FaUser /> {user?.name || 1500}
               </h2>
             </div>
 
             <div>
-              <p className="text-xs opacity-80">TOTAL INCOME</p>
+              <p className="text-xs opacity-80">মোট আয়</p>
               <h2 className="flex items-center gap-1 text-lg font-bold text-green-300">
-                <FaBangladeshiTakaSign /> {user?.balance|| 5400}
+                <FaBangladeshiTakaSign /> {user?.balance || 5400}
               </h2>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom Menu */}
-      <div className="grid grid-cols-5 gap-4 mt-6 text-center text-xs">
+      {/* Modern Bottom Menu */}
+      <div className="grid grid-cols-5 gap-3 mt-8 px-2">
 
-        <div>
-          <div className="bg-yellow-400 p-3 rounded-xl text-white flex justify-center">
-            <FaNewspaper />
+        {/* Recharge */}
+        <div className="group relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-2xl blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
+          <div className="relative bg-gradient-to-br from-yellow-400 to-orange-500 p-3 rounded-2xl text-white flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl cursor-pointer">
+            <FaNewspaper className="text-2xl" />
           </div>
-          <p className="mt-1">নিউজ</p>
+          <p className="mt-2 text-center text-gray-700 font-medium text-xs group-hover:text-yellow-600 transition-colors duration-200">রিচার্জ</p>
         </div>
 
-        <div>
-          <div className="bg-green-500 p-3 rounded-xl text-white flex justify-center">
-            <FaBolt />
+        {/* Withdraw */}
+        <div className="group relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded-2xl blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
+          <div className="relative bg-gradient-to-br from-green-400 to-emerald-500 p-3 rounded-2xl text-white flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl cursor-pointer">
+            <FaBolt className="text-2xl" />
           </div>
-          <p className="mt-1">জমা</p>
+          <p className="mt-2 text-center text-gray-700 font-medium text-xs group-hover:text-green-600 transition-colors duration-200">উত্তোলন</p>
         </div>
 
-        <div>
-          <div className="bg-lime-500 p-3 rounded-xl text-white flex justify-center">
-            <FaChartLine />
+        {/* Bonus */}
+        <div className="group relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-lime-400 to-green-500 rounded-2xl blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
+          <div className="relative bg-gradient-to-br from-lime-400 to-green-500 p-3 rounded-2xl text-white flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl cursor-pointer">
+            <FaChartLine className="text-2xl" />
           </div>
-          <p className="mt-1">বোনাস</p>
+          <p className="mt-2 text-center text-gray-700 font-medium text-xs group-hover:text-lime-600 transition-colors duration-200">বোনাস</p>
         </div>
 
-        <div>
-          <div className="bg-red-400 p-3 rounded-xl text-white flex justify-center">
-            <AiFillGift />
+        {/* About Us */}
+        <div className="group relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-pink-500 rounded-2xl blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
+          <div className="relative bg-gradient-to-br from-red-400 to-pink-500 p-3 rounded-2xl text-white flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl cursor-pointer">
+            <FcAbout className="text-2xl" />
           </div>
-          <p className="mt-1">অটচার</p>
+          <p className="mt-2 text-center text-gray-700 font-medium text-xs group-hover:text-red-500 transition-colors duration-200">আমাদের সম্পর্কে</p>
         </div>
 
-        <div>
-          <div className="bg-blue-500 p-3 rounded-xl text-white flex justify-center">
-            <MdOutlineAppRegistration />
+        {/* App */}
+        <div className="group relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-2xl blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
+          <div className="relative bg-gradient-to-br from-blue-400 to-indigo-500 p-3 rounded-2xl text-white flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl cursor-pointer">
+            <HiCloudArrowDown className="text-2xl" />
           </div>
-          <p className="mt-1">অ্যাপ</p>
+          <p className="mt-2 text-center text-gray-700 font-medium text-xs group-hover:text-blue-600 transition-colors duration-200">অ্যাপ</p>
         </div>
 
       </div>
+     
     </section>
   );
 };

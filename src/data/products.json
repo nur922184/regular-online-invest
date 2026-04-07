@@ -1,15 +1,5 @@
 [
   {
-    "id": 1,
-    "name": "মুলা প্যাকেজ",
-    "price": 200,
-    "dailyIncome": 5,
-    "duration": "365 দিন",
-    "totalIncome": 1825,
-    "image": "https://i.ibb.co.com/QSfHsHx/image-111327-1606302419.jpg",
-    "description": "মুলা চাষে দীর্ঘমেয়াদী বিনিয়োগ। কম ঝুঁকিতে প্রতিদিন নির্দিষ্ট আয় পাওয়ার সুযোগ।"
-  },
-  {
     "id": 2,
     "name": "শসা প্যাকেজ",
     "price": 400,
