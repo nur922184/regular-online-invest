@@ -1,6 +1,7 @@
 [
   {
     "id": 2,
+    "role": "hot",
     "name": "শসা প্যাকেজ",
     "price": 400,
     "dailyIncome": 20,
@@ -11,6 +12,7 @@
   },
   {
     "id": 3,
+    "role": "hot",
     "name": "টমেটো প্যাকেজ",
     "price": 1000,
     "dailyIncome": 45,
@@ -21,6 +23,7 @@
   },
   {
     "id": 4,
+    "role": "hot",
     "name": "বেগুন প্যাকেজ",
     "price": 2500,
     "dailyIncome": 120,
@@ -31,6 +34,7 @@
   },
   {
     "id": 5,
+    "role": "hot",
     "name": "গাজর প্যাকেজ",
     "price": 6000,
     "dailyIncome": 290,
@@ -41,6 +45,7 @@
   },
   {
     "id": 6,
+    "role": "hot",
     "name": "আলু প্যাকেজ",
     "price": 15000,
     "dailyIncome": 780,
@@ -51,6 +56,7 @@
   },
   {
     "id": 7,
+    "role": "hot",
     "name": "পেঁয়াজ প্যাকেজ",
     "price": 30000,
     "dailyIncome": 1470,
@@ -61,6 +67,7 @@
   },
   {
     "id": 8,
+    "role": "hot",
     "name": "রসুন প্যাকেজ",
     "price": 50000,
     "dailyIncome": 2850,
@@ -71,6 +78,7 @@
   },
   {
     "id": 9,
+    "role": "hot",
     "name": "সরিষা প্যাকেজ",
     "price": 100000,
     "dailyIncome": 6000,
@@ -81,6 +89,7 @@
   },
   {
     "id": 10,
+    "role": "hot",
     "name": "মাশরুম প্যাকেজ",
     "price": 300000,
     "dailyIncome": 19500,

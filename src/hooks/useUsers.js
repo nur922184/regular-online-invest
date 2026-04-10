@@ -1,32 +1,58 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useState, useEffect } from "react";
+import axiosInstance from "../Api/axiosInstance";
 
-const useUsers = () => {
-  const [users, setUsers] = useState([]);
+
+// 🔥 Get Current User ID
+const getCurrentUserId = () => {
+  const userId =
+    localStorage.getItem("userId") ||
+    localStorage.getItem("user_id") ||
+    localStorage.getItem("currentUserId");
+
+  const userObj = JSON.parse(localStorage.getItem("user"));
+
+  if (userId) return userId;
+  if (userObj?._id) return userObj._id;
+  if (userObj?.id) return userObj.id;
+
+  return null;
+};
+
+const useUser = (intervalTime = 3000) => {
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
-  const fetchUsers = async () => {
+  const fetchUser = async () => {
     try {
-      setLoading(true);
-      const res = await axios.get(
-        "https://backend-project-invest.vercel.app/api/users/all"
-      );
-      setUsers(res.data.users);
-      setError("");
+      const currentUserId = getCurrentUserId();
+      if (!currentUserId) return;
+
+      const res = await axiosInstance.get("/users/all");
+
+      const users = res.data?.users || [];
+
+      const currentUser = users.find((u) => u._id === currentUserId);
+
+      if (currentUser) {
+        setUser(currentUser);
+        localStorage.setItem("user", JSON.stringify(currentUser));
+      }
     } catch (err) {
-      setError("Failed to load users");
-      console.log(err);
+      console.log("User fetch error:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchUser();
+
+    const interval = setInterval(fetchUser, intervalTime);
+
+    return () => clearInterval(interval);
   }, []);
 
-  return { users, loading, error, refetch: fetchUsers };
+  return { user, loading, refresh: fetchUser };
 };
 
-export default useUsers;
+export default useUser;

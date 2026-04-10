@@ -6,21 +6,15 @@ import { GrProjects } from "react-icons/gr";
 
 export default function MobileBottomNav() {
   // Telegram channel link - replace with your actual channel link
-  const TELEGRAM_CHANNEL_URL = "https://t.me/your_channel_username";
+
 
   const navItems = [
     { id: "home", path: "/", icon: <FaHome />, label: "হোম" },
     { id: "portfolio", path: "/my_product", icon: <FaProductHunt />, label: "পণ্য" },
-    { id: "telegram", path: TELEGRAM_CHANNEL_URL, icon: <FaTelegram size={35} color="blue" />, label: "টেলিগ্রাম", isExternal: true },
+    { id: "telegram", path: "/Support", icon: <FaTelegram size={35} color="blue" />, label: "টেলিগ্রাম",},
     { id: "refer", path: "/refer", icon: <SiSlideshare />, label: "আমন্ত্রণ" },
     { id: "profile", path: "/profile", icon: <GrProjects />, label: "আমার" },
   ];
-
-  const handleTelegramClick = (e, url) => {
-    e.preventDefault();
-    window.open(url, '_blank', 'noopener,noreferrer');
-  };
-
   return (
     <>
       {/* 🔵 Mobile Bottom Navbar */}
@@ -31,7 +25,7 @@ export default function MobileBottomNav() {
               <a
                 key={item.id}
                 href={item.path}
-                onClick={(e) => handleTelegramClick(e, item.path)}
+
                 className="flex flex-col items-center text-sm transition-all duration-300 group relative"
               >
                 <div className="text-2xl text-gray-500 group-hover:text-blue-500 transition-all duration-300 group-hover:scale-110">
@@ -99,7 +93,6 @@ export default function MobileBottomNav() {
               <a
                 key={item.id}
                 href={item.path}
-                onClick={(e) => handleTelegramClick(e, item.path)}
                 className="flex items-center gap-3 p-3 rounded-xl transition-all duration-300 text-gray-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-transparent hover:text-blue-600 group"
               >
                 <div className="text-xl transition-transform duration-300 group-hover:scale-110">

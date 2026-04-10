@@ -12,7 +12,14 @@ import UserProfile from "../Pages/UserProfile";
 import ReferPage from "../Pages/ReferPage";
 import ErrorPage from "../Pages/ErrorPage";
 import AboutUs from "../Pages/AboutUs";
-import MyProducts from "../Component/MyProducts";
+// import MyProducts from "../Component/MyProducts";
+import DepositPage from "../Component/DepositPage";
+import MyInvestments from "../Component/MyInvestments";
+import AdminTransactions from "../AdminComponent/AdminTransactions";
+import TelegramSupport from "../Pages/TelegramSupport";
+import TopUp from "../Component/TopUp";
+import TransactionHistory from "../Component/TransactionHistory";
+// import RechargePage from "../Component/RechargePage";
 
 const Router = createBrowserRouter([
   {
@@ -32,9 +39,14 @@ const Router = createBrowserRouter([
         element: <AboutUs/>,
       },
       {
-        path: "/myproduct",
-        element: <MyProducts/>,
+        path: "/my_product",
+        element: <MyInvestments/>,
       },
+      {
+        path: "/Support",
+        element: <TelegramSupport/>,
+      },
+    
       {
         path: "/profile",
         element: <UserProfile />,
@@ -42,6 +54,22 @@ const Router = createBrowserRouter([
       {
         path: "/refer",
         element: <ReferPage />,
+      },
+      {
+        path: "/topup",
+        element: <TopUp/>,
+      },
+      {
+        path: "/recharge",
+        element: <DepositPage/>,
+      },
+      {
+        path: "/transition_history",
+        element: <TransactionHistory/>,
+      },
+        {
+        path: "/Deposit",
+        element: <AdminTransactions/>,
       },
     ],
   },

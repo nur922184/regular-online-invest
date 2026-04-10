@@ -2,17 +2,17 @@ import { useState, useEffect } from "react";
 import {
   FaBangladeshiTakaSign,
   FaChartLine,
-  FaNewspaper,
-  FaBolt,
   FaUser,
 } from "react-icons/fa6";
-import { MdOutlineAppRegistration } from "react-icons/md";
-import { AiFillGift } from "react-icons/ai";
 import { HiCloudArrowDown } from "react-icons/hi2";
 import { FcAbout } from "react-icons/fc";
+import { Link } from "react-router-dom";
+import useUser from "../hooks/useUsers";
+import { PiHandDepositDuotone, PiHandWithdrawDuotone } from "react-icons/pi";
+import { FaComments } from "react-icons/fa";
 
 const HeroSection = () => {
-  const [user, setUser] = useState(null);
+  const { user } = useUser();
 
   const images = [
     "https://i.ibb.co.com/672R4zLk/121.jpg",
@@ -31,10 +31,6 @@ const HeroSection = () => {
   }, []);
 
   // user data
-  useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem("user"));
-    if (userData) setUser(userData);
-  }, []);
 
   return (
     <section className="p-4 bg-gray-100">
@@ -89,56 +85,71 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* Modern Bottom Menu */}
-      <div className="grid grid-cols-5 gap-3 mt-8 px-2">
-
+      {/* Modern Bottom Menu - Glassmorphism Style */}
+      <div className="grid grid-cols-5 gap-4 mt-8 px-3">
         {/* Recharge */}
-        <div className="group relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-2xl blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
-          <div className="relative bg-gradient-to-br from-yellow-400 to-orange-500 p-3 rounded-2xl text-white flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl cursor-pointer">
-            <FaNewspaper className="text-2xl" />
+        <Link to={"/topup"}>
+          <div className="group relative cursor-pointer">
+            {/* Animated background glow */}
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-orange-500 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-all duration-500 group-hover:scale-110"></div>
+
+            {/* Icon Container */}
+            <div className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-1 shadow-lg group-hover:shadow-2xl">
+              <PiHandDepositDuotone className="text-3xl text-amber-400 drop-shadow-md group-hover:text-amber-300 transition-colors" />
+            </div>
+
+            {/* Label */}
+            <p className="mt-2 text-center text-slate-600 font-semibold text-xs tracking-wide group-hover:text-amber-500 transition-all duration-200">
+              রিচার্জ
+            </p>
           </div>
-          <p className="mt-2 text-center text-gray-700 font-medium text-xs group-hover:text-yellow-600 transition-colors duration-200">রিচার্জ</p>
-        </div>
+        </Link>
 
         {/* Withdraw */}
-        <div className="group relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded-2xl blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
-          <div className="relative bg-gradient-to-br from-green-400 to-emerald-500 p-3 rounded-2xl text-white flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl cursor-pointer">
-            <FaBolt className="text-2xl" />
+        <div className="group relative cursor-pointer">
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-all duration-500 group-hover:scale-110"></div>
+          <div className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-1 shadow-lg group-hover:shadow-2xl">
+            <PiHandWithdrawDuotone className="text-3xl text-emerald-400 drop-shadow-md group-hover:text-emerald-300 transition-colors" />
           </div>
-          <p className="mt-2 text-center text-gray-700 font-medium text-xs group-hover:text-green-600 transition-colors duration-200">উত্তোলন</p>
+          <p className="mt-2 text-center text-slate-600 font-semibold text-xs tracking-wide group-hover:text-emerald-500 transition-all duration-200">
+            উত্তোলন
+          </p>
         </div>
 
         {/* Bonus */}
-        <div className="group relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-lime-400 to-green-500 rounded-2xl blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
-          <div className="relative bg-gradient-to-br from-lime-400 to-green-500 p-3 rounded-2xl text-white flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl cursor-pointer">
-            <FaChartLine className="text-2xl" />
+        <div className="group relative cursor-pointer">
+          <div className="absolute inset-0 bg-gradient-to-r from-lime-400 to-green-500 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-all duration-500 group-hover:scale-110"></div>
+          <div className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-1 shadow-lg group-hover:shadow-2xl">
+            <FaChartLine className="text-3xl text-lime-400 drop-shadow-md group-hover:text-lime-300 transition-colors" />
           </div>
-          <p className="mt-2 text-center text-gray-700 font-medium text-xs group-hover:text-lime-600 transition-colors duration-200">বোনাস</p>
+          <p className="mt-2 text-center text-slate-600 font-semibold text-xs tracking-wide group-hover:text-lime-500 transition-all duration-200">
+            বোনাস
+          </p>
         </div>
 
         {/* About Us */}
-        <div className="group relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-pink-500 rounded-2xl blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
-          <div className="relative bg-gradient-to-br from-red-400 to-pink-500 p-3 rounded-2xl text-white flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl cursor-pointer">
-            <FcAbout className="text-2xl" />
+        <div className="group relative cursor-pointer">
+          <div className="absolute inset-0 bg-gradient-to-r from-rose-400 to-pink-500 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-all duration-500 group-hover:scale-110"></div>
+          <div className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-1 shadow-lg group-hover:shadow-2xl">
+            <FcAbout className="text-3xl text-rose-400 drop-shadow-md group-hover:text-rose-300 transition-colors" />
           </div>
-          <p className="mt-2 text-center text-gray-700 font-medium text-xs group-hover:text-red-500 transition-colors duration-200">আমাদের সম্পর্কে</p>
+          <p className="mt-2 text-center text-slate-600 font-semibold text-xs tracking-wide group-hover:text-rose-500 transition-all duration-200">
+            সম্পর্কে
+          </p>
         </div>
 
-        {/* App */}
-        <div className="group relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-2xl blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
-          <div className="relative bg-gradient-to-br from-blue-400 to-indigo-500 p-3 rounded-2xl text-white flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl cursor-pointer">
-            <HiCloudArrowDown className="text-2xl" />
+        {/* Support */}
+        <div className="group relative cursor-pointer">
+          <div className="absolute inset-0 bg-gradient-to-r from-sky-400 to-blue-500 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-all duration-500 group-hover:scale-110"></div>
+          <div className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-1 shadow-lg group-hover:shadow-2xl">
+            <FaComments className="text-3xl text-sky-400 drop-shadow-md group-hover:text-sky-300 transition-colors" />
           </div>
-          <p className="mt-2 text-center text-gray-700 font-medium text-xs group-hover:text-blue-600 transition-colors duration-200">অ্যাপ</p>
+          <p className="mt-2 text-center text-slate-600 font-semibold text-xs tracking-wide group-hover:text-sky-500 transition-all duration-200">
+            সাপোর্ট
+          </p>
         </div>
-
       </div>
-     
+
     </section>
   );
 };
