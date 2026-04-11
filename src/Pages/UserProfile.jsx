@@ -23,6 +23,7 @@ import {
 } from "react-icons/fa";
 import Swal from "sweetalert2";
 import useUser from "../hooks/useUsers";
+import { FiLogOut } from "react-icons/fi";
 
 
 const UserProfile = () => {
@@ -214,7 +215,7 @@ const UserProfile = () => {
             <MenuItem
               icon={<FaSyncAlt />}
               label="রিচার্জিং কর"
-              onClick={() => navigate("/recharge")}
+              onClick={() => navigate("/topup")}
             />
             <MenuItem
               icon={<FaHandHoldingUsd />}
@@ -242,13 +243,18 @@ const UserProfile = () => {
           <div className="divide-y divide-gray-50">
             <MenuItem
               icon={<FaHistory />}
-              label="হিস্টোরি"
+              label=" রিসার্জ হিস্টোরি"
               onClick={() => navigate("/transition_history")}
+            />
+            <MenuItem
+              icon={<FaHistory />}
+              label=" উত্তলণ হিস্টোরি"
+              onClick={() => navigate("/withdrawHisotory")}
             />
             <MenuItem
               icon={<FaLock />}
               label="পাসওয়ার্ড পরিবর্তন"
-              onClick={() => navigate("/change-password")}
+              onClick={() => navigate("/password_change")}
             />
             <MenuItem
               icon={<FaQuestionCircle />}
@@ -259,6 +265,11 @@ const UserProfile = () => {
               icon={<FaHeadset />}
               label="সাপোর্ট"
               onClick={() => navigate("/Support")}
+            />
+            <MenuItem
+             onClick={handleLogout}
+              icon={<FiLogOut />}
+              label="লগ আউট "
             />
           </div>
         </div>

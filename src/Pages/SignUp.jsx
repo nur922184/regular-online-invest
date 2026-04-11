@@ -102,7 +102,6 @@ const SignUp = () => {
       const response = await axios.post("https://backend-project-invest.vercel.app/api/users/register", {
         name, phone, password, referredBy,
         refCode: userRefCode,
-        balance: 50
       });
 
       if (response.data.user) {

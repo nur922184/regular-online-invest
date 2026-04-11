@@ -78,7 +78,7 @@ const HeroSection = () => {
             <div>
               <p className="text-xs opacity-80">মোট আয়</p>
               <h2 className="flex items-center gap-1 text-lg font-bold text-green-300">
-                <FaBangladeshiTakaSign /> {user?.balance || 5400}
+                <FaBangladeshiTakaSign /> {user?.balance || 0}
               </h2>
             </div>
           </div>
@@ -106,15 +106,17 @@ const HeroSection = () => {
         </Link>
 
         {/* Withdraw */}
-        <div className="group relative cursor-pointer">
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-all duration-500 group-hover:scale-110"></div>
-          <div className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-1 shadow-lg group-hover:shadow-2xl">
-            <PiHandWithdrawDuotone className="text-3xl text-emerald-400 drop-shadow-md group-hover:text-emerald-300 transition-colors" />
+        <Link to={"/withdraw"}>
+          <div className="group relative cursor-pointer">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-all duration-500 group-hover:scale-110"></div>
+            <div className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-1 shadow-lg group-hover:shadow-2xl">
+              <PiHandWithdrawDuotone className="text-3xl text-emerald-400 drop-shadow-md group-hover:text-emerald-300 transition-colors" />
+            </div>
+            <p className="mt-2 text-center text-slate-600 font-semibold text-xs tracking-wide group-hover:text-emerald-500 transition-all duration-200">
+              উত্তোলন
+            </p>
           </div>
-          <p className="mt-2 text-center text-slate-600 font-semibold text-xs tracking-wide group-hover:text-emerald-500 transition-all duration-200">
-            উত্তোলন
-          </p>
-        </div>
+        </Link>
 
         {/* Bonus */}
         <div className="group relative cursor-pointer">

@@ -12,14 +12,21 @@ import UserProfile from "../Pages/UserProfile";
 import ReferPage from "../Pages/ReferPage";
 import ErrorPage from "../Pages/ErrorPage";
 import AboutUs from "../Pages/AboutUs";
-// import MyProducts from "../Component/MyProducts";
 import DepositPage from "../Component/DepositPage";
 import MyInvestments from "../Component/MyInvestments";
 import AdminTransactions from "../AdminComponent/AdminTransactions";
 import TelegramSupport from "../Pages/TelegramSupport";
 import TopUp from "../Component/TopUp";
 import TransactionHistory from "../Component/TransactionHistory";
-// import RechargePage from "../Component/RechargePage";
+import AddAccount from "../Component/AddAccount";
+import AccountsList from "../Component/AccountsList";
+import WithdrawHistory from "../Component/WithdrawHistory";
+import WithdrawPage from "../Component/WithdrawPage";
+import AdminWithdraw from "../AdminComponent/AdminWithdraw";
+import ChangePassword from "../Component/ChangePassword";
+import ForgotPhone from "../Component/ForgotPhone";
+import ResetPhone from "../Component/ResetPhone";
+
 
 const Router = createBrowserRouter([
   {
@@ -36,20 +43,32 @@ const Router = createBrowserRouter([
       },
       {
         path: "/about",
-        element: <AboutUs/>,
+        element: <AboutUs />,
       },
       {
         path: "/my_product",
-        element: <MyInvestments/>,
+        element: <MyInvestments />,
       },
       {
         path: "/Support",
-        element: <TelegramSupport/>,
+        element: <TelegramSupport />,
       },
-    
+
       {
         path: "/profile",
         element: <UserProfile />,
+      },
+      {
+        path: "/password_change",
+        element: <ChangePassword />,
+      },
+      {
+        path: "/forgot-password-phone",
+        element: <ForgotPhone/>,
+      },
+      {
+        path: "/reset-phone",
+        element: <ResetPhone/>,
       },
       {
         path: "/refer",
@@ -57,19 +76,39 @@ const Router = createBrowserRouter([
       },
       {
         path: "/topup",
-        element: <TopUp/>,
+        element: <TopUp />,
       },
       {
         path: "/recharge",
-        element: <DepositPage/>,
+        element: <DepositPage />,
       },
       {
         path: "/transition_history",
-        element: <TransactionHistory/>,
+        element: <TransactionHistory />,
       },
-        {
-        path: "/Deposit",
-        element: <AdminTransactions/>,
+      {
+        path: "/add_account",
+        element: <AddAccount />,
+      },
+      {
+        path: "/account_list",
+        element: <AccountsList />,
+      },
+      {
+        path: "/withdraw",
+        element: <WithdrawPage />,
+      },
+      {
+        path: "/withdrawHisotory",
+        element: <WithdrawHistory />,
+      },
+      {
+        path: "/AdminDeposit",
+        element: <AdminTransactions />,
+      },
+      {
+        path: "/adminWithdraw",
+        element: <AdminWithdraw />,
       },
     ],
   },
@@ -92,7 +131,7 @@ const Router = createBrowserRouter([
     ),
   },
   {
-    path:"*",
+    path: "*",
     element: <ErrorPage></ErrorPage>
   }
 ]);
