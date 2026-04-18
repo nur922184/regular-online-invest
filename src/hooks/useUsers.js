@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "../Api/axiosInstance";
-
+import { useNavigate } from "react-router-dom";
 
 // 🔥 Get Current User ID
 const getCurrentUserId = () => {
@@ -19,16 +19,22 @@ const getCurrentUserId = () => {
 };
 
 const useUser = (intervalTime = 3000) => {
+  const navigate = useNavigate(); // ✅ এখানে থাকতে হবে
+
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const fetchUser = async () => {
     try {
       const currentUserId = getCurrentUserId();
-      if (!currentUserId) return;
+
+      // ইউজার আইডি না থাকলে লগইন
+      if (!currentUserId) {
+        navigate("/login");
+        return;
+      }
 
       const res = await axiosInstance.get("/users/all");
-
       const users = res.data?.users || [];
 
       const currentUser = users.find((u) => u._id === currentUserId);
@@ -36,9 +42,13 @@ const useUser = (intervalTime = 3000) => {
       if (currentUser) {
         setUser(currentUser);
         localStorage.setItem("user", JSON.stringify(currentUser));
+      } else {
+        localStorage.removeItem("user");
+        navigate("/login");
       }
     } catch (err) {
       console.log("User fetch error:", err);
+      navigate("/login");
     } finally {
       setLoading(false);
     }

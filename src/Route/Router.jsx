@@ -26,6 +26,9 @@ import AdminWithdraw from "../AdminComponent/AdminWithdraw";
 import ChangePassword from "../Component/ChangePassword";
 import ForgotPhone from "../Component/ForgotPhone";
 import ResetPhone from "../Component/ResetPhone";
+import AdminUsers from "../AdminComponent/AdminUsers";
+import AdminRoute from "./AdminRoute";
+import AdminDashboard from "../AdminComponent/AdminDashboard";
 
 
 const Router = createBrowserRouter([
@@ -64,11 +67,11 @@ const Router = createBrowserRouter([
       },
       {
         path: "/forgot-password-phone",
-        element: <ForgotPhone/>,
+        element: <ForgotPhone />,
       },
       {
         path: "/reset-phone",
-        element: <ResetPhone/>,
+        element: <ResetPhone />,
       },
       {
         path: "/refer",
@@ -99,16 +102,40 @@ const Router = createBrowserRouter([
         element: <WithdrawPage />,
       },
       {
-        path: "/withdrawHisotory",
+        path: "/withdrawHistory",
         element: <WithdrawHistory />,
       },
       {
-        path: "/AdminDeposit",
-        element: <AdminTransactions />,
+        path: "/admin/users",
+        element: (
+          <AdminRoute>
+            <AdminUsers />
+          </AdminRoute>
+        ),
       },
       {
-        path: "/adminWithdraw",
-        element: <AdminWithdraw />,
+        path: "/admin/deposit",
+        element: (
+          <AdminRoute>
+            <AdminTransactions />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "/admin/withdraw",
+        element: (
+          <AdminRoute>
+            <AdminWithdraw />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "/admin/analytics",
+        element: (
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
+        ),
       },
     ],
   },
