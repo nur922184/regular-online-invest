@@ -24,6 +24,7 @@ import {
   FaUserShield,
   FaDatabase,
   FaMoneyCheckAlt,
+  FaProductHunt,
 } from "react-icons/fa";
 import Swal from "sweetalert2";
 import useUser from "../hooks/useUsers";
@@ -150,6 +151,7 @@ const UserProfile = () => {
       {/* ADMIN MENU */}
       {isAdmin && (
         <Section title="Admin Control Panel">
+          <MenuItem icon={<FaProductHunt />} label="Product Management" onClick={() => navigate("/admin/product_manage")} />
           <MenuItem icon={<FaUserShield />} label="User Management" onClick={() => navigate("/admin/users")} />
           <MenuItem icon={<FaDatabase />} label="Deposit Control" onClick={() => navigate("/admin/deposit")} />
           <MenuItem icon={<FaMoneyCheckAlt />} label="Withdraw Approve" onClick={() => navigate("/admin/withdraw")} />

@@ -29,6 +29,7 @@ import ResetPhone from "../Component/ResetPhone";
 import AdminUsers from "../AdminComponent/AdminUsers";
 import AdminRoute from "./AdminRoute";
 import AdminDashboard from "../AdminComponent/AdminDashboard";
+import ManageProducts from "../AdminComponent/ManageProducts";
 
 
 const Router = createBrowserRouter([
@@ -134,6 +135,14 @@ const Router = createBrowserRouter([
         element: (
           <AdminRoute>
             <AdminDashboard />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "/admin/product_manage",
+        element: (
+          <AdminRoute>
+            <ManageProducts />
           </AdminRoute>
         ),
       },
