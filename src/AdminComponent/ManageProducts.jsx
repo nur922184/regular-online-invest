@@ -373,7 +373,7 @@ const ManageProducts = () => {
                 {filteredProducts.map((product) => (
                     <div
                         key={product._id || product.id}
-                        className="bg-white rounded-xl shadow-sm hover:shadow-md transition flex p-2 gap-3 items-center"
+                        className="bg-white rounded-xl border-2 shadow-sm hover:shadow-md transition flex p-2 gap-3 items-center"
                     >
 
                         {/* 🖼️ Left Image */}
