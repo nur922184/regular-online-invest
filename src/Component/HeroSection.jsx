@@ -1,15 +1,10 @@
 import { useState, useEffect } from "react";
 import {
-  FaBangladeshiTakaSign,
-  FaChartLine,
   FaUser,
-} from "react-icons/fa6";
-import { HiCloudArrowDown } from "react-icons/hi2";
-import { FcAbout } from "react-icons/fc";
+  FaLeaf,
+} from "react-icons/fa";
 import { Link } from "react-router-dom";
 import useUser from "../hooks/useUsers";
-import { PiHandDepositDuotone, PiHandWithdrawDuotone } from "react-icons/pi";
-import { FaComments } from "react-icons/fa";
 
 const HeroSection = () => {
   const { user } = useUser();
@@ -21,138 +16,129 @@ const HeroSection = () => {
   ];
 
   const [current, setCurrent] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
 
-  // slider
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % images.length);
-    }, 3000);
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
-  // user data
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
-    <section className="p-4 bg-gray-100">
-
-      {/* App Name */}
-      <h2 className="text-xl font-bold text-green-700 mb-3">
-        AgroFund
-      </h2>
-
-      {/* Banner Card */}
-      <div className="relative rounded-2xl overflow-hidden shadow-lg">
-
-        {/* Image Slider */}
-        {images.map((img, index) => (
-          <img
-            key={index}
-            src={img}
-            alt=""
-            className={`absolute w-full h-52 object-cover transition-opacity duration-1000 ${index === current ? "opacity-100" : "opacity-0"
-              }`}
-          />
-        ))}
-
-        {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-green-900/80 via-black/40 to-transparent" />
-
-        {/* Content */}
-        <div className="relative z-10 p-4 h-52 flex flex-col justify-between text-white">
-
-          {/* Top Title */}
-          <div>
-            <h3 className="text-lg font-bold">AgroFund</h3>
-            <p className="text-xs opacity-80">সবজি প্রকল্প</p>
+    <>
+      {/* Navbar */}
+      <div className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? "bg-white/80 backdrop-blur-md shadow-sm py-2"
+          : "bg-transparent py-4"
+      }`}>
+        <div className="max-w-md mx-auto px-4 flex items-center justify-between">
+          
+          {/* Logo */}
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 bg-gradient-to-tr from-green-500 to-green-700 rounded-xl flex items-center justify-center shadow">
+              <FaLeaf className="text-white text-sm" />
+            </div>
+            <span className={`font-semibold text-base ${
+              scrolled ? "text-green-800" : "text-white"
+            }`}>
+              AgroFund
+            </span>
           </div>
 
-          {/* User Data */}
-          <div className="space-y-2">
-            <div>
-              <p className="text-xs opacity-80">নাম</p>
-              <h2 className="flex items-center gap-1 text-lg font-bold">
-                <FaUser /> {user?.name || 1500}
-              </h2>
+          {/* User/Login */}
+          {user ? (
+            <div className={`flex items-center gap-2 text-sm ${
+              scrolled ? "text-gray-700" : "text-white"
+            }`}>
+              <FaUser size={14} />
+              <span>{user?.name?.split(" ")[0] || "User"}</span>
             </div>
-
-            <div>
-              <p className="text-xs opacity-80">মোট আয়</p>
-              <h2 className="flex items-center gap-1 text-lg font-bold text-green-300">
-                <FaBangladeshiTakaSign /> {user?.balance || 0}
-              </h2>
-            </div>
-          </div>
+          ) : (
+            <Link to="/login">
+              <button className={`text-sm font-medium px-4 py-1.5 rounded-full border transition ${
+                scrolled
+                  ? "text-green-600 border-green-600 hover:bg-green-50"
+                  : "text-white border-white hover:bg-white/20"
+              }`}>
+                লগইন
+              </button>
+            </Link>
+          )}
         </div>
       </div>
 
-      {/* Modern Bottom Menu - Glassmorphism Style */}
-      <div className="grid grid-cols-5 gap-4 mt-8 px-3">
-        {/* Recharge */}
-        <Link to={"/topup"}>
-          <div className="group relative cursor-pointer">
-            {/* Animated background glow */}
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-orange-500 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-all duration-500 group-hover:scale-110"></div>
+      {/* Hero Section */}
+      <section className="bg-gradient-to-b from-green-50 via-white to-green-50">
+        <div className="max-w-full mx-auto">
 
-            {/* Icon Container */}
-            <div className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-1 shadow-lg group-hover:shadow-2xl">
-              <PiHandDepositDuotone className="text-3xl text-amber-400 drop-shadow-md group-hover:text-amber-300 transition-colors" />
+         <div className="relative rounded-b-[30px] overflow-hidden shadow-lg h-[50vh] min-h-[320px] max-h-[500px]">
+            
+            {/* Images */}
+            {images.map((img, index) => (
+              <img
+                key={index}
+                src={img}
+                alt="Banner"
+                className={`absolute w-full h-full object-cover transition-all duration-1000 ease-in-out ${
+                  index === current
+                    ? "opacity-100 scale-100"
+                    : "opacity-0 scale-110"
+                }`}
+              />
+            ))}
+
+            {/* Dark Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/80" />
+
+            {/* Content */}
+            <div className="relative z-10 flex flex-col justify-end h-full p-5">
+
+              {/* Balance Card */}
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 mb-5 border border-white/20 shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white/70 text-xs">আপনার ব্যালেন্স</p>
+                    <p className="text-white font-semibold text-2xl mt-1">
+                      ৳ {user?.balance?.toLocaleString() || 0}
+                    </p>
+                  </div>
+                  <div className="bg-green-500/20 text-green-200 px-3 py-1 rounded-full text-xs">
+                    Active
+                  </div>
+                </div>
+              </div>
+
+              {/* Dots */}
+              <div className="flex justify-center gap-2 pb-2">
+                {images.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrent(idx)}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      idx === current
+                        ? "w-6 bg-white"
+                        : "w-2 bg-white/40"
+                    }`}
+                  />
+                ))}
+              </div>
+
             </div>
-
-            {/* Label */}
-            <p className="mt-2 text-center text-slate-600 font-semibold text-xs tracking-wide group-hover:text-amber-500 transition-all duration-200">
-              রিচার্জ
-            </p>
           </div>
-        </Link>
 
-        {/* Withdraw */}
-        <Link to={"/withdraw"}>
-          <div className="group relative cursor-pointer">
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-all duration-500 group-hover:scale-110"></div>
-            <div className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-1 shadow-lg group-hover:shadow-2xl">
-              <PiHandWithdrawDuotone className="text-3xl text-emerald-400 drop-shadow-md group-hover:text-emerald-300 transition-colors" />
-            </div>
-            <p className="mt-2 text-center text-slate-600 font-semibold text-xs tracking-wide group-hover:text-emerald-500 transition-all duration-200">
-              উত্তোলন
-            </p>
-          </div>
-        </Link>
-
-        {/* Bonus */}
-        <div className="group relative cursor-pointer">
-          <div className="absolute inset-0 bg-gradient-to-r from-lime-400 to-green-500 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-all duration-500 group-hover:scale-110"></div>
-          <div className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-1 shadow-lg group-hover:shadow-2xl">
-            <FaChartLine className="text-3xl text-lime-400 drop-shadow-md group-hover:text-lime-300 transition-colors" />
-          </div>
-          <p className="mt-2 text-center text-slate-600 font-semibold text-xs tracking-wide group-hover:text-lime-500 transition-all duration-200">
-            বোনাস
-          </p>
         </div>
-
-        {/* About Us */}
-        <div className="group relative cursor-pointer">
-          <div className="absolute inset-0 bg-gradient-to-r from-rose-400 to-pink-500 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-all duration-500 group-hover:scale-110"></div>
-          <div className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-1 shadow-lg group-hover:shadow-2xl">
-            <FcAbout className="text-3xl text-rose-400 drop-shadow-md group-hover:text-rose-300 transition-colors" />
-          </div>
-          <p className="mt-2 text-center text-slate-600 font-semibold text-xs tracking-wide group-hover:text-rose-500 transition-all duration-200">
-            সম্পর্কে
-          </p>
-        </div>
-
-        {/* Support */}
-        <div className="group relative cursor-pointer">
-          <div className="absolute inset-0 bg-gradient-to-r from-sky-400 to-blue-500 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-all duration-500 group-hover:scale-110"></div>
-          <div className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 flex justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-1 shadow-lg group-hover:shadow-2xl">
-            <FaComments className="text-3xl text-sky-400 drop-shadow-md group-hover:text-sky-300 transition-colors" />
-          </div>
-          <p className="mt-2 text-center text-slate-600 font-semibold text-xs tracking-wide group-hover:text-sky-500 transition-all duration-200">
-            সাপোর্ট
-          </p>
-        </div>
-      </div>
-
-    </section>
+      </section>
+    </>
   );
 };
 

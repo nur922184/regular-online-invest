@@ -241,13 +241,6 @@ const ProductList = ({ user, onUserUpdate }) => {
   // ---------------- UI ----------------
   return (
     <div className="max-w-3xl mx-auto px-3 py-4 space-y-4">
-
-      {/* ব্যালেন্স */}
-      <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-4 rounded-xl text-white shadow">
-        <p className="text-xs opacity-80">আপনার ব্যালেন্স</p>
-        <h2 className="text-lg font-bold">৳ {balance}</h2>
-      </div>
-
       {/* বোনাস */}
       <div className="bg-yellow-50 p-2 rounded-2xl border border-yellow-300">
         <Card

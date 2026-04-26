@@ -17,7 +17,7 @@ const MainLayout = () => {
       <div className="flex-1 min-h-screen flex flex-col">
 
         {/* Content */}
-        <main className="flex-1 p-4 pb-20 md:pb-4 md:ml-0">
+        <main className="flex-1 ">
           <Outlet />
         </main>
 

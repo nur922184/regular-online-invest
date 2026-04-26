@@ -11,7 +11,7 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="bg-gray-50 min-h-screen pb-10">
+    <div>
       {/* Hero Section */}
       <HeroSection />
 
