@@ -1,19 +1,17 @@
-// TopUp.jsx - Compact & Modern Design
+// TopUp.jsx - Green Agriculture Theme
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaGoogleWallet, FaArrowRight } from "react-icons/fa";
+import { FaWallet, FaArrowRight, FaLeaf, FaTractor, FaSeedling } from "react-icons/fa";
 import { FaBangladeshiTakaSign } from "react-icons/fa6";
-import { SiZabka } from "react-icons/si";
 import useUser from "../hooks/useUsers";
 
 const TopUp = () => {
   const [selectedAmount, setSelectedAmount] = useState(null);
   const [customAmount, setCustomAmount] = useState("");
-  const [activeChannel, setActiveChannel] = useState("autopay");
   const { user } = useUser();
   const navigate = useNavigate();
 
-  const quickAmounts = [650, 1300, 3250, 6500, 13000, 32500];
+  const quickAmounts = [500, 1000, 2000, 5000, 10000, 20000];
 
   const handleAmountSelect = (amount) => {
     setSelectedAmount(amount);
@@ -38,60 +36,60 @@ const TopUp = () => {
   const handleContinue = () => {
     const amount = getFinalAmount();
     if (!amount) {
-      // Show toast or alert
       return;
     }
     navigate("/recharge", { state: { amount: amount } });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-4 px-3">
-      <div className="max-w-sm mx-auto">
-        {/* Header - Compact */}
-        <div className="text-center mb-4">
-          <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl shadow-lg mb-2">
-            <FaGoogleWallet className="text-white text-2xl" />
+    <div className="min-h-screen bg-gradient-to-b from-green-50 via-white to-green-50">
+      <div className="max-w-md mx-auto px-4 py-5">
+
+        {/* হেডার */}
+        <div className="text-center mb-5">
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl shadow-lg mb-2">
+            <FaLeaf className="text-white text-2xl" />
           </div>
-          <h1 className="text-xl font-bold text-white">রিচার্জ</h1>
+          <h1 className="text-2xl font-bold text-green-800">রিচার্জ</h1>
+          <p className="text-green-600 text-xs">আপনার অ্যাকাউন্ট রিচার্জ করুন</p>
         </div>
 
-        {/* Balance Card - Compact */}
-        <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-3 shadow-lg mb-4">
+        {/* ব্যালেন্স কার্ড */}
+        <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl p-4 shadow-md mb-5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-white/80 text-xs mb-0.5">বর্তমান ব্যালেন্স</p>
               <p className="text-white text-2xl font-bold">৳ {user?.balance?.toLocaleString() || 0}</p>
             </div>
-            <div className="bg-white/20 p-2 rounded-lg">
-              <FaBangladeshiTakaSign className="text-white text-xl" />
+            <div className="bg-white/20 p-2 rounded-xl">
+              <FaWallet className="text-white text-xl" />
             </div>
           </div>
         </div>
 
-        {/* Currency Badge - Compact */}
-        <div className="flex items-center justify-between bg-white/5 backdrop-blur-sm rounded-lg p-2 mb-4 border border-white/10">
+        {/* স্ট্যাটাস বার */}
+        <div className="flex items-center justify-between bg-green-100 rounded-lg px-3 py-2 mb-5">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-amber-500/20 rounded-md flex items-center justify-center">
-              <span className="text-amber-400 font-bold text-sm">৳</span>
+            <div className="w-6 h-6 bg-green-600 rounded-md flex items-center justify-center">
+              <FaBangladeshiTakaSign className="text-white text-xs" />
             </div>
-            <span className="text-white text-sm font-medium">কারেন্সি পেমেন্ট</span>
+            <span className="text-green-800 text-sm font-medium">বাংলাদেশী টাকা (BDT)</span>
           </div>
-          <div className="text-green-400 text-[10px] bg-green-400/10 px-2 py-0.5 rounded-full">সক্রিয়</div>
+          <div className="text-green-700 text-[10px] bg-green-200 px-2 py-0.5 rounded-full">সক্রিয়</div>
         </div>
 
-        {/* Quick Amount - Compact Grid */}
-        <div className="mb-4">
-          <h2 className="text-white/80 text-sm font-medium mb-2">পরিমাণ নির্বাচন</h2>
+        {/* কুইক অ্যামাউন্ট */}
+        <div className="mb-5">
+          <h2 className="text-green-800 text-sm font-semibold mb-2">দ্রুত পরিমাণ</h2>
           <div className="grid grid-cols-3 gap-2">
             {quickAmounts.map((amount) => (
               <button
                 key={amount}
                 onClick={() => handleAmountSelect(amount)}
-                className={`py-2 rounded-lg font-semibold text-sm transition-all duration-200 ${
-                  selectedAmount === amount
-                    ? "bg-amber-500 text-white shadow-md scale-105"
-                    : "bg-white/10 text-white/80 hover:bg-white/20"
-                }`}
+                className={`py-2 rounded-lg font-semibold text-sm transition-all duration-200 ${selectedAmount === amount
+                    ? "bg-green-600 text-white shadow-md scale-105"
+                    : "bg-white border border-green-200 text-green-700 hover:bg-green-50"
+                  }`}
               >
                 ৳ {amount.toLocaleString()}
               </button>
@@ -99,74 +97,64 @@ const TopUp = () => {
           </div>
         </div>
 
-        {/* Custom Amount - Compact */}
-        <div className="mb-4">
-          <label className="text-white/60 text-xs mb-1 block">নিজস্ব পরিমান</label>
+        {/* কাস্টম অ্যামাউন্ট */}
+        <div className="mb-5">
+          <label className="text-green-700 text-xs font-medium mb-1 block">নিজস্ব পরিমাণ</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-400 font-bold text-lg">৳</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-green-600 font-bold">৳</span>
             <input
               type="number"
               value={customAmount}
               onChange={handleCustomChange}
-              placeholder="০"
-              className="w-full bg-white/10 border border-white/20 rounded-lg py-2 pl-8 pr-3 text-white text-base placeholder:text-white/30 focus:outline-none focus:border-amber-400 transition"
+              placeholder="আপনার পছন্দের পরিমাণ লিখুন"
+              className="w-full bg-white border border-green-200 rounded-lg py-2.5 pl-8 pr-3 text-green-800 text-sm placeholder:text-green-300 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition"
             />
           </div>
         </div>
-
-        {/* Channel - Compact */}
-        <div className="mb-4">
-          <h2 className="text-white/80 text-sm font-medium mb-2">রিচার্জ চ্যানেল</h2>
-          <div
-            onClick={() => setActiveChannel("autopay")}
-            className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-200 ${
-              activeChannel === "autopay"
-                ? "bg-amber-500/20 border border-amber-400"
-                : "bg-white/5 border border-white/10"
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-amber-500/20 rounded-lg flex items-center justify-center">
-                <SiZabka className="text-amber-400 text-lg" />
-              </div>
-              <div>
-                <p className="text-white text-sm font-medium">অটোপে</p>
-                <p className="text-white/40 text-[10px]">স্বয়ংক্রিয় - দ্রুত পেমেন্ট</p>
-              </div>
-            </div>
-            <div className={`w-4 h-4 rounded-full border-2 ${
-              activeChannel === "autopay" ? "border-amber-400 bg-amber-400" : "border-white/30"
-            }`}></div>
-          </div>
-        </div>
-
-        {/* Continue Button - Compact */}
+        {/* কন্টিনিউ বাটন */}
         <button
           onClick={handleContinue}
-          className="w-full bg-gradient-to-r from-amber-500 to-orange-500 py-3 rounded-lg text-white font-bold text-base flex items-center justify-center gap-2 hover:shadow-xl transition-all duration-200 hover:scale-[1.01] mb-4"
+          className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 py-3 rounded-xl text-white font-bold text-base flex items-center justify-center gap-2 shadow-md transition-all duration-200 active:scale-95 mb-4"
         >
-          চালিয়ে যান <FaArrowRight className="text-sm" />
+          চালিয়ে যান
+          <FaArrowRight className="text-sm" />
         </button>
 
-        {/* Guide - Compact */}
-        <div className="bg-white/5 backdrop-blur-sm rounded-lg p-3 border border-white/10">
-          <h3 className="text-white/80 text-xs font-medium mb-1.5">রিচার্জ গাইড</h3>
+        {/* রিচার্জ সাবধানতা */}
+        <div className="bg-green-50 rounded-lg p-3 border border-green-200 mb-5">
+          <div className="flex items-center gap-2 mb-2">
+            <FaSeedling className="text-green-600 text-sm" />
+            <h3 className="text-green-800 text-xs font-semibold">রিচার্জ নির্দেশিকা</h3>
+          </div>
           <div className="space-y-1.5">
             <div className="flex items-start gap-1.5">
-              <span className="text-amber-400 text-xs font-bold">•</span>
-              <p className="text-white/50 text-[10px]">সর্বনিম্ন ডিপোজিট ৳ ৬৫০</p>
+              <span className="text-green-500 text-xs">✓</span>
+              <p className="text-green-700 text-[10px]">ন্যূনতম রিচার্জ: ৫০০ টাকা</p>
             </div>
             <div className="flex items-start gap-1.5">
-              <span className="text-amber-400 text-xs font-bold">•</span>
-              <p className="text-white/50 text-[10px]">৩০ মিনিটের মধ্যে ব্যালেন্স না পেলে সাপোর্টে যোগাযোগ করুন</p>
+              <span className="text-green-500 text-xs">✓</span>
+              <p className="text-green-700 text-[10px]">রিচার্জ কমপ্লিট হতে ২-৩ মিনিট সময় লাগতে পারে</p>
+            </div>
+            <div className="flex items-start gap-1.5">
+              <span className="text-green-500 text-xs">✓</span>
+              <p className="text-green-700 text-[10px]">কোনো সমস্যায় সাপোর্টে যোগাযোগ করুন</p>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="mt-4 text-center">
-          <p className="text-slate-500 text-[9px]">সুরক্ষিত লেনদেন | ২৪/৭ সাপোর্ট</p>
+
+
+        {/* ফুটার */}
+        <div className="text-center">
+          <div className="flex justify-center gap-3 mb-2">
+            <FaTractor className="text-green-400 text-xs" />
+            <FaLeaf className="text-green-500 text-xs" />
+            <FaSeedling className="text-green-600 text-xs" />
+          </div>
+          <p className="text-gray-400 text-[10px]">সুরক্ষিত লেনদেন | ২৪/৭ কাস্টমার সাপোর্ট</p>
+          <p className="text-gray-300 text-[9px] mt-1">AgroFund - আপনার কৃষি সঙ্গী</p>
         </div>
+
       </div>
     </div>
   );

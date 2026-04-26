@@ -6,7 +6,7 @@ import MobileBottomNav from "../Component/MobileBottomNav";
 
 const MainLayout = () => {
   return (
-    <div className="flex">
+    <div className="flex bg-white">
 
       {/* 🔹 Desktop Sidebar */}
       <div className="hidden md:block w-64">

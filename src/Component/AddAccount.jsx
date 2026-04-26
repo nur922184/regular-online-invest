@@ -1,3 +1,4 @@
+// AddAccount.jsx - Green Agriculture Theme
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -5,9 +6,16 @@ import {
   FaArrowLeft,
   FaUser,
   FaPhone,
-  FaIdCard
+  FaIdCard,
+  FaWallet,
+  FaCheckCircle,
+  FaSpinner,
+  FaLeaf,
+  FaSeedling,
+  FaTractor
 } from "react-icons/fa";
 import useUser from "../hooks/useUsers";
+import { FaBangladeshiTakaSign } from "react-icons/fa6";
 
 const AddAccount = () => {
   const navigate = useNavigate();
@@ -26,7 +34,7 @@ const AddAccount = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ✅ Validation
+  // ভ্যালিডেশন
   const validate = () => {
     const { accountName, accountNumber, holderName } = formData;
 
@@ -44,7 +52,7 @@ const AddAccount = () => {
     return true;
   };
 
-  // ✅ Submit
+  // সাবমিট
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -70,7 +78,12 @@ const AddAccount = () => {
       const data = await res.json();
 
       if (data.success) {
-        Swal.fire("সফল!", "অ্যাকাউন্ট যোগ হয়েছে", "success");
+        Swal.fire({
+          icon: "success",
+          title: "সফল!",
+          text: "অ্যাকাউন্ট যোগ হয়েছে",
+          confirmButtonColor: "#16a34a"
+        });
         navigate("/withdraw");
       } else {
         throw new Error(data.message);
@@ -83,97 +96,193 @@ const AddAccount = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-slate-900 to-black p-4">
-      <div className="max-w-md mx-auto bg-white/5 backdrop-blur border border-white/10 rounded-xl p-4">
-
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-4">
-          <button onClick={() => navigate(-1)}>
-            <FaArrowLeft className="text-white text-lg" />
+    <div className="min-h-screen bg-gradient-to-b from-green-50 via-white to-green-50">
+      <div className="max-w-md mx-auto px-4 py-5">
+        
+        {/* হেডার */}
+        <div className="flex items-center gap-3 mb-5">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center active:bg-green-200 transition"
+          >
+            <FaArrowLeft className="text-green-700 text-sm" />
           </button>
-          <h2 className="text-white font-bold">Add Account</h2>
+          <h2 className="text-xl font-bold text-green-800">অ্যাকাউন্ট যোগ করুন</h2>
+          <FaWallet className="text-green-600 ml-auto text-sm" />
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3 text-sm">
+        {/* ইনফো কার্ড */}
+        <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl p-4 shadow-md mb-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-white/80 text-xs mb-0.5">বর্তমান ব্যবহারকারী</p>
+              <p className="text-white font-semibold text-sm">{user?.name || "নাম নেই"}</p>
+              <p className="text-white/70 text-[10px] mt-0.5">{user?.phone || "ফোন নেই"}</p>
+            </div>
+            <div className="bg-white/20 p-2 rounded-xl">
+              <FaUser className="text-white text-xl" />
+            </div>
+          </div>
+        </div>
 
-          {/* Account Type */}
-          <div className="grid grid-cols-2 gap-2">
-            {["bkash", "nagad"].map((type) => (
+        {/* ফর্ম কার্ড */}
+        <div className="bg-white rounded-xl shadow-md border border-green-100 p-5 mb-5">
+          
+          {/* অ্যাকাউন্ট টাইপ সিলেক্ট */}
+          <div className="mb-4">
+            <label className="block text-green-800 text-sm font-semibold mb-2">
+              অ্যাকাউন্ট টাইপ
+            </label>
+            <div className="grid grid-cols-2 gap-3">
               <button
-                key={type}
                 type="button"
-                onClick={() =>
-                  setFormData({ ...formData, accountType: type })
-                }
-                className={`py-2 rounded-lg border text-xs ${
-                  formData.accountType === type
-                    ? "bg-green-500/20 border-green-500 text-green-400"
-                    : "border-white/20 text-white/60"
+                onClick={() => setFormData({ ...formData, accountType: "bkash" })}
+                className={`p-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${
+                  formData.accountType === "bkash"
+                    ? "border-green-500 bg-green-50"
+                    : "border-gray-200 bg-white hover:border-green-300"
                 }`}
               >
-                {type === "bkash" ? "বিকাশ" : "নগদ"}
+                <FaBangladeshiTakaSign className={`text-xl ${formData.accountType === "bkash" ? "text-pink-500" : "text-gray-400"}`} />
+                <span className={`font-medium ${formData.accountType === "bkash" ? "text-green-700" : "text-gray-600"}`}>
+                  বিকাশ
+                </span>
+                {formData.accountType === "bkash" && (
+                  <FaCheckCircle className="text-green-500 text-sm" />
+                )}
               </button>
-            ))}
+
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, accountType: "nagad" })}
+                className={`p-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${
+                  formData.accountType === "nagad"
+                    ? "border-green-500 bg-green-50"
+                    : "border-gray-200 bg-white hover:border-green-300"
+                }`}
+              >
+                <FaBangladeshiTakaSign className={`text-xl ${formData.accountType === "nagad" ? "text-orange-500" : "text-gray-400"}`} />
+                <span className={`font-medium ${formData.accountType === "nagad" ? "text-green-700" : "text-gray-600"}`}>
+                  নগদ
+                </span>
+                {formData.accountType === "nagad" && (
+                  <FaCheckCircle className="text-green-500 text-sm" />
+                )}
+              </button>
+            </div>
           </div>
 
-          {/* Account Name */}
-          <div className="flex items-center bg-white/10 px-2 rounded-lg">
-            <FaIdCard className="text-white/50" />
-            <input
-              name="accountName"
-              placeholder="অ্যাকাউন্ট নাম"
-              onChange={handleChange}
-              className="bg-transparent outline-none text-white p-2 w-full"
-            />
+          {/* অ্যাকাউন্ট নাম */}
+          <div className="mb-4">
+            <label className="block text-green-800 text-sm font-semibold mb-2">
+              অ্যাকাউন্ট নাম
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2">
+                <FaIdCard className="text-green-500 text-xs" />
+              </span>
+              <input
+                name="accountName"
+                value={formData.accountName}
+                onChange={handleChange}
+                placeholder="যেমন: ব্যক্তিগত অ্যাকাউন্ট"
+                className="w-full pl-9 pr-3 py-2.5 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm placeholder:text-green-300 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100"
+              />
+            </div>
           </div>
 
-          {/* Holder Name */}
-          <div className="flex items-center bg-white/10 px-2 rounded-lg">
-            <FaUser className="text-white/50" />
-            <input
-              name="holderName"
-              placeholder="হোল্ডার নাম"
-              onChange={handleChange}
-              className="bg-transparent outline-none text-white p-2 w-full"
-            />
+          {/* হোল্ডার নাম */}
+          <div className="mb-4">
+            <label className="block text-green-800 text-sm font-semibold mb-2">
+              হোল্ডারের নাম
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2">
+                <FaUser className="text-green-500 text-xs" />
+              </span>
+              <input
+                name="holderName"
+                value={formData.holderName}
+                onChange={handleChange}
+                placeholder="আপনার পুরো নাম"
+                className="w-full pl-9 pr-3 py-2.5 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm placeholder:text-green-300 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100"
+              />
+            </div>
           </div>
 
-          {/* Number */}
-          <div className="flex items-center bg-white/10 px-2 rounded-lg">
-            <FaPhone className="text-white/50" />
-            <input
-              name="accountNumber"
-              placeholder="01XXXXXXXXX"
-              onChange={handleChange}
-              className="bg-transparent outline-none text-white p-2 w-full"
-            />
+          {/* অ্যাকাউন্ট নম্বর */}
+          <div className="mb-5">
+            <label className="block text-green-800 text-sm font-semibold mb-2">
+              অ্যাকাউন্ট নম্বর
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2">
+                <FaPhone className="text-green-500 text-xs" />
+              </span>
+              <input
+                name="accountNumber"
+                value={formData.accountNumber}
+                onChange={handleChange}
+                placeholder="01XXXXXXXXX"
+                className="w-full pl-9 pr-3 py-2.5 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm placeholder:text-green-300 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100"
+              />
+            </div>
+            <p className="text-gray-400 text-[10px] mt-1">
+              সঠিক মোবাইল নম্বর দিন (01 দিয়ে শুরু)
+            </p>
           </div>
 
-          {/* Info */}
-          <div className="text-xs text-white/60 bg-white/5 p-2 rounded">
-            ✔ সঠিক নম্বর দিন <br />
-            ✔ Withdraw এর জন্য ব্যবহার হবে
+          {/* তথ্য বক্স */}
+          <div className="bg-green-50 rounded-lg p-3 mb-5">
+            <div className="flex items-start gap-2">
+              <FaCheckCircle className="text-green-600 text-sm mt-0.5" />
+              <div>
+                <p className="text-green-800 text-xs font-semibold mb-1">গুরুত্বপূর্ণ তথ্য</p>
+                <p className="text-green-700 text-[10px]">✓ এই অ্যাকাউন্ট উত্তোলনের জন্য ব্যবহার হবে</p>
+                <p className="text-green-700 text-[10px]">✓ সঠিক তথ্য প্রদান করুন</p>
+                <p className="text-green-700 text-[10px]">✓ একাধিক অ্যাকাউন্ট যোগ করা যাবে</p>
+              </div>
+            </div>
           </div>
 
-          {/* Buttons */}
-          <div className="flex gap-2">
+          {/* বাটন */}
+          <div className="flex gap-3">
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="flex-1 py-2 bg-white/10 text-white rounded-lg"
+              className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium text-sm transition"
             >
               বাতিল
             </button>
 
             <button
               type="submit"
+              onClick={handleSubmit}
               disabled={loading}
-              className="flex-1 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-semibold"
+              className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-2.5 rounded-lg font-semibold text-sm transition-all active:scale-95 disabled:opacity-50"
             >
-              {loading ? "Processing..." : "যোগ করুন"}
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <FaSpinner className="animate-spin" />
+                  <span>যোগ করা হচ্ছে...</span>
+                </div>
+              ) : (
+                "অ্যাকাউন্ট যোগ করুন"
+              )}
             </button>
           </div>
-        </form>
+        </div>
+
+        {/* ফুটার */}
+        <div className="text-center">
+          <div className="flex justify-center gap-2 mb-1">
+            <FaLeaf className="text-green-400 text-xs" />
+            <FaSeedling className="text-green-500 text-xs" />
+            <FaTractor className="text-green-600 text-xs" />
+          </div>
+          <p className="text-gray-400 text-[10px]">AgroFund - আপনার কৃষি সঙ্গী</p>
+        </div>
+
       </div>
     </div>
   );
