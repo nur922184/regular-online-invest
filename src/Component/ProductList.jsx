@@ -266,34 +266,10 @@ const ProductList = ({ user, onUserUpdate }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
-      <div className="max-w-md mx-auto px-4 py-5">
-
-        {/* হেডার */}
-        <div className="text-center mb-5">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl flex items-center justify-center">
-              <FaLeaf className="text-white text-xl" />
-            </div>
-            <h1 className="text-2xl font-bold text-green-800">বিনিয়োগ প্যাকেজ</h1>
-          </div>
-          <p className="text-green-600 text-xs">আপনার পছন্দের প্যাকেজ নির্বাচন করুন</p>
-        </div>
-
-        {/* ব্যালেন্স কার্ড */}
-        <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl p-4 shadow-md mb-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white/80 text-xs mb-0.5">আপনার ব্যালেন্স</p>
-              <p className="text-white text-2xl font-bold">৳ {formatNumber(balance)}</p>
-            </div>
-            <div className="bg-white/20 p-2 rounded-xl">
-              <FaWallet className="text-white text-xl" />
-            </div>
-          </div>
-        </div>
+      <div className="max-w-md mx-auto px-4 py-2">
 
         {/* বোনাস কার্ড */}
-        <div className="mb-5">
+        <div className="mb-3">
           <div className="bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl overflow-hidden shadow-md">
             <div className="p-4">
               <div className="flex items-center gap-3">
@@ -317,6 +293,15 @@ const ProductList = ({ user, onUserUpdate }) => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+        {/* হেডার */}
+        <div className="text-center mb-2">
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <div className="w-10 h-10 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl flex items-center justify-center">
+              <FaLeaf className="text-white text-xl" />
+            </div>
+            <h1 className="text-xl font-bold text-green-800">বিনিয়োগ প্যাকেজ</h1>
           </div>
         </div>
 
