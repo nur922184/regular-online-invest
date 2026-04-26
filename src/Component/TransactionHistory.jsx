@@ -1,3 +1,4 @@
+// TransactionHistory.jsx - AgroFund Green Theme
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -8,7 +9,11 @@ import {
   FaArrowLeft,
   FaSync,
   FaSearch,
-  FaCopy
+  FaCopy,
+  FaWallet,
+  FaLeaf,
+  FaTractor,
+  FaSeedling
 } from "react-icons/fa";
 import useUser from "../hooks/useUsers";
 
@@ -19,13 +24,13 @@ const TransactionHistory = () => {
   const hasFetched = useRef(false);
 
   const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true); // first load only
-  const [refreshing, setRefreshing] = useState(false); // button refresh
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("latest");
 
-  // ✅ Only first load
+  // শুধুমাত্র প্রথমবার লোড
   useEffect(() => {
     if (user?._id && !hasFetched.current) {
       fetchTransactions(true);
@@ -60,21 +65,27 @@ const TransactionHistory = () => {
 
   const getStatusConfig = (status) => {
     if (status === "approved")
-      return { color: "text-green-400", icon: FaCheckCircle, label: "অনুমোদিত" };
+      return { color: "text-green-500", bg: "bg-green-500/10", icon: FaCheckCircle, label: "অনুমোদিত" };
     if (status === "rejected")
-      return { color: "text-red-400", icon: FaTimesCircle, label: "বাতিল" };
-    return { color: "text-yellow-400", icon: FaClock, label: "পেন্ডিং" };
+      return { color: "text-red-500", bg: "bg-red-500/10", icon: FaTimesCircle, label: "বাতিল" };
+    return { color: "text-yellow-500", bg: "bg-yellow-500/10", icon: FaClock, label: "পেন্ডিং" };
   };
 
-  const formatDate = (date) =>
-    new Date(date).toLocaleString("bn-BD");
+  const formatDate = (date) => {
+    return new Date(date).toLocaleString("bn-BD", {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
-  // Filter + Search + Sort
+  // ফিল্টার + সার্চ + সর্ট
   let filtered = transactions.filter((trx) => {
     const matchFilter = filter === "all" || trx.status === filter;
-    const matchSearch = trx.transactionId
-      .toLowerCase()
-      .includes(search.toLowerCase());
+    const matchSearch = trx.transactionId?.toLowerCase().includes(search.toLowerCase()) ||
+                       trx.amount?.toString().includes(search);
     return matchFilter && matchSearch;
   });
 
@@ -84,128 +95,175 @@ const TransactionHistory = () => {
       : new Date(a.createdAt) - new Date(b.createdAt)
   );
 
-  const totalBalance = transactions
+  const totalApproved = transactions
     .filter((t) => t.status === "approved")
     .reduce((sum, t) => sum + t.amount, 0);
 
+  const totalPending = transactions
+    .filter((t) => t.status === "pending")
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const getFilterCount = (status) => {
+    if (status === "all") return transactions.length;
+    return transactions.filter(t => t.status === status).length;
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-slate-900 to-black p-4">
-      <div className="max-w-md mx-auto">
-
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <button onClick={() => navigate(-1)}>
-            <FaArrowLeft className="text-white text-lg" />
+    <div className="min-h-screen bg-gradient-to-b from-green-50 via-white to-green-50">
+      <div className="max-w-md mx-auto px-4 py-5">
+        
+        {/* হেডার */}
+        <div className="flex items-center justify-between mb-5">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center active:bg-green-200 transition"
+          >
+            <FaArrowLeft className="text-green-700 text-sm" />
           </button>
-
-          <h1 className="text-white font-bold">Transaction History</h1>
-
-          <FaSync
+          
+          <div className="flex items-center gap-2">
+            <FaHistory className="text-green-600 text-lg" />
+            <h1 className="text-lg font-bold text-green-800">লেনদেন ইতিহাস</h1>
+          </div>
+          
+          <button
             onClick={() => fetchTransactions(false)}
-            className={`text-white cursor-pointer ${
-              refreshing ? "animate-spin" : ""
+            className={`w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center transition ${
+              refreshing ? "animate-spin" : "active:bg-green-200"
             }`}
-          />
+          >
+            <FaSync className="text-green-600 text-sm" />
+          </button>
         </div>
 
-        {/* Balance */}
-        <div className="bg-gradient-to-r from-amber-500 to-yellow-400 p-4 rounded-xl mb-4 shadow-lg">
-          <p className="text-black text-xs">Total Approved</p>
-          <h2 className="text-black text-xl font-bold">
-            ৳ {totalBalance.toLocaleString()}
-          </h2>
+        {/* সামারি কার্ড */}
+        <div className="grid grid-cols-2 gap-3 mb-5">
+          <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl p-3 shadow-md">
+            <p className="text-white/70 text-[10px]">মোট অনুমোদিত</p>
+            <p className="text-white font-bold text-lg">৳ {totalApproved.toLocaleString()}</p>
+          </div>
+          <div className="bg-yellow-500 rounded-xl p-3 shadow-md">
+            <p className="text-white/70 text-[10px]">পেন্ডিং</p>
+            <p className="text-white font-bold text-lg">৳ {totalPending.toLocaleString()}</p>
+          </div>
         </div>
 
-        {/* Search + Sort */}
-        <div className="flex gap-2 mb-3">
-          <div className="flex items-center bg-white/10 px-2 rounded-lg flex-1">
-            <FaSearch className="text-white/50" />
+        {/* সার্চ বার */}
+        <div className="mb-4">
+          <div className="relative">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-green-400 text-xs" />
             <input
               type="text"
-              placeholder="Search ID..."
-              className="bg-transparent outline-none text-white text-xs p-2 w-full"
+              placeholder="ট্রানজেকশন আইডি বা টাকার পরিমাণ খুঁজুন..."
+              className="w-full pl-9 pr-3 py-2 bg-white border border-green-200 rounded-lg text-green-800 text-sm placeholder:text-green-300 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100"
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-
-          <select
-            className="bg-white/10 text-white text-xs rounded-lg px-2"
-            onChange={(e) => setSort(e.target.value)}
-          >
-            <option value="latest">Latest</option>
-            <option value="oldest">Oldest</option>
-          </select>
         </div>
 
-        {/* Filters */}
-        <div className="flex gap-2 mb-3">
-          {["all", "pending", "approved", "rejected"].map((f) => (
+        {/* ফিল্টার বাটন */}
+        <div className="flex gap-2 mb-4">
+          {[
+            { id: "all", label: "সব", count: getFilterCount("all") },
+            { id: "pending", label: "পেন্ডিং", count: getFilterCount("pending") },
+            { id: "approved", label: "অনুমোদিত", count: getFilterCount("approved") },
+            { id: "rejected", label: "বাতিল", count: getFilterCount("rejected") }
+          ].map((f) => (
             <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`flex-1 py-1 text-xs rounded-lg ${
-                filter === f
-                  ? "bg-amber-500 text-black"
-                  : "bg-white/10 text-white"
+              key={f.id}
+              onClick={() => setFilter(f.id)}
+              className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition ${
+                filter === f.id
+                  ? "bg-green-600 text-white shadow-md"
+                  : "bg-white border border-green-200 text-green-700 hover:bg-green-50"
               }`}
             >
-              {f}
+              {f.label} ({f.count})
             </button>
           ))}
         </div>
 
-        {/* List */}
+        {/* সর্ট অপশন */}
+        <div className="flex justify-end mb-4">
+          <select
+            className="bg-white border border-green-200 text-green-700 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-green-500"
+            onChange={(e) => setSort(e.target.value)}
+            value={sort}
+          >
+            <option value="latest">নতুন প্রথমে</option>
+            <option value="oldest">পুরাতন প্রথমে</option>
+          </select>
+        </div>
+
+        {/* লেনদেন লিস্ট */}
         {loading ? (
-          <div className="text-center text-white/50 py-10">
-            Loading transactions...
+          <div className="text-center py-10">
+            <div className="w-10 h-10 border-2 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+            <p className="text-green-600 text-sm">লেনদেন লোড হচ্ছে...</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center text-white/50 py-10">
-            No Transactions Found
+          <div className="text-center py-10 bg-white rounded-xl border border-green-100">
+            <FaHistory className="text-green-300 text-4xl mx-auto mb-2" />
+            <p className="text-green-500 text-sm">কোন লেনদেন পাওয়া যায়নি</p>
+            <p className="text-green-400 text-[10px] mt-1">নতুন লেনদেন শুরু করতে ডিপোজিট করুন</p>
           </div>
         ) : (
           <div className="space-y-3">
             {filtered.map((t) => {
-              const { icon: Icon, color, label } = getStatusConfig(t.status);
+              const { icon: Icon, color, bg, label } = getStatusConfig(t.status);
 
               return (
                 <div
                   key={t._id}
-                  className="bg-white/5 p-3 rounded-xl border border-white/10 backdrop-blur hover:scale-[1.02] transition"
+                  className="bg-white rounded-xl p-4 border border-green-100 shadow-sm hover:shadow-md transition-all"
                 >
-                  <div className="flex justify-between items-center mb-2">
+                  {/* হেডার */}
+                  <div className="flex justify-between items-center mb-3">
                     <div className="flex items-center gap-2">
-                      <Icon className={color} />
-                      <span className="text-white text-sm font-semibold">
-                        ৳ {t.amount}
-                      </span>
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${bg}`}>
+                        <Icon className={color} size={14} />
+                      </div>
+                      <div>
+                        <p className="text-green-800 font-bold text-base">
+                          ৳ {t.amount?.toLocaleString()}
+                        </p>
+                        <p className="text-green-500 text-[10px]">{t.paymentMethod}</p>
+                      </div>
                     </div>
-                    <span className={`${color} text-xs`}>{label}</span>
+                    <span className={`${color} text-[10px] font-medium px-2 py-0.5 rounded-full ${bg}`}>
+                      {label}
+                    </span>
                   </div>
 
-                  <div className="text-xs text-white/60 space-y-1">
-                    <div className="flex justify-between">
-                      <span>ID:</span>
-                      <span className="flex items-center gap-1">
-                        {t.transactionId}
-                        <FaCopy
-                          className="cursor-pointer"
+                  {/* ডিটেইলস */}
+                  <div className="space-y-2 text-xs border-t border-green-100 pt-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-500">ট্রানজেকশন আইডি:</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-green-700 font-mono text-[10px]">{t.transactionId}</span>
+                        <button
                           onClick={() => {
                             navigator.clipboard.writeText(t.transactionId);
-                            alert("Copied!");
+                            // ছোট নোটিফিকেশন
+                            const btn = document.createElement('div');
+                            btn.className = 'fixed bottom-20 left-1/2 -translate-x-1/2 bg-green-600 text-white px-3 py-1 rounded-lg text-xs z-50';
+                            btn.innerText = 'কপি হয়েছে!';
+                            document.body.appendChild(btn);
+                            setTimeout(() => btn.remove(), 1500);
                           }}
-                        />
-                      </span>
+                          className="p-1 hover:bg-green-100 rounded transition"
+                        >
+                          <FaCopy className="text-green-500 text-[10px]" />
+                        </button>
+                      </div>
                     </div>
-
                     <div className="flex justify-between">
-                      <span>Date:</span>
-                      <span>{formatDate(t.createdAt)}</span>
+                      <span className="text-gray-500">তারিখ ও সময়:</span>
+                      <span className="text-green-700">{formatDate(t.createdAt)}</span>
                     </div>
-
                     <div className="flex justify-between">
-                      <span>Method:</span>
-                      <span>{t.paymentMethod}</span>
+                      <span className="text-gray-500">মোবাইল নম্বর:</span>
+                      <span className="text-green-700">{t.phoneNumber || "N/A"}</span>
                     </div>
                   </div>
                 </div>
@@ -213,6 +271,17 @@ const TransactionHistory = () => {
             })}
           </div>
         )}
+
+        {/* ফুটার */}
+        <div className="text-center mt-6 pt-4 border-t border-green-100">
+          <div className="flex justify-center gap-2 mb-1">
+            <FaLeaf className="text-green-400 text-xs" />
+            <FaSeedling className="text-green-500 text-xs" />
+            <FaTractor className="text-green-600 text-xs" />
+          </div>
+          <p className="text-gray-400 text-[10px]">AgroFund - আপনার কৃষি সঙ্গী</p>
+        </div>
+
       </div>
     </div>
   );

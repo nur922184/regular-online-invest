@@ -138,13 +138,13 @@ const UserProfile = () => {
       {/* USER MENU */}
       {!isAdmin && (
         <Section title="User Menu">
-          <MenuItem icon={<FaUserPlus />} label="Mining" onClick={() => navigate("/mining")} />
-          <MenuItem icon={<FaSyncAlt />} label="Recharge" onClick={() => navigate("/topup")} />
-          <MenuItem icon={<FaHandHoldingUsd />} label="Withdraw" onClick={() => navigate("/withdraw")} />
-          <MenuItem icon={<FaUsers />} label="My Team" onClick={() => navigate("/refer")} />
-          <MenuItem icon={<FaHistory />} label="Transaction History" onClick={() => navigate("/transition_history")} />
-          <MenuItem icon={<FaHistory />} label="Withdraw History" onClick={() => navigate("/withdrawHisotory")} />
-          <MenuItem icon={<FaLock />} label="Change Password" onClick={() => navigate("/password_change")} />
+          <MenuItem icon={<FaUserPlus />} label="একাউন্ট" onClick={() => navigate("/account_list")} />
+          <MenuItem icon={<FaSyncAlt />} label="রিসার্জ" onClick={() => navigate("/topup")} />
+          <MenuItem icon={<FaHandHoldingUsd />} label="উত্তোলন" onClick={() => navigate("/withdraw")} />
+          <MenuItem icon={<FaUsers />} label="আমার দল" onClick={() => navigate("/refer")} />
+          <MenuItem icon={<FaHistory />} label=" রিসার্জ হিস্টি" onClick={() => navigate("/transition_history")} />
+          <MenuItem icon={<FaHistory />} label="উত্তোলন হিস্টি " onClick={() => navigate("/withdrawHistory")} />
+          <MenuItem icon={<FaLock />} label="পার্সওয়াড পরিবর্তন" onClick={() => navigate("/password_change")} />
         </Section>
       )}
 
