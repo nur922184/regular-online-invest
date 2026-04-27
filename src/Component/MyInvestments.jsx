@@ -242,13 +242,10 @@ const MyInvestments = () => {
     return new Intl.NumberFormat("bn-BD").format(num);
   };
 
-  if (loading) {
+   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center">
-        <div className="text-center">
-          <FaSpinner className="animate-spin text-4xl text-green-600 mx-auto mb-3" />
-          <p className="text-green-600 text-sm">লোড হচ্ছে...</p>
-        </div>
+        <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }

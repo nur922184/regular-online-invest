@@ -279,6 +279,16 @@ const UserProfile = () => {
               </div>
               <FaArrowRight className="text-gray-300 text-xs group-hover:text-green-500 transition" />
             </button>
+            <button
+              onClick={handleLogout} 
+              className="flex items-center justify-between w-full p-3 hover:bg-green-50 transition group"
+            >
+              <div className="flex items-center gap-3">
+                <FaSignOutAlt className="text-red-600 text-sm" />
+                <span className="text-red-700 text-sm">লগ আউট</span>
+              </div>
+              <FaArrowRight className="text-gray-300 text-xs group-hover:text-green-500 transition" />
+            </button>
           </div>
         </div>
 
