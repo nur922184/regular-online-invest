@@ -131,6 +131,9 @@ const ProductList = ({ user, onUserUpdate }) => {
   };
 
   // পণ্য কেনা
+  // ProductList.jsx - আপডেটেড ভার্সন (শুধু গুরুত্বপূর্ণ অংশ)
+
+  // পণ্য কেনা ফাংশন - আপডেটেড
   const handlePurchase = async (product) => {
     if (!userId) {
       closeModal();
@@ -156,44 +159,65 @@ const ProductList = ({ user, onUserUpdate }) => {
         });
       }
 
+      // ✅ সঠিক ডাটা পাঠানো হচ্ছে
+      const requestBody = {
+        userId: userId,
+        productId: product._id,
+        productName: product.name,  // ✅ productName যোগ করা হয়েছে
+        amount: product.price,
+        dailyIncome: product.dailyIncome,
+        duration: product.duration,
+        totalIncome: product.totalIncome,
+      };
+
+      console.log("Sending request:", requestBody); // ডিবাগের জন্য
+
       const res = await fetch(
         "https://backend-project-invest.vercel.app/api/investments/create",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId,
-            productId: product._id,
-            amount: product.price,
-            dailyIncome: product.dailyIncome,
-            duration: product.duration,
-            totalIncome: product.totalIncome,
-            status: "active",
-          }),
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("token")}`
+          },
+          body: JSON.stringify(requestBody),
         }
       );
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.message);
-
-      closeModal();
-      Swal.fire({
-        icon: "success",
-        title: "অভিনন্দন! 🎉",
-        text: "বিনিয়োগ সফল হয়েছে",
-        confirmButtonColor: "#16a34a"
-      }).then(() => navigate("/dashboard"));
-
-      if (onUserUpdate && data.newBalance) {
-        onUserUpdate({ ...user, balance: data.newBalance });
+      if (!res.ok) {
+        throw new Error(data.message || "বিনিয়োগ ব্যর্থ হয়েছে");
       }
+
+      if (data.success) {
+        closeModal();
+
+        // ইউজার আপডেট
+        if (onUserUpdate && data.newBalance) {
+          onUserUpdate({ ...user, balance: data.newBalance });
+        }
+
+        Swal.fire({
+          icon: "success",
+          title: "অভিনন্দন! 🎉",
+          text: data.message || "বিনিয়োগ সফল হয়েছে",
+          confirmButtonColor: "#16a34a",
+          timer: 2000
+        }).then(() => {
+          navigate("/my_product");
+        });
+      } else {
+        throw new Error(data.message);
+      }
+
     } catch (err) {
+      console.error("Purchase error:", err);
       closeModal();
       Swal.fire({
         icon: "error",
         title: "ত্রুটি",
-        text: err.message,
+        text: err.message || "বিনিয়োগ করতে ব্যর্থ হয়েছে",
         confirmButtonColor: "#ef4444"
       });
     } finally {
@@ -459,7 +483,7 @@ const ProductList = ({ user, onUserUpdate }) => {
       </div>
 
       {/* অ্যানিমেশন স্টাইল */}
-      <style jsx>{`
+      <style>{`
         @keyframes slideUp {
           from {
             transform: translateY(100%);

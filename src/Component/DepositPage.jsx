@@ -3,13 +3,13 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import useUser from "../hooks/useUsers";
-import { FaCopy, FaCheck, FaWallet, FaMobileAlt } from "react-icons/fa";
+import { FaCopy, FaCheck, FaWallet, FaMobileAlt, FaArrowLeft } from "react-icons/fa";
 
 const DepositPage = () => {
   const { user } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const [amount, setAmount] = useState("");
   const [transactionId, setTransactionId] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -23,26 +23,26 @@ const DepositPage = () => {
   }, [location]);
 
   const methods = {
-    bkash: { 
-      name: "বিকাশ", 
-      number: "01745624188", 
-      icon: "https://i.ibb.co.com/gZpmSgNq/image.png" 
+    bkash: {
+      name: "বিকাশ",
+      number: "01745624188",
+      icon: "https://i.ibb.co.com/gZpmSgNq/image.png"
     },
-    nagad: { 
-      name: "নগদ", 
-      number: "01345124414", 
-      icon: "https://i.ibb.co.com/m5YqjDpS/image.png" 
+    nagad: {
+      name: "নগদ",
+      number: "01345124414",
+      icon: "https://i.ibb.co.com/m5YqjDpS/image.png"
     }
   };
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(methods[selectedMethod].number);
     setCopied(true);
-    Swal.fire({ 
-      title: "কপি হয়েছে!", 
-      icon: "success", 
-      timer: 1000, 
-      showConfirmButton: false 
+    Swal.fire({
+      title: "কপি হয়েছে!",
+      icon: "success",
+      timer: 1000,
+      showConfirmButton: false
     });
     setTimeout(() => setCopied(false), 1000);
   };
@@ -55,7 +55,7 @@ const DepositPage = () => {
     if (!transactionId) {
       return Swal.fire("ট্রানজেকশন আইডি দিন", "", "warning");
     }
-    
+
     setSubmitting(true);
     try {
       const res = await fetch("https://backend-project-invest.vercel.app/api/transactions/create", {
@@ -72,14 +72,14 @@ const DepositPage = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-      
-      Swal.fire({ 
-        title: "সফল!", 
-        text: "ট্রানজেকশন সাবমিট হয়েছে", 
-        icon: "success", 
-        confirmButtonColor: "#16a34a" 
+
+      Swal.fire({
+        title: "সফল!",
+        text: "ট্রানজেকশন সাবমিট হয়েছে",
+        icon: "success",
+        confirmButtonColor: "#16a34a"
       }).then(() => navigate("/transition_history"));
-      
+
       setTransactionId("");
     } catch (error) {
       Swal.fire("ত্রুটি!", error.message, "error");
@@ -91,9 +91,15 @@ const DepositPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
       <div className="max-w-md mx-auto px-4 py-4">
-        
+
         {/* হেডার */}
         <div className="text-center mb-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center active:bg-green-200 transition"
+          >
+            <FaArrowLeft className="text-green-700 text-sm" />
+          </button>
           <div className="inline-flex items-center justify-center w-12 h-12 bg-green-600 rounded-xl shadow-md mb-2">
             <FaWallet className="text-white text-xl" />
           </div>
@@ -115,12 +121,11 @@ const DepositPage = () => {
               <button
                 key={key}
                 onClick={() => setSelectedMethod(key)}
-                className={`flex-1 py-2 rounded-lg border flex items-center justify-center gap-2 transition ${
-                  selectedMethod === key ? "border-green-600 bottom-5 bg-green-100" : "border-gray-200"
-                }`}
+                className={`flex-1 py-2 rounded-lg border flex items-center justify-center gap-2 transition ${selectedMethod === key ? "border-green-600 bottom-5 bg-green-100" : "border-gray-200"
+                  }`}
               >
-                <img 
-                  src={methods[key].icon} 
+                <img
+                  src={methods[key].icon}
                   alt={methods[key].name}
                   className="w-7 h-7 object-contain"
                 />
@@ -138,8 +143,8 @@ const DepositPage = () => {
                 <FaMobileAlt className="text-green-600 text-xs" />
                 <span className="text-green-700 text-xs">এই অ্যাকাউন্টে পেমেন্ট করুন</span>
               </div>
-              <button 
-                onClick={handleCopy} 
+              <button
+                onClick={handleCopy}
                 className="px-2 py-1 bg-white rounded-md text-green-600 text-xs flex items-center gap-1"
               >
                 {copied ? <FaCheck size={10} /> : <FaCopy size={10} />}

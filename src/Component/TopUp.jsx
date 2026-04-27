@@ -1,7 +1,7 @@
 // TopUp.jsx - Green Agriculture Theme
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaWallet, FaArrowRight, FaLeaf, FaTractor, FaSeedling } from "react-icons/fa";
+import { FaWallet, FaArrowRight, FaLeaf, FaTractor, FaSeedling, FaArrowLeft } from "react-icons/fa";
 import { FaBangladeshiTakaSign } from "react-icons/fa6";
 import useUser from "../hooks/useUsers";
 
@@ -47,6 +47,12 @@ const TopUp = () => {
 
         {/* হেডার */}
         <div className="text-center mb-5">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center active:bg-green-200 transition"
+          >
+            <FaArrowLeft className="text-green-700 text-sm" />
+          </button>
           <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl shadow-lg mb-2">
             <FaLeaf className="text-white text-2xl" />
           </div>
@@ -87,8 +93,8 @@ const TopUp = () => {
                 key={amount}
                 onClick={() => handleAmountSelect(amount)}
                 className={`py-2 rounded-lg font-semibold text-sm transition-all duration-200 ${selectedAmount === amount
-                    ? "bg-green-600 text-white shadow-md scale-105"
-                    : "bg-white border border-green-200 text-green-700 hover:bg-green-50"
+                  ? "bg-green-600 text-white shadow-md scale-105"
+                  : "bg-white border border-green-200 text-green-700 hover:bg-green-50"
                   }`}
               >
                 ৳ {amount.toLocaleString()}
