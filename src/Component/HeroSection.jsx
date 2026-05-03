@@ -35,23 +35,23 @@ const HeroSection = () => {
     },
     {
       id: 3,
-      name: "দল",
-      link: "/refer",
-      icon: "https://static.vecteezy.com/system/resources/previews/028/263/400/non_2x/color-icon-for-cultural-vector.jpg",
+      name: "বোনাস",
+      link: "/bonus",
+      icon: "https://cdn-icons-png.flaticon.com/512/3390/3390993.png",
       bgGradient: "from-teal-400 to-green-500",
     },
     {
       id: 4,
-      name: "ইতিহাস",
-      link: "/transition_history",
-      icon: "https://cdn-icons-png.flaticon.com/512/3209/3209265.png",
+      name: "বেতন",
+      link: "/SalaryBonus",
+      icon: "https://e7.pngegg.com/pngimages/99/761/png-clipart-person-holding-banknote-computer-icons-loan-bank-business-finance-icon-free-salary-miscellaneous-saving-thumbnail.png",
       bgGradient: "from-cyan-400 to-teal-500",
     },
     {
       id: 5,
-      name: "সাপোর্ট",
-      link: "/support",
-      icon: "https://cdn-icons-png.flaticon.com/512/1077/1077063.png",
+      name: "কোম্পানি",
+      link: "/about",
+      icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTBg9zkf0PWdFupdiDjLIkF1rWzE_oC76dNaQ&s",
       bgGradient: "from-sky-400 to-cyan-500",
     },
   ];
@@ -185,7 +185,7 @@ const HeroSection = () => {
                   <img
                     src={item.icon}
                     alt={item.name}
-                    className="w-8 h-8 rounded-full object-contain"
+                    className="w-full h-full rounded-full object-contain"
                     onError={(e) => {
                       e.target.src =
                         "https://cdn-icons-png.flaticon.com/512/6466/6466947.png";

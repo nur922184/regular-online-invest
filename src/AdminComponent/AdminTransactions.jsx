@@ -1,4 +1,4 @@
-// AdminTransactions.jsx - Professional Green Theme
+// AdminTransactions.jsx - আপডেটেড ভার্সন (adminId সহ)
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -18,12 +18,17 @@ import {
   FaSpinner,
   FaUser,
   FaCalendarAlt,
-  FaPhone
+  FaPhone,
+  FaTree,
+  FaUsers,
+  FaShieldAlt
 } from "react-icons/fa";
 import { FaBangladeshiTakaSign } from "react-icons/fa6";
+import useUser from "../hooks/useUsers";
 
 const AdminTransactions = () => {
   const navigate = useNavigate();
+  const { user } = useUser(); // এডমিন ইউজার তথ্য নেওয়া
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -54,10 +59,20 @@ const AdminTransactions = () => {
     fetchTransactions();
   }, []);
 
-  const handleApprove = async (id) => {
+  const handleApprove = async (id, amount, userId) => {
     const confirm = await Swal.fire({
       title: "ট্রানজেকশন অনুমোদন করবেন?",
-      text: "একবার অনুমোদন করলে তা পরিবর্তন করা যাবে না",
+      html: `
+        <div class="text-left">
+          <p>পরিমাণ: <strong class="text-green-600">৳${amount}</strong></p>
+          <p class="text-sm text-gray-600 mt-2">রেফারেল কমিশন বিতরণ:</p>
+          <ul class="text-sm text-gray-600 mt-1">
+            <li>• Level 1 (রেফারার): 10% = ৳${(amount * 0.10).toFixed(2)}</li>
+            <li>• Level 2: 5% = ৳${(amount * 0.05).toFixed(2)}</li>
+            <li>• Level 3: 2% = ৳${(amount * 0.02).toFixed(2)}</li>
+          </ul>
+        </div>
+      `,
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "হ্যাঁ, অনুমোদন করুন",
@@ -69,21 +84,63 @@ const AdminTransactions = () => {
     if (!confirm.isConfirmed) return;
 
     try {
-      await axios.patch(
-        `https://backend-project-invest.vercel.app/api/transactions/approve/${id}`
+      // ✅ adminId সহ রিকোয়েস্ট পাঠানো হচ্ছে
+      const res = await axios.patch(
+        `https://backend-project-invest.vercel.app/api/transactions/approve/${id}`,
+        {
+          adminId: user?._id || "admin"  // এডমিন আইডি পাঠানো হচ্ছে
+        }
       );
-      Swal.fire({
-        icon: "success",
-        title: "অনুমোদন করা হয়েছে!",
-        timer: 1500,
-        showConfirmButton: false
-      });
+      
+      const data = res.data;
+      
+      // কমিশন বিতরণের বিবরণ দেখানো
+      if (data.commissionGiven) {
+        let commissionHtml = '<div class="text-left mt-2">';
+        if (data.commissionGiven.level1) commissionHtml += '<p>✅ Level 1: 10% কমিশন দেওয়া হয়েছে</p>';
+        if (data.commissionGiven.level2) commissionHtml += '<p>✅ Level 2: 5% কমিশন দেওয়া হয়েছে</p>';
+        if (data.commissionGiven.level3) commissionHtml += '<p>✅ Level 3: 2% কমিশন দেওয়া হয়েছে</p>';
+        if (!data.commissionGiven.level1 && !data.commissionGiven.level2 && !data.commissionGiven.level3) {
+          commissionHtml += '<p>ℹ️ এই ইউজারের কোনো রেফারেল নেই</p>';
+        }
+        commissionHtml += '</div>';
+        
+        Swal.fire({
+          icon: "success",
+          title: "অনুমোদন করা হয়েছে!",
+          html: `
+            <div class="text-center">
+              <p class="text-lg font-bold text-green-600">৳${amount} যোগ করা হয়েছে</p>
+              ${commissionHtml}
+              <p class="text-xs text-gray-500 mt-3">নতুন ব্যালেন্স: ৳${data.newBalance?.toLocaleString()}</p>
+            </div>
+          `,
+          timer: 3000,
+          showConfirmButton: true,
+          confirmButtonColor: "#16a34a"
+        });
+      } else {
+        Swal.fire({
+          icon: "success",
+          title: "অনুমোদন করা হয়েছে!",
+          html: `
+            <div class="text-center">
+              <p class="text-lg font-bold text-green-600">৳${amount} যোগ করা হয়েছে</p>
+              <p class="text-xs text-gray-500 mt-2">নতুন ব্যালেন্স: ৳${data.newBalance?.toLocaleString()}</p>
+            </div>
+          `,
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+      
       fetchTransactions();
     } catch (error) {
+      console.error("Approval error:", error);
       Swal.fire({
         icon: "error",
         title: "ত্রুটি",
-        text: "অনুমোদন করতে ব্যর্থ হয়েছে",
+        text: error.response?.data?.message || "অনুমোদন করতে ব্যর্থ হয়েছে",
         confirmButtonColor: "#ef4444"
       });
     }
@@ -92,7 +149,6 @@ const AdminTransactions = () => {
   const handleReject = async (id) => {
     const confirm = await Swal.fire({
       title: "ট্রানজেকশন বাতিল করবেন?",
-      text: "একবার বাতিল করলে তা পরিবর্তন করা যাবে না",
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "হ্যাঁ, বাতিল করুন",
@@ -105,7 +161,10 @@ const AdminTransactions = () => {
 
     try {
       await axios.patch(
-        `https://backend-project-invest.vercel.app/api/transactions/reject/${id}`
+        `https://backend-project-invest.vercel.app/api/transactions/reject/${id}`,
+        {
+          adminId: user?._id || "admin"
+        }
       );
       Swal.fire({
         icon: "success",
@@ -166,18 +225,13 @@ const AdminTransactions = () => {
     return new Intl.NumberFormat("bn-BD").format(num);
   };
 
-  // পরিসংখ্যান
-  const totalAmount = transactions.reduce((sum, t) => sum + t.amount, 0);
-  const pendingAmount = transactions.filter(t => t.status === "pending").reduce((sum, t) => sum + t.amount, 0);
-  const approvedAmount = transactions.filter(t => t.status === "approved").reduce((sum, t) => sum + t.amount, 0);
+  const totalAmount = transactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+  const pendingAmount = transactions.filter(t => t.status === "pending").reduce((sum, t) => sum + (t.amount || 0), 0);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center">
-        <div className="text-center">
-          <FaSpinner className="animate-spin text-4xl text-green-600 mx-auto mb-3" />
-          <p className="text-green-600 text-sm">লোড হচ্ছে...</p>
-        </div>
+        <FaSpinner className="animate-spin text-4xl text-green-600" />
       </div>
     );
   }
@@ -188,99 +242,62 @@ const AdminTransactions = () => {
         
         {/* হেডার */}
         <div className="flex items-center justify-between mb-5">
-          <button 
-            onClick={() => navigate(-1)} 
-            className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center active:bg-green-200 transition"
-          >
+          <button onClick={() => navigate(-1)} className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
             <FaArrowLeft className="text-green-700 text-sm" />
           </button>
           <div className="flex items-center gap-2">
-            <FaMoneyBillWave className="text-green-600 text-lg" />
+            <FaShieldAlt className="text-red-600 text-lg" />
             <h1 className="text-lg font-bold text-green-800">লেনদেন ব্যবস্থাপনা</h1>
           </div>
-          <button
-            onClick={fetchTransactions}
-            className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center active:bg-green-200 transition"
-          >
+          <button onClick={fetchTransactions} className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
             <FaSyncAlt className={`text-green-600 text-sm ${refreshing ? "animate-spin" : ""}`} />
           </button>
         </div>
 
-        {/* স্ট্যাটিসটিক্স কার্ড */}
-        <div className="grid grid-cols-3 gap-2 mb-5">
-          <div className="bg-white rounded-xl p-2 text-center shadow-sm border border-green-100">
-            <FaWallet className="text-green-600 text-sm mx-auto mb-1" />
-            <p className="text-gray-500 text-[9px]">মোট</p>
+        {/* স্ট্যাটিসটিক্স */}
+        <div className="grid grid-cols-2 gap-3 mb-5">
+          <div className="bg-white rounded-xl p-3 text-center shadow-sm border border-green-100">
+            <FaWallet className="text-green-600 text-lg mx-auto mb-1" />
+            <p className="text-gray-500 text-[10px]">মোট ডিপোজিট</p>
             <p className="text-green-700 font-bold text-sm">৳{formatNumber(totalAmount)}</p>
           </div>
-          <div className="bg-white rounded-xl p-2 text-center shadow-sm border border-yellow-100">
-            <FaClock className="text-yellow-500 text-sm mx-auto mb-1" />
-            <p className="text-gray-500 text-[9px]">পেন্ডিং</p>
+          <div className="bg-white rounded-xl p-3 text-center shadow-sm border border-yellow-100">
+            <FaClock className="text-yellow-500 text-lg mx-auto mb-1" />
+            <p className="text-gray-500 text-[10px]">পেন্ডিং</p>
             <p className="text-yellow-700 font-bold text-sm">৳{formatNumber(pendingAmount)}</p>
-          </div>
-          <div className="bg-white rounded-xl p-2 text-center shadow-sm border border-green-100">
-            <FaCheckCircle className="text-green-500 text-sm mx-auto mb-1" />
-            <p className="text-gray-500 text-[9px]">অনুমোদিত</p>
-            <p className="text-green-700 font-bold text-sm">৳{formatNumber(approvedAmount)}</p>
           </div>
         </div>
 
-        {/* সার্চ বার */}
+        {/* সার্চ */}
         <div className="mb-4">
           <div className="relative">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-green-400 text-xs" />
             <input
               type="text"
-              placeholder="ট্রানজেকশন আইডি, নাম বা ফোন নম্বর দিয়ে খুঁজুন..."
+              placeholder="ট্রানজেকশন আইডি, নাম বা ফোন দিয়ে খুঁজুন..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-white border border-green-200 rounded-lg text-green-800 text-sm placeholder:text-green-300 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100"
+              className="w-full pl-9 pr-3 py-2 bg-white border border-green-200 rounded-lg text-green-800 text-sm"
             />
           </div>
         </div>
 
         {/* ফিল্টার বাটন */}
         <div className="flex gap-2 mb-4">
-          <button
-            onClick={() => setFilter("all")}
-            className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition ${
-              filter === "all"
-                ? "bg-green-600 text-white shadow-md"
-                : "bg-white border border-green-200 text-green-700 hover:bg-green-50"
-            }`}
-          >
-            সব ({transactions.length})
-          </button>
-          <button
-            onClick={() => setFilter("pending")}
-            className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition ${
-              filter === "pending"
-                ? "bg-yellow-500 text-white shadow-md"
-                : "bg-white border border-yellow-200 text-yellow-700 hover:bg-yellow-50"
-            }`}
-          >
-            পেন্ডিং ({transactions.filter(t => t.status === "pending").length})
-          </button>
-          <button
-            onClick={() => setFilter("approved")}
-            className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition ${
-              filter === "approved"
-                ? "bg-green-600 text-white shadow-md"
-                : "bg-white border border-green-200 text-green-700 hover:bg-green-50"
-            }`}
-          >
-            অনুমোদিত ({transactions.filter(t => t.status === "approved").length})
-          </button>
-          <button
-            onClick={() => setFilter("rejected")}
-            className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition ${
-              filter === "rejected"
-                ? "bg-red-600 text-white shadow-md"
-                : "bg-white border border-red-200 text-red-700 hover:bg-red-50"
-            }`}
-          >
-            বাতিল ({transactions.filter(t => t.status === "rejected").length})
-          </button>
+          {["all", "pending", "approved", "rejected"].map((item) => (
+            <button
+              key={item}
+              onClick={() => setFilter(item)}
+              className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition ${
+                filter === item
+                  ? "bg-green-600 text-white shadow-md"
+                  : "bg-white border border-green-200 text-green-700"
+              }`}
+            >
+              {item === "all" ? "সব" : item === "pending" ? "পেন্ডিং" : item === "approved" ? "অনুমোদিত" : "বাতিল"}
+              ({transactions.filter(t => item === "all" ? true : t.status === item).length})
+            </button>
+          ))}
         </div>
 
         {/* লেনদেন লিস্ট */}
@@ -288,7 +305,6 @@ const AdminTransactions = () => {
           <div className="text-center py-10 bg-white rounded-xl border border-green-100">
             <FaMoneyBillWave className="text-green-300 text-4xl mx-auto mb-2" />
             <p className="text-green-500 text-sm">কোন লেনদেন পাওয়া যায়নি</p>
-            <p className="text-green-400 text-[10px] mt-1">অন্য কীওয়ার্ড দিয়ে সার্চ করুন</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -297,76 +313,73 @@ const AdminTransactions = () => {
               const statusConfig = getStatusConfig(trx.status);
 
               return (
-                <div
-                  key={trx._id}
-                  className={`bg-white rounded-xl shadow-sm border ${statusConfig.border} overflow-hidden transition-all hover:shadow-md`}
-                >
-                  <div className="p-4">
-                    {/* হেডার */}
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <FaBangladeshiTakaSign className="text-green-600 text-sm" />
-                          <span className="text-green-700 font-bold text-lg">৳{formatNumber(trx.amount)}</span>
-                        </div>
-                        <p className="text-gray-500 text-[10px] flex items-center gap-1">
-                          <FaCalendarAlt size={8} />
-                          {new Date(trx.createdAt).toLocaleString("bn-BD")}
-                        </p>
+                <div key={trx._id} className={`bg-white rounded-xl shadow-sm border ${statusConfig.border} p-4`}>
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <FaBangladeshiTakaSign className="text-green-600 text-sm" />
+                        <span className="text-green-700 font-bold text-lg">৳{formatNumber(trx.amount)}</span>
                       </div>
-                      <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${statusConfig.bg} ${statusConfig.color}`}>
-                        <StatusIcon size={10} />
-                        <span className="text-[10px] font-medium">{statusConfig.label}</span>
-                      </div>
+                      <p className="text-gray-500 text-[10px] flex items-center gap-1">
+                        <FaCalendarAlt size={8} />
+                        {new Date(trx.createdAt).toLocaleString("bn-BD")}
+                      </p>
                     </div>
-
-                    {/* ইউজার তথ্য */}
-                    {trx.userName && (
-                      <div className="flex items-center gap-2 mb-2 text-xs">
-                        <FaUser className="text-gray-400 text-[10px]" />
-                        <span className="text-gray-600">{trx.userName}</span>
-                      </div>
-                    )}
-
-                    {/* লেনদেন বিবরণ */}
-                    <div className="space-y-1.5 text-xs">
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-500">ট্রানজেকশন আইডি:</span>
-                        <span className="text-gray-700 font-mono text-[10px]">{trx.transactionId}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-500">পেমেন্ট মেথড:</span>
-                        <span className="text-gray-700">{trx.paymentMethod}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-500">মোবাইল নম্বর:</span>
-                        <div className="flex items-center gap-1">
-                          <FaPhone size={8} className="text-gray-400" />
-                          <span className="text-gray-700">{trx.phoneNumber}</span>
-                        </div>
-                      </div>
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${statusConfig.bg} ${statusConfig.color}`}>
+                      <StatusIcon size={10} />
+                      <span className="text-[10px] font-medium">{statusConfig.label}</span>
                     </div>
-
-                    {/* অ্যাকশন বাটন */}
-                    {trx.status === "pending" && (
-                      <div className="flex gap-3 mt-4">
-                        <button
-                          onClick={() => handleApprove(trx._id)}
-                          className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium text-sm transition flex items-center justify-center gap-2"
-                        >
-                          <FaCheckCircle size={12} />
-                          অনুমোদন করুন
-                        </button>
-                        <button
-                          onClick={() => handleReject(trx._id)}
-                          className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-medium text-sm transition flex items-center justify-center gap-2"
-                        >
-                          <FaTimesCircle size={12} />
-                          বাতিল করুন
-                        </button>
-                      </div>
-                    )}
                   </div>
+
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">ট্রানজেকশন আইডি:</span>
+                      <span className="text-gray-700 font-mono text-[10px]">{trx.transactionId}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">পেমেন্ট মেথড:</span>
+                      <span className="text-gray-700">{trx.paymentMethod}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">মোবাইল নম্বর:</span>
+                      <span className="text-gray-700">{trx.phoneNumber}</span>
+                    </div>
+                  </div>
+
+                  {/* কমিশন তথ্য */}
+                  {trx.status === "pending" && (
+                    <div className="mt-3 p-2 bg-gray-50 rounded-lg">
+                      <p className="text-gray-500 text-[9px] flex items-center gap-1">
+                        <FaTree size={8} />
+                        রেফারেল কমিশন
+                      </p>
+                      <div className="flex justify-between text-[10px] mt-1">
+                        <span>Level 1 (10%): ৳{(trx.amount * 0.10).toFixed(2)}</span>
+                        <span>Level 2 (5%): ৳{(trx.amount * 0.05).toFixed(2)}</span>
+                        <span>Level 3 (2%): ৳{(trx.amount * 0.02).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* অ্যাকশন বাটন */}
+                  {trx.status === "pending" && (
+                    <div className="flex gap-3 mt-4">
+                      <button
+                        onClick={() => handleApprove(trx._id, trx.amount, trx.userId)}
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium text-sm transition flex items-center justify-center gap-2"
+                      >
+                        <FaCheckCircle size={12} />
+                        অনুমোদন দিন
+                      </button>
+                      <button
+                        onClick={() => handleReject(trx._id)}
+                        className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-medium text-sm transition flex items-center justify-center gap-2"
+                      >
+                        <FaTimesCircle size={12} />
+                        বাতিল করুন
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}

@@ -1,4 +1,4 @@
-// WithdrawPage.jsx - Green Agriculture Theme with Card Selection
+// WithdrawPage.jsx - আপডেটেড (সার্ভিস চার্জ সহ)
 import React, { useEffect, useState, useRef } from "react";
 import Swal from "sweetalert2";
 import { Link, useNavigate } from "react-router-dom";
@@ -12,9 +12,10 @@ import {
   FaCheckCircle,
   FaSpinner,
   FaMoneyBillWave,
-  FaAccusoft,
+  FaEye,
+  FaEyeSlash
 } from "react-icons/fa";
-// import { SiNagad } from "react-icons/si";
+import { FaBangladeshiTakaSign, } from "react-icons/fa6";
 import useUser from "../hooks/useUsers";
 
 const WithdrawPage = () => {
@@ -25,16 +26,16 @@ const WithdrawPage = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
-  
-  // ট্র্যাক করার জন্য রেফারেন্স
+  const [showPassword, setShowPassword] = useState(false);
+
   const hasLoaded = useRef(false);
+  const isMaxAccountReached = accounts.length >= 2;
 
   const [form, setForm] = useState({
     amount: "",
     password: ""
   });
 
-  // লোড অ্যাকাউন্ট - শুধুমাত্র একবার লোড হবে
   useEffect(() => {
     if (!user) return;
     if (!hasLoaded.current) {
@@ -48,7 +49,7 @@ const WithdrawPage = () => {
     try {
       const res = await fetch(`https://backend-project-invest.vercel.app/api/accounts/user/${user._id}`);
       const data = await res.json();
-      
+
       if (!data.accounts || data.accounts.length === 0) {
         Swal.fire({
           title: "অ্যাকাউন্ট নেই!",
@@ -59,7 +60,6 @@ const WithdrawPage = () => {
         setAccounts([]);
       } else {
         setAccounts(data.accounts);
-        // প্রথম অ্যাকাউন্টটি ডিফল্ট সিলেক্ট করা
         if (data.accounts.length > 0 && !selectedAccount) {
           setSelectedAccount(data.accounts[0]);
         }
@@ -73,33 +73,30 @@ const WithdrawPage = () => {
     }
   };
 
-  // অ্যাকাউন্ট সিলেক্ট
   const handleAccountSelect = (account) => {
     setSelectedAccount(account);
     setForm({ ...form, accountId: account._id });
   };
 
-  // ক্যালকুলেশন
+  // ✅ ক্যালকুলেশন (সার্ভিস চার্জ সহ)
   const amount = Number(form.amount) || 0;
   const serviceCharge = amount * 0.05;
   const totalDeduction = amount + serviceCharge;
   const remainingBalance = user?.balance - totalDeduction;
 
-  // অ্যাকাউন্ট আইকন
   const getAccountIcon = (type) => {
-    switch(type) {
+    switch (type) {
       case "bkash":
-        return <FaMoneyBillWave className="text-pink-500 text-xl" />;
+        return <FaBangladeshiTakaSign className="text-pink-500 text-xl" />;
       case "nagad":
-        return <FaAccusoft className="text-orange-500 text-xl" />;
+        return <FaBangladeshiTakaSign className="text-orange-500 text-xl" />;
       default:
         return <FaMoneyBillWave className="text-green-500 text-xl" />;
     }
   };
 
-  // অ্যাকাউন্ট নাম বাংলা
   const getAccountName = (type) => {
-    switch(type) {
+    switch (type) {
       case "bkash": return "বিকাশ";
       case "nagad": return "নগদ";
       default: return type;
@@ -128,7 +125,20 @@ const WithdrawPage = () => {
     }
 
     if (totalDeduction > user.balance) {
-      return Swal.fire("Error", "পর্যাপ্ত ব্যালেন্স নেই", "error");
+      return Swal.fire({
+        icon: "error",
+        title: "পর্যাপ্ত ব্যালেন্স নেই",
+        html: `
+          <div class="text-left">
+            <p>উত্তোলন: ৳${withdrawAmount}</p>
+            <p>সার্ভিস চার্জ (৫%): ৳${serviceCharge.toFixed(2)}</p>
+            <p class="font-bold text-red-600">মোট প্রয়োজন: ৳${totalDeduction.toFixed(2)}</p>
+            <p class="text-gray-600 mt-2">আপনার ব্যালেন্স: ৳${user.balance}</p>
+          </div>
+        `,
+        confirmButtonColor: "#ef4444"
+      });
+      return;
     }
 
     try {
@@ -139,8 +149,8 @@ const WithdrawPage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: user._id,
-          accountId: selectedAccount._id,
           amount: withdrawAmount,
+          accountId: selectedAccount._id,
           password: form.password
         })
       });
@@ -154,11 +164,25 @@ const WithdrawPage = () => {
           html: `
             <div class="text-left">
               <p>উত্তোলন রিকোয়েস্ট সাবমিট হয়েছে</p>
-              <div class="bg-green-50 p-2 rounded mt-2">
-                <p class="text-sm">পরিমাণ: ৳${withdrawAmount}</p>
-                <p class="text-sm">চার্জ (৫%): ৳${serviceCharge.toFixed(2)}</p>
-                <p class="text-sm font-bold">মোট কাটা: ৳${totalDeduction.toFixed(2)}</p>
+              <div class="bg-green-50 p-3 rounded-lg mt-3">
+                <div class="flex justify-between">
+                  <span>উত্তোলন পরিমাণ:</span>
+                  <span class="font-bold">৳${withdrawAmount.toFixed(2)}</span>
+                </div>
+                <div class="flex justify-between mt-1">
+                  <span>সার্ভিস চার্জ (৫%):</span>
+                  <span class="text-yellow-600">৳${serviceCharge.toFixed(2)}</span>
+                </div>
+                <div class="flex justify-between mt-1 pt-1 border-t border-green-200">
+                  <span class="font-bold">মোট কাটা:</span>
+                  <span class="font-bold text-red-600">৳${totalDeduction.toFixed(2)}</span>
+                </div>
+                <div class="flex justify-between mt-2">
+                  <span>নতুন ব্যালেন্স:</span>
+                  <span class="font-bold text-green-600">৳${(user.balance - totalDeduction).toFixed(2)}</span>
+                </div>
               </div>
+              <p class="text-xs text-gray-500 mt-3">এডমিন অ্যাপ্রুভ করার পর টাকা পাঠানো হবে (২৪-৪৮ ঘন্টা)</p>
             </div>
           `,
           confirmButtonColor: "#16a34a"
@@ -176,7 +200,6 @@ const WithdrawPage = () => {
     }
   };
 
-  // লোডিং স্টেট
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center">
@@ -188,11 +211,11 @@ const WithdrawPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
       <div className="max-w-md mx-auto px-4 py-5">
-        
+
         {/* হেডার */}
         <div className="flex items-center gap-3 mb-5">
-          <button 
-            onClick={() => navigate(-1)} 
+          <button
+            onClick={() => navigate(-1)}
             className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center active:bg-green-200 transition"
           >
             <FaArrowLeft className="text-green-700 text-sm" />
@@ -206,7 +229,10 @@ const WithdrawPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-white/80 text-xs mb-0.5">বর্তমান ব্যালেন্স</p>
-              <p className="text-white text-2xl font-bold">৳ {user?.balance?.toLocaleString() || 0}</p>
+              <div className="flex items-center gap-1">
+                <FaBangladeshiTakaSign className="text-white text-sm" />
+                <p className="text-white text-2xl font-bold">{user?.balance?.toLocaleString() || 0}</p>
+              </div>
             </div>
             <div className="bg-white/20 p-2 rounded-xl">
               <FaWallet className="text-white text-xl" />
@@ -214,12 +240,12 @@ const WithdrawPage = () => {
           </div>
         </div>
 
-        {/* অ্যাকাউন্ট সিলেক্ট - গ্রিড লেআউট */}
+        {/* অ্যাকাউন্ট সিলেক্ট */}
         <div className="mb-5">
           <label className="block text-green-800 text-sm font-semibold mb-2">
             অ্যাকাউন্ট নির্বাচন করুন
           </label>
-          
+
           {accounts.length === 0 ? (
             <div className="text-center py-4 bg-gray-50 rounded-lg">
               <p className="text-gray-500 text-sm">কোন অ্যাকাউন্ট নেই</p>
@@ -235,47 +261,29 @@ const WithdrawPage = () => {
                 <div
                   key={account._id}
                   onClick={() => handleAccountSelect(account)}
-                  className={`p-2 rounded-xl border-2 cursor-pointer transition-all ${
-                    selectedAccount?._id === account._id
+                  className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${selectedAccount?._id === account._id
                       ? "border-green-500 bg-green-50 shadow-md"
                       : "border-gray-200 bg-white hover:border-green-300"
-                  }`}
+                    }`}
                 >
                   <div className="text-center">
-                    {/* আইকন */}
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center mx-auto mb-1 ${
-                      selectedAccount?._id === account._id
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 ${selectedAccount?._id === account._id
                         ? "bg-green-100"
                         : "bg-gray-50"
-                    }`}>
+                      }`}>
                       {getAccountIcon(account.accountType)}
                     </div>
-                    
-                    {/* তথ্য */}
-                    <div className="text-center">
-                      <h3 className="font-bold text-gray-800 text-sm">
-                        {getAccountName(account.accountType)}
-                      </h3>
-                      <p className="text-gray-500 text-[10px] mt-0.5 truncate max-w-full">
-                        {account.accountNumber}
-                      </p>
-                      {selectedAccount?._id === account._id && (
-                        <span className="inline-block mt-1 text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">
-                          নির্বাচিত
-                        </span>
-                      )}
-                    </div>
-                    
-                    {/* রেডিও ইন্ডিকেটর - ছোট */}
-                    <div className={`mt-2 w-4 h-4 rounded-full border-2 flex items-center justify-center mx-auto ${
-                      selectedAccount?._id === account._id
-                        ? "border-green-500 bg-green-500"
-                        : "border-gray-300"
-                    }`}>
-                      {selectedAccount?._id === account._id && (
-                        <FaCheckCircle className="text-white text-[8px]" />
-                      )}
-                    </div>
+                    <h3 className="font-bold text-gray-800 text-sm">
+                      {getAccountName(account.accountType)}
+                    </h3>
+                    <p className="text-gray-500 text-[10px] mt-0.5">
+                      {account.accountNumber}
+                    </p>
+                    {selectedAccount?._id === account._id && (
+                      <span className="inline-block mt-1 text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">
+                        নির্বাচিত
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
@@ -283,10 +291,10 @@ const WithdrawPage = () => {
           )}
         </div>
 
-        {/* ফর্ম কার্ড - শুধু অ্যাকাউন্ট থাকলে দেখাবে */}
+        {/* ফর্ম কার্ড */}
         {accounts.length > 0 && (
           <div className="bg-white rounded-xl shadow-md border border-green-100 p-5 mb-5">
-            
+
             {/* টাকার পরিমাণ */}
             <div className="mb-4">
               <label className="block text-green-800 text-sm font-semibold mb-2">
@@ -302,7 +310,6 @@ const WithdrawPage = () => {
                   className="w-full pl-8 pr-3 py-2.5 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm placeholder:text-green-300 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100"
                 />
               </div>
-              {/* কুইক অ্যামাউন্ট */}
               <div className="flex gap-2 mt-2">
                 {[200, 500, 1000, 2000].map((amt) => (
                   <button
@@ -327,12 +334,19 @@ const WithdrawPage = () => {
                   <FaLock className="text-green-500 text-xs" />
                 </span>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="আপনার পাসওয়ার্ড দিন"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="w-full pl-9 pr-3 py-2.5 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm placeholder:text-green-300 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100"
+                  className="w-full pl-9 pr-9 py-2.5 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm placeholder:text-green-300 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
+                </button>
               </div>
             </div>
 
@@ -379,9 +393,14 @@ const WithdrawPage = () => {
               )}
             </button>
 
-            {/* অ্যাকাউন্ট যোগ বাটন */}
-            <Link to="/add_account">
-              <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg font-medium text-sm transition">
+            <Link to={isMaxAccountReached ? "#" : "/add_account"}>
+              <button
+                disabled={isMaxAccountReached}
+                className={`w-full py-2 rounded-lg font-medium text-sm transition ${isMaxAccountReached
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-orange-500 hover:bg-orange-600 text-white"
+                  }`}
+              >
                 + নতুন অ্যাকাউন্ট যোগ করুন
               </button>
             </Link>
@@ -397,6 +416,7 @@ const WithdrawPage = () => {
               <p className="text-green-700 text-[10px]">• ন্যূনতম উত্তোলন: ২০০ টাকা</p>
               <p className="text-green-700 text-[10px]">• সার্ভিস চার্জ: ৫%</p>
               <p className="text-green-700 text-[10px]">• ২৪-৪৮ ঘন্টার মধ্যে টাকা পাঠানো হবে</p>
+              <p className="text-green-700 text-[10px]">• উত্তোলন + চার্জ = মোট কাটা হবে</p>
             </div>
           </div>
         </div>

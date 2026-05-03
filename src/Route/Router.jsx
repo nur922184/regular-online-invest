@@ -30,6 +30,9 @@ import AdminUsers from "../AdminComponent/AdminUsers";
 import AdminRoute from "./AdminRoute";
 import AdminDashboard from "../AdminComponent/AdminDashboard";
 import ManageProducts from "../AdminComponent/ManageProducts";
+import AdminBonus from "../AdminComponent/AdminBonus";
+import UserBonus from "../Component/UserBonus";
+import SalaryBonus from "../Component/SalaryBonus";
 
 
 const Router = createBrowserRouter([
@@ -77,6 +80,14 @@ const Router = createBrowserRouter([
       {
         path: "/refer",
         element: <ReferPage />,
+      },
+      {
+        path: "/bonus",
+        element: <UserBonus />,
+      },
+      {
+        path: "/SalaryBonus",
+        element: <SalaryBonus />,
       },
       {
         path: "/topup",
@@ -143,6 +154,14 @@ const Router = createBrowserRouter([
         element: (
           <AdminRoute>
             <ManageProducts />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "/admin/bonus",
+        element: (
+          <AdminRoute>
+            <AdminBonus />
           </AdminRoute>
         ),
       },

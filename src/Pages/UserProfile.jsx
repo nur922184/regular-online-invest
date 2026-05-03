@@ -28,7 +28,8 @@ import {
   FaProductHunt,
   FaUserShield,
   FaFileInvoiceDollar,
-  FaArrowLeft
+  FaArrowLeft,
+  FaBoxOpen
 } from "react-icons/fa";
 import Swal from "sweetalert2";
 import useUser from "../hooks/useUsers";
@@ -102,6 +103,7 @@ const UserProfile = () => {
   const adminMenuItems = [
     { icon: FaProductHunt, label: "পণ্য ব্যবস্থাপনা", path: "/admin/product_manage", color: "text-emerald-600" },
     { icon: FaUserShield, label: "ইউজার ব্যবস্থাপনা", path: "/admin/users", color: "text-blue-600" },
+    { icon: FaBoxOpen, label: "বোনাস ব্যবস্থাপনা", path: "/admin/bonus", color: "text-blue-600" },
     { icon: FaDatabase, label: "ডিপোজিট কন্ট্রোল", path: "/admin/deposit", color: "text-orange-600" },
     { icon: FaMoneyCheckAlt, label: "উত্তোলন অনুমোদন", path: "/admin/withdraw", color: "text-purple-600" },
     { icon: FaChartLine, label: "এনালিটিক্স", path: "/admin/analytics", color: "text-cyan-600" },
@@ -111,9 +113,6 @@ const UserProfile = () => {
   // স্ট্যাটিসটিক্স ডাটা
   const stats = [
     { icon: FaWallet, label: "ব্যালেন্স", value: user?.balance || 0, color: "from-green-600 to-emerald-600" },
-    { icon: FaChartLine, label: "মোট আয়", value: user?.totalIncome || 0, color: "from-blue-600 to-cyan-600" },
-    { icon: FaUserFriends, label: "রেফারেল", value: totalReferrals, color: "from-purple-600 to-pink-600" },
-    { icon: FaGift, label: "পেন্ডিং", value: user?.pendingEarnings || 0, color: "from-orange-600 to-red-600" }
   ];
 
   return (
@@ -182,7 +181,7 @@ const UserProfile = () => {
         </div>
 
         {/* স্ট্যাটিসটিক্স গ্রিড */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-1 gap-3 mb-6">
           {stats.map((stat, idx) => (
             <div key={idx} className={`bg-gradient-to-r ${stat.color} rounded-xl p-3 shadow-md`}>
               <div className="flex items-center justify-between">

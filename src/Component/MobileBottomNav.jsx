@@ -3,6 +3,7 @@ import { FaHome } from "react-icons/fa";
 import { SiSlideshare } from "react-icons/si";
 import { FaProductHunt, FaTelegram } from "react-icons/fa6";
 import { GrProjects } from "react-icons/gr";
+import { BsBoxSeam } from "react-icons/bs";
 
 export default function MobileBottomNav() {
   // Telegram channel link - replace with your actual channel link
@@ -10,7 +11,7 @@ export default function MobileBottomNav() {
 
   const navItems = [
     { id: "home", path: "/", icon: <FaHome />, label: "হোম" },
-    { id: "portfolio", path: "/my_product", icon: <FaProductHunt />, label: "পণ্য" },
+    { id: "portfolio", path: "/my_product", icon: <BsBoxSeam />, label: "পণ্য" },
     { id: "telegram", path: "/Support", icon: <FaTelegram size={35} color="blue" />, label: "টেলিগ্রাম",},
     { id: "refer", path: "/refer", icon: <SiSlideshare />, label: "আমন্ত্রণ" },
     { id: "profile", path: "/profile", icon: <GrProjects />, label: "আমার" },

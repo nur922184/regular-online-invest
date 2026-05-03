@@ -348,7 +348,7 @@ const ProductList = ({ user, onUserUpdate }) => {
                 />
                 <div className="flex-1 p-3">
                   <h3 className="font-bold text-gray-800 text-sm mb-1">{product.name}</h3>
-                  <p className="text-green-600 font-bold text-sm">৳ {formatNumber(product.price)}</p>
+                  <p className="text-green-600 font-bold text-sm"> ৳ মূল্য {formatNumber(product.price)}</p>
                   <div className="flex items-center gap-3 mt-2 text-xs">
                     <span className="text-blue-500 flex items-center gap-1">
                       <FaClock size={10} />
@@ -363,9 +363,8 @@ const ProductList = ({ user, onUserUpdate }) => {
               </div>
               <div className="bg-green-50 px-3 py-2 border-t border-green-100">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-500">মোট আয়:</span>
-                  <span className="text-purple-600 font-bold">৳ {formatNumber(product.totalIncome)}</span>
-                  <span className="text-green-600 flex items-center gap-1">
+                  <span className="text-gray-500">মোট আয়: <span className="text-purple-600 font-bold">৳ {formatNumber(product.totalIncome)}</span></span>
+                  <span className="text-green-100 text-sm flex items-center gap-1 bg-green-500 px-8 py-0.5 rounded-full">
                     কিনুন
                     <FaArrowRight size={10} />
                   </span>
