@@ -60,7 +60,7 @@ const DepositPage = () => {
     
     try {
       setCheckingStatus(true);
-      const res = await fetch(`https://backend-project-invest.vercel.app/api/transactions/user/${user._id}`);
+      const res = await fetch(`https://backend-project-invest.onrender.com/api/transactions/user/${user._id}`);
       const data = await res.json();
       
       if (data.success && data.transactions) {
@@ -125,7 +125,7 @@ const DepositPage = () => {
     if (!user?._id) return;
     
     try {
-      const res = await fetch(`https://backend-project-invest.vercel.app/api/transactions/user/${user._id}`);
+      const res = await fetch(`https://backend-project-invest.onrender.com/api/transactions/user/${user._id}`);
       const data = await res.json();
       
       if (data.success && data.transactions) {
@@ -287,7 +287,7 @@ const DepositPage = () => {
     setSubmitting(true);
     
     try {
-      const res = await fetch("https://backend-project-invest.vercel.app/api/transactions/create", {
+      const res = await fetch("https://backend-project-invest.onrender.com/api/transactions/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

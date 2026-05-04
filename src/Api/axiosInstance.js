@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: "https://backend-project-invest.vercel.app/api",
+  baseURL: "https://backend-project-invest.onrender.com/api",
   timeout: 10000,
 });
 

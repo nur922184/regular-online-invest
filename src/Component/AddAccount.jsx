@@ -44,7 +44,7 @@ const AddAccount = () => {
         hasChecked.current = true; // ✅ একবার run lock
         setCheckingCount(true);
 
-        const res = await fetch(`https://backend-project-invest.vercel.app/api/accounts/user/${user._id}`);
+        const res = await fetch(`https://backend-project-invest.onrender.com/api/accounts/user/${user._id}`);
         const data = await res.json();
 
         if (data.success && data.accounts) {
@@ -124,7 +124,7 @@ const AddAccount = () => {
       setLoading(true);
 
       const res = await fetch(
-        "https://backend-project-invest.vercel.app/api/accounts/add",
+        "https://backend-project-invest.onrender.com/api/accounts/add",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

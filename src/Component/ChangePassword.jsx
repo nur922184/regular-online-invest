@@ -96,7 +96,7 @@ const ChangePassword = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("https://backend-project-invest.vercel.app/api/users/change-password", {
+      const res = await fetch("https://backend-project-invest.onrender.com/api/users/change-password", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json"

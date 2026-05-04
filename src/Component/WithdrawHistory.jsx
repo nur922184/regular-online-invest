@@ -42,7 +42,7 @@ const WithdrawHistory = () => {
       else setRefreshing(true);
 
       const res = await fetch(
-        `https://backend-project-invest.vercel.app/api/withdrawals/user/${user._id}`
+        `https://backend-project-invest.onrender.com/api/withdrawals/user/${user._id}`
       );
       const json = await res.json();
 

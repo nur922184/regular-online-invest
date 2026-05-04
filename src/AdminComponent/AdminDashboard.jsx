@@ -56,7 +56,7 @@ const AdminDashboard = () => {
       setLoading(true);
       
       // ইউজার স্ট্যাটস
-      const userRes = await fetch("https://backend-project-invest.vercel.app/api/users/admin/dashboard");
+      const userRes = await fetch("https://backend-project-invest.onrender.com/api/users/admin/dashboard");
       const userData = await userRes.json();
       
       if (userData.success) {
@@ -64,17 +64,17 @@ const AdminDashboard = () => {
       }
       
       // ট্রানজেকশন স্ট্যাটস
-      const transRes = await fetch("https://backend-project-invest.vercel.app/api/transactions/all");
+      const transRes = await fetch("https://backend-project-invest.onrender.com/api/transactions/all");
       const transData = await transRes.json();
       const transactions = transData.transactions || [];
       
       // উইথড্র স্ট্যাটস
-      const withdrawRes = await fetch("https://backend-project-invest.vercel.app/api/withdrawals/admin/all");
+      const withdrawRes = await fetch("https://backend-project-invest.onrender.com/api/withdrawals/admin/all");
       const withdrawData = await withdrawRes.json();
       const withdrawals = withdrawData.withdrawals || [];
       
       // ইনভেস্টমেন্ট স্ট্যাটস
-      const investRes = await fetch("https://backend-project-invest.vercel.app/api/investments/all");
+      const investRes = await fetch("https://backend-project-invest.onrender.com/api/investments/all");
       const investData = await investRes.json();
       const investments = investData.investments || [];
       

@@ -9,7 +9,7 @@ const ForgotPhone = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("https://backend-project-invest.vercel.app/api/auth/forgot-password-phone", {
+    const res = await fetch("https://backend-project-invest.onrender.com/api/auth/forgot-password-phone", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ phone })

@@ -33,7 +33,7 @@ const AccountsList = () => {
 
   const fetchAccounts = async () => {
     try {
-      const response = await fetch(`https://backend-project-invest.vercel.app/api/accounts/user/${user._id}`);
+      const response = await fetch(`https://backend-project-invest.onrender.com/api/accounts/user/${user._id}`);
       const data = await response.json();
       
       if (data.success) {
@@ -48,7 +48,7 @@ const AccountsList = () => {
 
   const handleSetDefault = async (accountId) => {
     try {
-      const response = await fetch(`https://backend-project-invest.vercel.app/api/accounts/set-default/${accountId}`, {
+      const response = await fetch(`https://backend-project-invest.onrender.com/api/accounts/set-default/${accountId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user._id })
@@ -89,7 +89,7 @@ const AccountsList = () => {
 
     if (confirm.isConfirmed) {
       try {
-        const response = await fetch(`https://backend-project-invest.vercel.app/api/accounts/delete/${accountId}`, {
+        const response = await fetch(`https://backend-project-invest.onrender.com/api/accounts/delete/${accountId}`, {
           method: 'DELETE'
         });
         

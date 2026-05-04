@@ -76,7 +76,7 @@ useEffect(() => {
       }
 
       // সব ইউজার লোড
-      const res = await axios.get("https://backend-project-invest.vercel.app/api/users/all");
+      const res = await axios.get("https://backend-project-invest.onrender.com/api/users/all");
       const allUsers = res.data?.users || [];
       const currentUser = allUsers.find(u => u._id === user._id);
       
@@ -193,7 +193,7 @@ useEffect(() => {
     
     try {
       // ব্যাকএন্ডে বোনাস ক্লেইম রেকুয়েস্ট
-      const response = await axios.post("https://backend-project-invest.vercel.app/api/bonus/level-claim", {
+      const response = await axios.post("https://backend-project-invest.onrender.com/api/bonus/level-claim", {
         userId: user._id,
         level: level,
         amount: levelData.bonusAmount

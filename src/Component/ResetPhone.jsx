@@ -14,7 +14,7 @@ const ResetPhone = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("https://backend-project-invest.vercel.app/api/auth/reset-password-phone", {
+    const res = await fetch("https://backend-project-invest.onrender.com/api/auth/reset-password-phone", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

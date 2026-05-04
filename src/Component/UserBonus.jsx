@@ -32,7 +32,7 @@ const UserBonus = () => {
     
     setChecking(true);
     try {
-      const res = await fetch("https://backend-project-invest.vercel.app/api/bonus-code/check", {
+      const res = await fetch("https://backend-project-invest.onrender.com/api/bonus-code/check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code: code.toUpperCase() })
@@ -75,7 +75,7 @@ const UserBonus = () => {
     
     setLoading(true);
     try {
-      const res = await fetch("https://backend-project-invest.vercel.app/api/bonus-code/claim", {
+      const res = await fetch("https://backend-project-invest.onrender.com/api/bonus-code/claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

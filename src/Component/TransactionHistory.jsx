@@ -47,7 +47,7 @@ const TransactionHistory = () => {
       }
 
       const res = await fetch(
-        `https://backend-project-invest.vercel.app/api/transactions/user/${user._id}`
+        `https://backend-project-invest.onrender.com/api/transactions/user/${user._id}`
       );
 
       const data = await res.json();
