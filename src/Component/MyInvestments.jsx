@@ -40,8 +40,8 @@ const MyInvestments = () => {
       if (!user?._id) return;
 
       const [invRes, bonusRes] = await Promise.all([
-        axios.get(`https://backend-project-invest.onrender.com/api/investments/user/${user._id}`),
-        axios.get(`https://backend-project-invest.onrender.com/api/bonus/status/${user._id}`),
+        axios.get(`https://investify-backend.vercel.app/api/investments/user/${user._id}`),
+        axios.get(`https://investify-backend.vercel.app/api/bonus/status/${user._id}`),
       ]);
 
       const userInvestments = invRes.data?.investments || [];
@@ -149,7 +149,7 @@ const MyInvestments = () => {
     }
 
     try {
-      const response = await axios.post("https://backend-project-invest.onrender.com/api/bonus/claim", {
+      const response = await axios.post("https://investify-backend.vercel.app/api/bonus/claim", {
         userId: user._id
       });
 
@@ -198,7 +198,7 @@ const MyInvestments = () => {
     try {
       setClaiming(prev => ({ ...prev, [investmentId]: true }));
 
-      const response = await axios.post(`https://backend-project-invest.onrender.com/api/investments/claim/${investmentId}`, {
+      const response = await axios.post(`https://investify-backend.vercel.app/api/investments/claim/${investmentId}`, {
         userId: user._id
       });
 

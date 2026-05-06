@@ -41,7 +41,7 @@ const ManageProducts = () => {
     });
 
     // API বেস URL
-    const API_URL = 'https://backend-project-invest.onrender.com/api/products';
+    const API_URL = 'https://investify-backend.vercel.app/api/products';
 
     // সব পণ্য লোড করুন
     const fetchProducts = async () => {

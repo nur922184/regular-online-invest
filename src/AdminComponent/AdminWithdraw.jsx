@@ -34,7 +34,7 @@ const AdminWithdraw = () => {
   const loadData = async () => {
     try {
       setRefreshing(true);
-      const res = await fetch("https://backend-project-invest.onrender.com/api/withdrawals/admin/all");
+      const res = await fetch("https://investify-backend.vercel.app/api/withdrawals/admin/all");
       const result = await res.json();
       setData(result.withdrawals || []);
     } catch (error) {
@@ -70,7 +70,7 @@ const AdminWithdraw = () => {
     if (!confirm.isConfirmed) return;
 
     try {
-      const res = await fetch(`https://backend-project-invest.onrender.com/api/withdrawals/admin/update/${id}`, {
+      const res = await fetch(`https://investify-backend.vercel.app/api/withdrawals/admin/update/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status })

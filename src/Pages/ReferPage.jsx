@@ -62,7 +62,7 @@ const ReferPage = () => {
       }
 
       // সব ইউজার লোড
-      const res = await axios.get("https://backend-project-invest.onrender.com/api/users/all");
+      const res = await axios.get("https://investify-backend.vercel.app/api/users/all");
       const users = res.data?.users || [];
       const currentUser = users.find(u => u._id === userId) || JSON.parse(localStorage.getItem("user"));
 
@@ -79,7 +79,7 @@ const ReferPage = () => {
         // প্রতিটি ইউজারের ডিপোজিট তথ্য নেওয়া
         const getUserDepositInfo = async (user) => {
           try {
-            const txRes = await axios.get(`https://backend-project-invest.onrender.com/api/transactions/user/${user._id}`);
+            const txRes = await axios.get(`https://investify-backend.vercel.app/api/transactions/user/${user._id}`);
             const transactions = txRes.data?.transactions || [];
             const approvedDeposits = transactions.filter(t => t.status === "approved");
             const totalDeposit = approvedDeposits.reduce((sum, t) => sum + t.amount, 0);

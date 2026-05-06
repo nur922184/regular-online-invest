@@ -47,7 +47,7 @@ const ProductList = ({ user, onUserUpdate }) => {
         setIsFetchingProducts(true);
 
         const res = await fetch(
-          "https://backend-project-invest.onrender.com/api/products/all"
+          "https://investify-backend.vercel.app/api/products/all"
         );
         const data = await res.json();
 
@@ -80,7 +80,7 @@ const ProductList = ({ user, onUserUpdate }) => {
   useEffect(() => {
     if (!userId) return;
 
-    fetch(`https://backend-project-invest.onrender.com/api/bonus/status/${userId}`)
+    fetch(`https://investify-backend.vercel.app/api/bonus/status/${userId}`)
       .then((res) => res.json())
       .then((data) => setClaimedBonus(data.claimed === true))
       .catch(() => { });
@@ -173,7 +173,7 @@ const ProductList = ({ user, onUserUpdate }) => {
       console.log("Sending request:", requestBody); // ডিবাগের জন্য
 
       const res = await fetch(
-        "https://backend-project-invest.onrender.com/api/investments/create",
+        "https://investify-backend.vercel.app/api/investments/create",
         {
           method: "POST",
           headers: {
@@ -241,7 +241,7 @@ const ProductList = ({ user, onUserUpdate }) => {
 
     try {
       const res = await fetch(
-        "https://backend-project-invest.onrender.com/api/bonus/claim",
+        "https://investify-backend.vercel.app/api/bonus/claim",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

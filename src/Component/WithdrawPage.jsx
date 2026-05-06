@@ -47,7 +47,7 @@ const WithdrawPage = () => {
   const loadAccounts = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`https://backend-project-invest.onrender.com/api/accounts/user/${user._id}`);
+      const res = await fetch(`https://investify-backend.vercel.app/api/accounts/user/${user._id}`);
       const data = await res.json();
 
       if (!data.accounts || data.accounts.length === 0) {
@@ -144,7 +144,7 @@ const WithdrawPage = () => {
     try {
       setSubmitting(true);
 
-      const res = await fetch("https://backend-project-invest.onrender.com/api/withdrawals/request", {
+      const res = await fetch("https://investify-backend.vercel.app/api/withdrawals/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

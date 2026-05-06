@@ -99,7 +99,7 @@ const SignUp = () => {
     const userRefCode = generateReferralCode();
 
     try {
-      const response = await axios.post("https://backend-project-invest.onrender.com/api/users/register", {
+      const response = await axios.post("https://investify-backend.vercel.app/api/users/register", {
         name, phone, password, referredBy,
         refCode: userRefCode,
       });

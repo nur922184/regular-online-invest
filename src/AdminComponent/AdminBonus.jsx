@@ -33,7 +33,7 @@ const AdminBonus = () => {
   const fetchCodes = async () => {
     try {
       setLoading(true);
-      const res = await fetch("https://backend-project-invest.onrender.com/api/bonus-code/admin/all");
+      const res = await fetch("https://investify-backend.vercel.app/api/bonus-code/admin/all");
       const data = await res.json();
       if (data.success) {
         setCodes(data.data);
@@ -52,7 +52,7 @@ const AdminBonus = () => {
   const generateCode = async () => {
     try {
       setGenerating(true);
-      const res = await fetch("https://backend-project-invest.onrender.com/api/bonus-code/admin/generate", {
+      const res = await fetch("https://investify-backend.vercel.app/api/bonus-code/admin/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -103,7 +103,7 @@ const AdminBonus = () => {
     if (!confirm.isConfirmed) return;
     
     try {
-      const res = await fetch(`https://backend-project-invest.onrender.com/api/bonus-code/admin/delete/${id}`, {
+      const res = await fetch(`https://investify-backend.vercel.app/api/bonus-code/admin/delete/${id}`, {
         method: "DELETE"
       });
       
@@ -130,7 +130,7 @@ const AdminBonus = () => {
 
   const toggleStatus = async (id, currentStatus) => {
     try {
-      const res = await fetch(`https://backend-project-invest.onrender.com/api/bonus-code/admin/toggle/${id}`, {
+      const res = await fetch(`https://investify-backend.vercel.app/api/bonus-code/admin/toggle/${id}`, {
         method: "PUT"
       });
       
