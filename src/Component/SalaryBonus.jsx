@@ -1,4 +1,5 @@
-// SalaryBonus.jsx - Level Based Salary Bonus System
+// SalaryBonus.jsx - আপডেটেড (শুধু ডিপোজিট থাকলেই রেফারেল গণ্য হবে)
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -16,9 +17,9 @@ import {
   FaSeedling,
   FaWallet,
   FaCrown,
-  FaChartLine,
   FaUserFriends,
-  FaGem
+  FaGem,
+  FaMoneyBillWave
 } from "react-icons/fa";
 import { FaBangladeshiTakaSign, FaDiamond } from "react-icons/fa6";
 import Swal from "sweetalert2";
@@ -89,8 +90,38 @@ const SalaryBonus = () => {
     }
   });
   const [totalEarned, setTotalEarned] = useState(0);
-
+  const [depositOnlyUsers, setDepositOnlyUsers] = useState(new Map()); // ইউজারের ডিপোজিট স্ট্যাটাস সংরক্ষণের জন্য
   const [hasLoaded, setHasLoaded] = useState(false);
+
+  // ইউজারের ডিপোজিট চেক করার ফাংশন (ক্যাশিং সহ)
+  const getUserDepositStatus = async (userId) => {
+    if (depositOnlyUsers.has(userId)) {
+      return depositOnlyUsers.get(userId);
+    }
+    
+    try {
+      const txRes = await axios.get(`https://investify-backend.vercel.app/api/transactions/user/${userId}`);
+      const transactions = txRes.data?.transactions || [];
+      const hasApprovedDeposit = transactions.some(t => t.status === "approved");
+      
+      setDepositOnlyUsers(prev => new Map(prev).set(userId, hasApprovedDeposit));
+      return hasApprovedDeposit;
+    } catch (error) {
+      console.error("Error checking deposit:", error);
+      return false;
+    }
+  };
+
+  // শুধুমাত্র ডিপোজিট থাকা ইউজারদের ফিল্টার করার ফাংশন
+  const filterUsersWithDeposits = async (users) => {
+    const depositPromises = users.map(async (u) => {
+      const hasDeposit = await getUserDepositStatus(u._id);
+      return hasDeposit ? u : null;
+    });
+    
+    const results = await Promise.all(depositPromises);
+    return results.filter(u => u !== null);
+  };
 
   useEffect(() => {
     if (user?._id && !hasLoaded) {
@@ -113,20 +144,27 @@ const SalaryBonus = () => {
       const currentUser = allUsers.find(u => u._id === user._id);
       
       if (currentUser) {
-        // Level 1: সরাসরি রেফারেল (ডাইরেক্ট)
-        const level1Users = allUsers.filter(u => u.referredBy === currentUser.refCode);
+        // শুধুমাত্র ডিপোজিট থাকা ইউজারদের ফিল্টার করে রেফারেল চেইন তৈরি
         
-        // Level 2: Level 1 এর রেফারেল
-        const level2Users = allUsers.filter(u => level1Users.some(l1 => u.referredBy === l1.refCode));
+        // Level 1: ডাইরেক্ট রেফারেল (যাদের ডিপোজিট আছে)
+        const allLevel1Users = allUsers.filter(u => u.referredBy === currentUser.refCode);
+        const level1UsersWithDeposits = await filterUsersWithDeposits(allLevel1Users);
         
-        // Level 3: Level 2 এর রেফারেল
-        const level3Users = allUsers.filter(u => level2Users.some(l2 => u.referredBy === l2.refCode));
+        // Level 2: Level 1 এর রেফারেল (শুধু যাদের ডিপোজিট আছে)
+        const allLevel2Users = allUsers.filter(u => level1UsersWithDeposits.some(l1 => u.referredBy === l1.refCode));
+        const level2UsersWithDeposits = await filterUsersWithDeposits(allLevel2Users);
         
-        // Level 4: Level 3 এর রেফারেল
-        const level4Users = allUsers.filter(u => level3Users.some(l3 => u.referredBy === l3.refCode));
+        // Level 3: Level 2 এর রেফারেল (শুধু যাদের ডিপোজিট আছে)
+        const allLevel3Users = allUsers.filter(u => level2UsersWithDeposits.some(l2 => u.referredBy === l2.refCode));
+        const level3UsersWithDeposits = await filterUsersWithDeposits(allLevel3Users);
         
-        // Level 5: Level 4 এর রেফারেল
-        const level5Users = allUsers.filter(u => level4Users.some(l4 => u.referredBy === l4.refCode));
+        // Level 4: Level 3 এর রেফারেল (শুধু যাদের ডিপোজিট আছে)
+        const allLevel4Users = allUsers.filter(u => level3UsersWithDeposits.some(l3 => u.referredBy === l3.refCode));
+        const level4UsersWithDeposits = await filterUsersWithDeposits(allLevel4Users);
+        
+        // Level 5: Level 4 এর রেফারেল (শুধু যাদের ডিপোজিট আছে)
+        const allLevel5Users = allUsers.filter(u => level4UsersWithDeposits.some(l4 => u.referredBy === l4.refCode));
+        const level5UsersWithDeposits = await filterUsersWithDeposits(allLevel5Users);
         
         // চেক করা কোন লেভেল আগে ক্লেইম করা হয়েছে কিনা
         const claimedLevels = JSON.parse(localStorage.getItem(`bonus_claimed_${user._id}`)) || {
@@ -154,7 +192,7 @@ const SalaryBonus = () => {
           return nextDate;
         };
         
-        // Check if level is available (not claimed OR claimed but cooldown passed)
+        // Check if level is available
         const isLevelAvailable = (levelKey, lastClaimed, cooldownDays) => {
           if (!claimedLevels[levelKey]) return true;
           if (!lastClaimed) return false;
@@ -173,63 +211,63 @@ const SalaryBonus = () => {
         setBonusData({
           level1: {
             required: 10,
-            current: level1Users.length,
-            completed: level1Users.length >= 10,
+            current: level1UsersWithDeposits.length,
+            completed: level1UsersWithDeposits.length >= 10,
             alreadyClaimed: claimedLevels.level1,
             bonusAmount: 250,
             cooldownDays: 7,
             lastClaimed: lastClaimTimes.level1,
             nextAvailable: level1NextAvailable,
             availableToClaim: isLevelAvailable('level1', lastClaimTimes.level1, 7),
-            progress: Math.min(100, (level1Users.length / 10) * 100)
+            progress: Math.min(100, (level1UsersWithDeposits.length / 10) * 100)
           },
           level2: {
             required: 30,
-            current: level2Users.length,
-            completed: level2Users.length >= 30,
+            current: level2UsersWithDeposits.length,
+            completed: level2UsersWithDeposits.length >= 30,
             alreadyClaimed: claimedLevels.level2,
             bonusAmount: 800,
             cooldownDays: 15,
             lastClaimed: lastClaimTimes.level2,
             nextAvailable: level2NextAvailable,
             availableToClaim: isLevelAvailable('level2', lastClaimTimes.level2, 15),
-            progress: Math.min(100, (level2Users.length / 30) * 100)
+            progress: Math.min(100, (level2UsersWithDeposits.length / 30) * 100)
           },
           level3: {
             required: 50,
-            current: level3Users.length,
-            completed: level3Users.length >= 50,
+            current: level3UsersWithDeposits.length,
+            completed: level3UsersWithDeposits.length >= 50,
             alreadyClaimed: claimedLevels.level3,
             bonusAmount: 1500,
             cooldownDays: 30,
             lastClaimed: lastClaimTimes.level3,
             nextAvailable: level3NextAvailable,
             availableToClaim: isLevelAvailable('level3', lastClaimTimes.level3, 30),
-            progress: Math.min(100, (level3Users.length / 50) * 100)
+            progress: Math.min(100, (level3UsersWithDeposits.length / 50) * 100)
           },
           level4: {
             required: 100,
-            current: level4Users.length,
-            completed: level4Users.length >= 100,
+            current: level4UsersWithDeposits.length,
+            completed: level4UsersWithDeposits.length >= 100,
             alreadyClaimed: claimedLevels.level4,
             bonusAmount: 4000,
             cooldownDays: 30,
             lastClaimed: lastClaimTimes.level4,
             nextAvailable: level4NextAvailable,
             availableToClaim: isLevelAvailable('level4', lastClaimTimes.level4, 30),
-            progress: Math.min(100, (level4Users.length / 100) * 100)
+            progress: Math.min(100, (level4UsersWithDeposits.length / 100) * 100)
           },
           level5: {
             required: 200,
-            current: level5Users.length,
-            completed: level5Users.length >= 200,
+            current: level5UsersWithDeposits.length,
+            completed: level5UsersWithDeposits.length >= 200,
             alreadyClaimed: claimedLevels.level5,
             bonusAmount: 10000,
             cooldownDays: 30,
             lastClaimed: lastClaimTimes.level5,
             nextAvailable: level5NextAvailable,
             availableToClaim: isLevelAvailable('level5', lastClaimTimes.level5, 30),
-            progress: Math.min(100, (level5Users.length / 200) * 100)
+            progress: Math.min(100, (level5UsersWithDeposits.length / 200) * 100)
           }
         });
         
@@ -270,7 +308,13 @@ const SalaryBonus = () => {
       Swal.fire({
         icon: "warning",
         title: "শর্ত পূরণ হয়নি",
-        text: `Level ${level} এর জন্য আরও ${remaining} জন রেফারেল প্রয়োজন। বর্তমানে ${levelData.current}/${levelData.required}`,
+        html: `
+          <div class="text-center">
+            <p>Level ${level} এর জন্য আরও <span class="font-bold text-orange-600">${remaining}</span> জন ডিপোজিট সম্পন্ন রেফারেল প্রয়োজন।</p>
+            <p class="text-sm text-gray-500 mt-2">বর্তমানে: ${levelData.current}/${levelData.required}</p>
+            <p class="text-xs text-blue-500 mt-3">💡 শুধুমাত্র যারা ডিপোজিট করেছেন তারাই রেফারেল হিসেবে গণ্য হবেন।</p>
+          </div>
+        `,
         confirmButtonColor: "#f59e0b"
       });
       return;
@@ -290,7 +334,7 @@ const SalaryBonus = () => {
           <div class="text-5xl mb-3">🎉</div>
           <p class="font-bold text-green-600">Level ${level} বোনাস</p>
           <p class="text-2xl font-bold text-green-700 mt-2">৳${levelData.bonusAmount.toLocaleString()}</p>
-          <p class="text-sm text-gray-600 mt-2">${levelData.current}/${levelData.required} রেফারেল সম্পন্ন হয়েছে</p>
+          <p class="text-sm text-gray-600 mt-2">${levelData.current}/${levelData.required} ডিপোজিট সম্পন্ন রেফারেল</p>
           <p class="text-xs text-blue-600 mt-2">🏆 কুলডাউন: ${levelData.cooldownDays} দিন</p>
           <p class="text-xs text-gray-500 mt-1">${message}</p>
         </div>
@@ -309,7 +353,6 @@ const SalaryBonus = () => {
     setClaimingLevel(level);
     
     try {
-      // ব্যাকএন্ডে বোনাস ক্লেইম রিকুয়েস্ট
       const response = await axios.post("https://investify-backend.vercel.app/api/bonus/level-claim", {
         userId: user._id,
         level: level,
@@ -318,7 +361,6 @@ const SalaryBonus = () => {
       });
       
       if (response.data.success) {
-        // লোকাল স্টোরেজে সেভ করা
         const claimedLevels = JSON.parse(localStorage.getItem(`bonus_claimed_${user._id}`)) || {
           level1: false,
           level2: false,
@@ -340,11 +382,9 @@ const SalaryBonus = () => {
         localStorage.setItem(`bonus_claimed_${user._id}`, JSON.stringify(claimedLevels));
         localStorage.setItem(`bonus_last_claim_times_${user._id}`, JSON.stringify(lastClaimTimes));
         
-        // Calculate next available
         const nextAvailable = new Date();
         nextAvailable.setDate(nextAvailable.getDate() + levelData.cooldownDays);
         
-        // স্টেট আপডেট
         setBonusData(prev => ({
           ...prev,
           [levelKey]: {
@@ -357,7 +397,6 @@ const SalaryBonus = () => {
         }));
         setTotalEarned(prev => prev + levelData.bonusAmount);
         
-        // ইউজার ব্যালেন্স আপডেট
         refresh();
         
         Swal.fire({
@@ -391,66 +430,11 @@ const SalaryBonus = () => {
   };
 
   const levels = [
-    {
-      id: 1,
-      name: "ব্রোঞ্জ",
-      icon: FaMedal,
-      color: "from-amber-600 to-orange-600",
-      bg: "bg-amber-50",
-      border: "border-amber-200",
-      text: "text-amber-700",
-      progressBg: "bg-amber-200",
-      progressFill: "bg-amber-600",
-      badgeColor: "bg-amber-100 text-amber-700"
-    },
-    {
-      id: 2,
-      name: "সিলভার",
-      icon: FaStar,
-      color: "from-gray-500 to-gray-600",
-      bg: "bg-gray-50",
-      border: "border-gray-200",
-      text: "text-gray-700",
-      progressBg: "bg-gray-200",
-      progressFill: "bg-gray-600",
-      badgeColor: "bg-gray-100 text-gray-700"
-    },
-    {
-      id: 3,
-      name: "গোল্ড",
-      icon: FaCrown,
-      color: "from-yellow-500 to-yellow-600",
-      bg: "bg-yellow-50",
-      border: "border-yellow-200",
-      text: "text-yellow-700",
-      progressBg: "bg-yellow-200",
-      progressFill: "bg-yellow-600",
-      badgeColor: "bg-yellow-100 text-yellow-700"
-    },
-    {
-      id: 4,
-      name: "প্লাটিনাম",
-      icon: FaGem,
-      color: "from-cyan-500 to-blue-600",
-      bg: "bg-cyan-50",
-      border: "border-cyan-200",
-      text: "text-cyan-700",
-      progressBg: "bg-cyan-200",
-      progressFill: "bg-cyan-600",
-      badgeColor: "bg-cyan-100 text-cyan-700"
-    },
-    {
-      id: 5,
-      name: "ডায়মন্ড",
-      icon: FaDiamond,
-      color: "from-purple-500 to-purple-700",
-      bg: "bg-purple-50",
-      border: "border-purple-200",
-      text: "text-purple-700",
-      progressBg: "bg-purple-200",
-      progressFill: "bg-purple-600",
-      badgeColor: "bg-purple-100 text-purple-700"
-    }
+    { id: 1, name: "ব্রোঞ্জ", icon: FaMedal, color: "from-amber-600 to-orange-600", bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", progressBg: "bg-amber-200", progressFill: "bg-amber-600", badgeColor: "bg-amber-100 text-amber-700" },
+    { id: 2, name: "সিলভার", icon: FaStar, color: "from-gray-500 to-gray-600", bg: "bg-gray-50", border: "border-gray-200", text: "text-gray-700", progressBg: "bg-gray-200", progressFill: "bg-gray-600", badgeColor: "bg-gray-100 text-gray-700" },
+    { id: 3, name: "গোল্ড", icon: FaCrown, color: "from-yellow-500 to-yellow-600", bg: "bg-yellow-50", border: "border-yellow-200", text: "text-yellow-700", progressBg: "bg-yellow-200", progressFill: "bg-yellow-600", badgeColor: "bg-yellow-100 text-yellow-700" },
+    { id: 4, name: "প্লাটিনাম", icon: FaGem, color: "from-cyan-500 to-blue-600", bg: "bg-cyan-50", border: "border-cyan-200", text: "text-cyan-700", progressBg: "bg-cyan-200", progressFill: "bg-cyan-600", badgeColor: "bg-cyan-100 text-cyan-700" },
+    { id: 5, name: "ডায়মন্ড", icon: FaDiamond, color: "from-purple-500 to-purple-700", bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-700", progressBg: "bg-purple-200", progressFill: "bg-purple-600", badgeColor: "bg-purple-100 text-purple-700" }
   ];
 
   const formatNumber = (num) => {
@@ -476,22 +460,20 @@ const SalaryBonus = () => {
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
       <div className="max-w-md mx-auto px-4 py-5">
         
-        {/* হেডার */}
         <div className="flex items-center gap-3 mb-5">
-          <button 
-            onClick={() => navigate(-1)} 
-            className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center active:bg-green-200 transition"
-          >
+          <button onClick={() => navigate(-1)} className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center active:bg-green-200 transition">
             <FaArrowLeft className="text-green-700 text-sm" />
           </button>
           <div className="flex items-center gap-2">
             <FaTrophy className="text-yellow-500 text-lg" />
             <h1 className="text-lg font-bold text-green-800">সেলারি বোনাস</h1>
           </div>
-          <FaGift className="text-green-600 ml-auto text-sm" />
+          <div className="flex items-center gap-1 ml-auto bg-blue-100 px-2 py-1 rounded-lg">
+            <FaMoneyBillWave className="text-blue-600 text-xs" />
+            <span className="text-blue-700 text-[10px] font-semibold">ডিপোজিট ভিত্তিক</span>
+          </div>
         </div>
 
-        {/* টোটাল আয় কার্ড */}
         <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl p-4 shadow-md mb-5">
           <div className="flex items-center justify-between">
             <div>
@@ -507,7 +489,17 @@ const SalaryBonus = () => {
           </div>
         </div>
 
-        {/* লেভেল কার্ড */}
+        {/* ইনফো ব্যাজ */}
+        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-3 mb-4 border border-blue-100">
+          <div className="flex items-center gap-2">
+            <FaMoneyBillWave className="text-blue-500 text-sm" />
+            <p className="text-blue-700 text-xs">
+              <span className="font-semibold">শুধুমাত্র ডিপোজিট সম্পন্ন ইউজার</span> রেফারেল হিসেবে গণ্য হবে। 
+              রেজিস্ট্রেশন করলেই হবে না, ডিপোজিট করতে হবে।
+            </p>
+          </div>
+        </div>
+
         <div className="space-y-4">
           {levels.map((level) => {
             const levelData = bonusData[`level${level.id}`];
@@ -517,11 +509,7 @@ const SalaryBonus = () => {
             const showCooldown = levelData.alreadyClaimed && !levelData.availableToClaim && remainingDays > 0;
             
             return (
-              <div 
-                key={level.id} 
-                className={`bg-white rounded-xl shadow-md border ${level.border} overflow-hidden transition-all hover:shadow-lg`}
-              >
-                {/* হেডার */}
+              <div key={level.id} className={`bg-white rounded-xl shadow-md border ${level.border} overflow-hidden transition-all hover:shadow-lg`}>
                 <div className={`bg-gradient-to-r ${level.color} px-4 py-3 text-white`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -538,29 +526,23 @@ const SalaryBonus = () => {
                   </div>
                 </div>
                 
-                {/* বডি */}
                 <div className="p-4">
-                  {/* প্রগ্রেস বার */}
                   <div className="mb-3">
                     <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-600">রেফারেল প্রগ্রেস</span>
+                      <span className="text-gray-600">ডিপোজিট সম্পন্ন রেফারেল</span>
                       <span className={`font-semibold ${level.text}`}>
                         {levelData.current}/{levelData.required}
                       </span>
                     </div>
                     <div className={`w-full h-2.5 ${level.progressBg} rounded-full overflow-hidden`}>
-                      <div 
-                        className={`h-full ${level.progressFill} rounded-full transition-all duration-500`}
-                        style={{ width: `${levelData.progress}%` }}
-                      ></div>
+                      <div className={`h-full ${level.progressFill} rounded-full transition-all duration-500`} style={{ width: `${levelData.progress}%` }}></div>
                     </div>
                   </div>
                   
-                  {/* স্ট্যাটাস এবং কুলডাউন */}
                   <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                     <div className="flex items-center gap-2">
                       <FaUsers className="text-gray-400 text-xs" />
-                      <span className="text-gray-500 text-xs">মোট রেফারেল</span>
+                      <span className="text-gray-500 text-xs">ডিপোজিটর রেফারেল</span>
                     </div>
                     <div className="flex items-center gap-2">
                       {showCooldown ? (
@@ -575,14 +557,13 @@ const SalaryBonus = () => {
                         </span>
                       ) : (
                         <span className="flex items-center gap-1 text-gray-400 text-xs">
-                          <FaUsers size={10} />
-                          {levelData.required - levelData.current} বাকি
+                          <FaMoneyBillWave size={10} />
+                          {levelData.required - levelData.current} ডিপোজিট বাকি
                         </span>
                       )}
                     </div>
                   </div>
                   
-                  {/* ক্লেইম বাটন */}
                   <button
                     onClick={() => claimBonus(level.id)}
                     disabled={!canClaim || claiming}
@@ -593,29 +574,16 @@ const SalaryBonus = () => {
                     }`}
                   >
                     {isClaimingNow ? (
-                      <>
-                        <FaSpinner className="animate-spin" />
-                        ক্লেইম হচ্ছে...
-                      </>
+                      <><FaSpinner className="animate-spin" /> ক্লেইম হচ্ছে...</>
                     ) : showCooldown ? (
-                      <>
-                        <FaClock size={14} />
-                        {remainingDays} দিন পর ক্লেইম করুন
-                      </>
+                      <><FaClock size={14} /> {remainingDays} দিন পর ক্লেইম করুন</>
                     ) : levelData.completed ? (
-                      <>
-                        <FaGift size={14} />
-                        বোনাস ক্লেইম করুন
-                      </>
+                      <><FaGift size={14} /> বোনাস ক্লেইম করুন</>
                     ) : (
-                      <>
-                        <FaUsers size={14} />
-                        {levelData.required - levelData.current} জন বাকি
-                      </>
+                      <><FaMoneyBillWave size={14} /> {levelData.required - levelData.current} জন ডিপোজিট বাকি</>
                     )}
                   </button>
                   
-                  {/* কুলডাউন তথ্য */}
                   {levelData.alreadyClaimed && levelData.lastClaimed && (
                     <div className="text-center pt-2">
                       <p className="text-gray-400 text-[9px] flex items-center justify-center gap-1">
@@ -630,7 +598,6 @@ const SalaryBonus = () => {
           })}
         </div>
 
-        {/* নির্দেশিকা */}
         <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 mt-5">
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -639,19 +606,18 @@ const SalaryBonus = () => {
             <div>
               <h3 className="text-blue-800 font-semibold text-sm mb-1">সেলারি বোনাস নির্দেশিকা</h3>
               <ul className="text-blue-700 text-[10px] space-y-1">
-                <li>✓ Level 1: ১০ জন ডাইরেক্ট রেফারেল → ৳২৫০ (প্রতি ৭ দিনে)</li>
-                <li>✓ Level 2: ৩০ জন সেকেন্ড লেভেল রেফারেল → ৳৮০০ (প্রতি ১৫ দিনে)</li>
-                <li>✓ Level 3: ৫০ জন থার্ড লেভেল রেফারেল → ৳১৫০০ (প্রতি ৩০ দিনে)</li>
-                <li>✓ Level 4: ১০০ জন ফোর্থ লেভেল রেফারেল → ৳৪০০০ (প্রতি ৩০ দিনে)</li>
-                <li>✓ Level 5: ২০০ জন ফিফথ লেভেল রেফারেল → ৳১০০০০ (প্রতি ৩০ দিনে)</li>
+                <li>✓ <span className="font-semibold">Level 1:</span> ১০ জন ডাইরেক্ট (ডিপোজিটর) → ৳২৫০ </li>
+                <li>✓ <span className="font-semibold">Level 2:</span> ৩০ জন সেকেন্ড লেভেল (ডিপোজিটর) → ৳৮০০ </li>
+                <li>✓ <span className="font-semibold">Level 3:</span> ৫০ জন থার্ড লেভেল (ডিপোজিটর) → ৳১৫০০ </li>
+                <li>✓ <span className="font-semibold">Level 4:</span> ১০০ জন ফোর্থ লেভেল (ডিপোজিটর) → ৳৪০০০ </li>
+                <li>✓ <span className="font-semibold">Level 5:</span> ২০০ জন ফিফথ লেভেল (ডিপোজিটর) → ৳১০০০০</li>
+                <li>✓ <span className="font-semibold text-orange-600">গুরুত্বপূর্ণ:</span> শুধুমাত্র যারা ডিপোজিট করেছেন তারাই রেফারেল হিসেবে গণ্য হবেন</li>
                 <li>✓ প্রতিটি লেভেল নির্ধারিত সময় পরপর ক্লেইম করা যাবে</li>
-                <li>✓ বোনাস সরাসরি আপনার ব্যালেন্সে যোগ হবে</li>
               </ul>
             </div>
           </div>
         </div>
 
-        {/* ফুটার */}
         <div className="text-center mt-6 pt-4 border-t border-green-100">
           <div className="flex justify-center gap-2 mb-1">
             <FaLeaf className="text-green-400 text-xs" />

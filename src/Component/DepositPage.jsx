@@ -1,16 +1,16 @@
 // components/DepositPage.jsx - আপডেটেড ভার্সন (টাইমআউট বন্ধের সুবিধা সহ)
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import useUser from "../hooks/useUsers";
-import { 
-  FaCopy, 
-  FaCheck, 
-  FaWallet, 
-  FaMobileAlt, 
-  FaArrowLeft, 
-  FaClock, 
-  FaShieldAlt, 
+import {
+  FaCopy,
+  FaCheck,
+  FaWallet,
+  FaMobileAlt,
+  FaArrowLeft,
+  FaClock,
+  FaShieldAlt,
   FaExclamationTriangle,
   FaInfoCircle,
   FaSpinner,
@@ -40,36 +40,36 @@ const DepositPage = () => {
     if (location.state?.amount) {
       setAmount(location.state.amount.toString());
     }
-    
+
     checkPendingTransaction();
     loadLastSubmissionTime();
-    
+
     // টাইমার ইন্টারভাল
     const interval = setInterval(() => {
       if (lastSubmissionTime) {
         updateRemainingTime(lastSubmissionTime);
       }
     }, 1000);
-    
+
     return () => clearInterval(interval);
   }, [location, user]);
 
   // পেন্ডিং ট্রানজেকশন চেক করা
   const checkPendingTransaction = async () => {
     if (!user?._id) return;
-    
+
     try {
       setCheckingStatus(true);
       const res = await fetch(`https://investify-backend.vercel.app/api/transactions/user/${user._id}`);
       const data = await res.json();
-      
+
       if (data.success && data.transactions) {
         const pendingTransactions = data.transactions.filter(t => t.status === "pending");
-        
+
         if (pendingTransactions.length > 0) {
           const latestPending = pendingTransactions[0];
           const submitTime = localStorage.getItem(`last_deposit_${user._id}`);
-          
+
           if (submitTime) {
             setLastSubmissionTime(parseInt(submitTime));
             updateRemainingTime(parseInt(submitTime));
@@ -123,14 +123,14 @@ const DepositPage = () => {
   // ট্রানজেকশন স্ট্যাটাস চেক করে টাইমার রিসেট করা
   const checkAndResetTimer = async () => {
     if (!user?._id) return;
-    
+
     try {
       const res = await fetch(`https://investify-backend.vercel.app/api/transactions/user/${user._id}`);
       const data = await res.json();
-      
+
       if (data.success && data.transactions) {
         const pendingTransactions = data.transactions.filter(t => t.status === "pending");
-        
+
         // যদি কোনো পেন্ডিং ট্রানজেকশন না থাকে, টাইমার রিসেট
         if (pendingTransactions.length === 0) {
           clearTimer();
@@ -212,7 +212,7 @@ const DepositPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!canSubmitAgain()) {
       Swal.fire({
         title: "অপেক্ষা করুন!",
@@ -285,7 +285,7 @@ const DepositPage = () => {
     }
 
     setSubmitting(true);
-    
+
     try {
       const res = await fetch("https://investify-backend.vercel.app/api/transactions/create", {
         method: "POST",
@@ -300,7 +300,7 @@ const DepositPage = () => {
           status: "pending"
         })
       });
-      
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
@@ -338,7 +338,7 @@ const DepositPage = () => {
       });
 
       setTransactionId("");
-      
+
     } catch (error) {
       Swal.fire({
         title: "ডিপোজিট ব্যর্থ!",
@@ -409,30 +409,31 @@ const DepositPage = () => {
             <p className="text-orange-600 font-bold text-2xl text-center mt-2">
               {formatTime(remainingSeconds)}
             </p>
-            <button
-              onClick={checkAndResetTimer}
-              className="w-full mt-3 py-1.5 bg-orange-600 text-white rounded-lg text-xs font-medium flex items-center justify-center gap-2"
-            >
-              <FaSyncAlt size={10} />
-              স্ট্যাটাস চেক করুন
-            </button>
+            <Link to={"/transition_history"}>
+              <button
+                onClick={checkAndResetTimer}
+                className="w-full mt-3 py-1.5 bg-orange-600 text-white rounded-lg text-xs font-medium flex items-center justify-center gap-2"
+              >
+                <FaSyncAlt size={10} />
+                স্ট্যাটাস চেক করুন
+              </button>
+            </Link>
           </div>
         )}
 
         {/* মেইন কার্ড */}
         <div className="bg-white rounded-xl shadow-md border border-green-100 p-4 mb-4">
-          
+
           {/* মেথড সিলেক্ট */}
           <div className="flex gap-3 mb-4">
             {Object.keys(methods).map((key) => (
               <button
                 key={key}
                 onClick={() => !isSubmitDisabled && setSelectedMethod(key)}
-                className={`flex-1 py-2 rounded-lg border flex items-center justify-center gap-2 transition ${
-                  selectedMethod === key 
-                    ? "border-green-600 bg-green-50 shadow-sm" 
+                className={`flex-1 py-2 rounded-lg border flex items-center justify-center gap-2 transition ${selectedMethod === key
+                    ? "border-green-600 bg-green-50 shadow-sm"
                     : "border-gray-200"
-                } ${isSubmitDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                  } ${isSubmitDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                 disabled={isSubmitDisabled}
               >
                 <img
@@ -513,15 +514,14 @@ const DepositPage = () => {
                 {currentMethod.name} অ্যাপ থেকে প্রাপ্ত ট্রানজেকশন আইডি
               </p>
             </div>
-            
+
             <button
               type="submit"
               disabled={isSubmitDisabled}
-              className={`w-full py-2.5 rounded-lg font-medium text-sm transition active:scale-95 flex items-center justify-center gap-2 ${
-                isSubmitDisabled
-                  ? "bg-gray-300 cursor-not-allowed" 
+              className={`w-full py-2.5 rounded-lg font-medium text-sm transition active:scale-95 flex items-center justify-center gap-2 ${isSubmitDisabled
+                  ? "bg-gray-300 cursor-not-allowed"
                   : "bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:shadow-md"
-              }`}
+                }`}
             >
               {submitting ? (
                 <>

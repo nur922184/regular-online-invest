@@ -1,31 +1,28 @@
-// ProductList.jsx - Professional Green Theme with Modal
+// ProductList.jsx - আপডেটেড ভার্সন (ফ্রি প্রোডাক্ট সবার উপরে)
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
-  FaFire,
-  FaGift,
-  FaCheckCircle,
-  FaTimes,
-  FaShoppingCart,
   FaLeaf,
   FaSeedling,
   FaTractor,
   FaSpinner,
   FaClock,
   FaChartLine,
-  FaWallet,
-  FaInfoCircle,
-  FaArrowRight
+  FaArrowRight,
+  FaGift,
+  FaCheckCircle,
+  FaCrown
 } from "react-icons/fa";
-import { FaBangladeshiTakaSign } from "react-icons/fa6";
 
 const ProductList = ({ user, onUserUpdate }) => {
   const navigate = useNavigate();
 
   const [products, setProducts] = useState([]);
+  const [freeProduct, setFreeProduct] = useState(null);
+  const [paidProducts, setPaidProducts] = useState([]);
   const [visibleProducts, setVisibleProducts] = useState([]);
-  const [claimedBonus, setClaimedBonus] = useState(false);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -33,6 +30,7 @@ const ProductList = ({ user, onUserUpdate }) => {
   const [processing, setProcessing] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [hasClaimedFreeProduct, setHasClaimedFreeProduct] = useState(false);
 
   const loaderRef = useRef(null);
   const productsPerPage = 5;
@@ -40,7 +38,33 @@ const ProductList = ({ user, onUserUpdate }) => {
   const userId = user?._id;
   const balance = user?.balance || 0;
 
-  // পণ্য লোড
+  // চেক করা ইউজার আগে ফ্রি প্রোডাক্ট নিয়েছে কিনা
+  useEffect(() => {
+    const checkFreeProductClaimed = async () => {
+      if (!userId) return;
+      
+      try {
+        const res = await fetch(
+          `https://investify-backend.vercel.app/api/investments/user/${userId}`
+        );
+        const data = await res.json();
+        
+        if (data.success && data.investments) {
+          // ফ্রি টাইপের বিনিয়োগ আছে কিনা চেক করা
+          const hasFree = data.investments.some(
+            (inv) => inv.productType === "free" || inv.amount === 0
+          );
+          setHasClaimedFreeProduct(hasFree);
+        }
+      } catch (error) {
+        console.error("ফ্রি প্রোডাক্ট চেক করতে সমস্যা:", error);
+      }
+    };
+    
+    checkFreeProductClaimed();
+  }, [userId]);
+
+  // API থেকে সকল পণ্য লোড করা
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -51,21 +75,26 @@ const ProductList = ({ user, onUserUpdate }) => {
         );
         const data = await res.json();
 
-        const list = (data.products || data.data || data || []).map((p) => ({
+        // API থেকে পাওয়া সকল পণ্য নেওয়া
+        let list = (data.products || data.data || data || []).map((p) => ({
           ...p,
           id: p._id || p.id,
         }));
 
-        const sorted = list.sort((a, b) => a.price - b.price);
+        // ফ্রি প্রোডাক্ট আলাদা করা
+        const free = list.find(p => p.type === "free") || null;
+        const paid = list.filter(p => p.type !== "free").sort((a, b) => a.price - b.price);
 
-        setProducts(sorted);
-        setVisibleProducts(sorted.slice(0, productsPerPage));
-        setHasMore(sorted.length > productsPerPage);
-      } catch {
+        setFreeProduct(free);
+        setPaidProducts(paid);
+        setVisibleProducts(paid.slice(0, productsPerPage));
+        setHasMore(paid.length > productsPerPage);
+      } catch (error) {
+        console.error("পণ্য লোড করতে সমস্যা:", error);
         Swal.fire({
           icon: "error",
           title: "ত্রুটি",
-          text: "পণ্য লোড করা যায়নি",
+          text: "পণ্য লোড করা যায়নি। ইন্টারনেট সংযোগ চেক করুন।",
           confirmButtonColor: "#16a34a"
         });
       } finally {
@@ -76,17 +105,7 @@ const ProductList = ({ user, onUserUpdate }) => {
     fetchProducts();
   }, []);
 
-  // বোনাস স্ট্যাটাস
-  useEffect(() => {
-    if (!userId) return;
-
-    fetch(`https://investify-backend.vercel.app/api/bonus/status/${userId}`)
-      .then((res) => res.json())
-      .then((data) => setClaimedBonus(data.claimed === true))
-      .catch(() => { });
-  }, [userId]);
-
-  // ইনফিনিটি স্ক্রল
+  // ইনফিনিটি স্ক্রল এর জন্য লোড মোর (পেইড প্রোডাক্টের জন্য)
   const loadMore = useCallback(() => {
     if (loading || !hasMore) return;
 
@@ -94,17 +113,17 @@ const ProductList = ({ user, onUserUpdate }) => {
 
     setTimeout(() => {
       const start = page * productsPerPage;
-      const more = products.slice(start, start + productsPerPage);
+      const more = paidProducts.slice(start, start + productsPerPage);
 
       if (more.length) {
         setVisibleProducts((prev) => [...prev, ...more]);
         setPage((p) => p + 1);
       }
 
-      setHasMore(start + productsPerPage < products.length);
+      setHasMore(start + productsPerPage < paidProducts.length);
       setLoading(false);
     }, 300);
-  }, [page, products, hasMore, loading]);
+  }, [page, paidProducts, hasMore, loading]);
 
   useEffect(() => {
     if (!loaderRef.current || isFetchingProducts) return;
@@ -120,6 +139,16 @@ const ProductList = ({ user, onUserUpdate }) => {
 
   // মডাল খোলা
   const openModal = (product) => {
+    // ফ্রি প্রোডাক্ট এবং আগেই নিয়ে থাকলে অ্যালার্ট দেখানো
+    if (product.type === "free" && hasClaimedFreeProduct) {
+      Swal.fire({
+        icon: "info",
+        title: "ইতিমধ্যে নিয়েছেন!",
+        text: "আপনি বিআইপি প্যাকেজটি ইতিমধ্যে নিয়ে ফেলেছেন। প্রতিটি ইউজার শুধুমাত্র একবার এই প্যাকেজ নিতে পারবেন।",
+        confirmButtonColor: "#16a34a"
+      });
+      return;
+    }
     setSelectedProduct(product);
     setIsModalOpen(true);
   };
@@ -130,10 +159,7 @@ const ProductList = ({ user, onUserUpdate }) => {
     setSelectedProduct(null);
   };
 
-  // পণ্য কেনা
-  // ProductList.jsx - আপডেটেড ভার্সন (শুধু গুরুত্বপূর্ণ অংশ)
-
-  // পণ্য কেনা ফাংশন - আপডেটেড
+  // পণ্য কেনার ফাংশন (ফ্রি ও পেইড একই API ব্যবহার করবে)
   const handlePurchase = async (product) => {
     if (!userId) {
       closeModal();
@@ -149,7 +175,8 @@ const ProductList = ({ user, onUserUpdate }) => {
     setProcessing(true);
 
     try {
-      if (balance < product.price) {
+      // ফ্রি প্রোডাক্টের জন্য ব্যালেন্স চেক করা হবে না
+      if (product.type !== "free" && balance < product.price) {
         closeModal();
         return Swal.fire({
           icon: "error",
@@ -159,18 +186,16 @@ const ProductList = ({ user, onUserUpdate }) => {
         });
       }
 
-      // ✅ সঠিক ডাটা পাঠানো হচ্ছে
       const requestBody = {
         userId: userId,
         productId: product._id,
-        productName: product.name,  // ✅ productName যোগ করা হয়েছে
-        amount: product.price,
+        productName: product.name,
+        amount: product.type === "free" ? 0 : product.price,
         dailyIncome: product.dailyIncome,
         duration: product.duration,
         totalIncome: product.totalIncome,
+        productType: product.type === "free" ? "free" : "paid"
       };
-
-      console.log("Sending request:", requestBody); // ডিবাগের জন্য
 
       const res = await fetch(
         "https://investify-backend.vercel.app/api/investments/create",
@@ -193,15 +218,19 @@ const ProductList = ({ user, onUserUpdate }) => {
       if (data.success) {
         closeModal();
 
-        // ইউজার আপডেট
+        // ফ্রি প্রোডাক্ট নিলে সেটা রেকর্ড করে রাখা
+        if (product.type === "free") {
+          setHasClaimedFreeProduct(true);
+        }
+
         if (onUserUpdate && data.newBalance) {
           onUserUpdate({ ...user, balance: data.newBalance });
         }
 
         Swal.fire({
           icon: "success",
-          title: "অভিনন্দন! 🎉",
-          text: data.message || "বিনিয়োগ সফল হয়েছে",
+          title: product.type === "free" ? "অভিনন্দন! 🎁" : "অভিনন্দন! 🎉",
+          text: data.message || (product.type === "free" ? "বিআইপি প্যাকেজ সফলভাবে নেওয়া হয়েছে!" : "বিনিয়োগ সফল হয়েছে"),
           confirmButtonColor: "#16a34a",
           timer: 2000
         }).then(() => {
@@ -225,53 +254,7 @@ const ProductList = ({ user, onUserUpdate }) => {
     }
   };
 
-  // বোনাস ক্লেইম
-  const handleBonus = async () => {
-    if (!userId) return Swal.fire({
-      icon: "warning",
-      title: "লগইন করুন",
-      confirmButtonColor: "#16a34a"
-    });
-
-    if (claimedBonus) return Swal.fire({
-      icon: "info",
-      title: "ইতিমধ্যে ক্লেইম করা হয়েছে",
-      confirmButtonColor: "#16a34a"
-    });
-
-    try {
-      const res = await fetch(
-        "https://investify-backend.vercel.app/api/bonus/claim",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId,
-            bonusProductId: "bonus_mula",
-          }),
-        }
-      );
-
-      if (!res.ok) throw new Error();
-
-      setClaimedBonus(true);
-      Swal.fire({
-        icon: "success",
-        title: "অভিনন্দন! 🎁",
-        text: "বোনাস সফলভাবে ক্লেইম হয়েছে",
-        confirmButtonColor: "#16a34a"
-      });
-    } catch {
-      Swal.fire({
-        icon: "error",
-        title: "ত্রুটি",
-        text: "বোনাস ক্লেইম ব্যর্থ",
-        confirmButtonColor: "#ef4444"
-      });
-    }
-  };
-
-  // নম্বর ফরম্যাট
+  // নম্বর ফরম্যাট করার ফাংশন
   const formatNumber = (num) => {
     if (!num && num !== 0) return "০";
     return new Intl.NumberFormat("bn-BD").format(num);
@@ -292,88 +275,157 @@ const ProductList = ({ user, onUserUpdate }) => {
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
       <div className="max-w-md mx-auto px-4 py-2">
 
-        {/* বোনাস কার্ড */}
-        <div className="mb-3">
-          <div className="bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl overflow-hidden shadow-md">
-            <div className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <FaGift className="text-white text-2xl" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-white font-bold text-sm">ফ্রি বোনাস প্যাকেজ</h3>
-                  <p className="text-white/80 text-[10px]">৩৬৫ দিন • দৈনিক ৳৫</p>
-                  <p className="text-white font-bold text-xs mt-1">মোট আয়: ৳১,৮২৫</p>
-                </div>
-                <button
-                  onClick={handleBonus}
-                  disabled={claimedBonus}
-                  className={`px-4 py-2 rounded-lg font-semibold text-sm transition ${claimedBonus
-                    ? "bg-gray-500 text-white cursor-not-allowed"
-                    : "bg-white text-orange-600 hover:bg-gray-100"
-                    }`}
-                >
-                  {claimedBonus ? "ক্লেইম করা হয়েছে" : "ক্লেইম করুন"}
-                </button>
-              </div>
+        {/* ========== ফ্রি/বিআইপি প্রোডাক্ট সেকশন (সবার উপরে) ========== */}
+        {freeProduct && (
+          <div className="mb-6">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[11px] font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-md">
+                <FaCrown size={12} />
+                বিশেষ অফার
+              </span>
+              <span className="bg-gradient-to-r from-rose-500 to-pink-500 text-white text-[11px] font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-md">
+                <FaGift size={10} />
+                বিআইপি
+              </span>
             </div>
-          </div>
-        </div>
-        {/* হেডার */}
-        <div className="text-center mb-2">
-          <div className="flex items-center justify-center gap-2 mb-1">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl flex items-center justify-center">
-              <FaLeaf className="text-white text-xl" />
-            </div>
-            <h1 className="text-xl font-bold text-green-800">বিনিয়োগ প্যাকেজ</h1>
-          </div>
-        </div>
-
-        {/* পণ্য লিস্ট */}
-        <div className="space-y-4">
-          {visibleProducts.map((product) => (
+            
             <div
-              key={product._id}
-              onClick={() => openModal(product)}
-              className="bg-white rounded-xl shadow-md border border-green-100 overflow-hidden cursor-pointer hover:shadow-lg transition-all active:scale-[0.99]"
+              onClick={() => !hasClaimedFreeProduct && openModal(freeProduct)}
+              className={`bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl shadow-lg border-2 border-amber-400 overflow-hidden cursor-pointer transition-all ${
+                hasClaimedFreeProduct ? "opacity-75 cursor-not-allowed" : "active:scale-[0.99] hover:shadow-xl"
+              }`}
             >
-              <div className="flex">
+              <div className="flex relative">
+                {/* ফ্রি ব্যাজ */}
+                <div className="absolute left-2 top-2 z-10">
+                  <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-md">
+                    <FaGift size={8} />
+                    সম্পূর্ণ ফ্রি!
+                  </span>
+                </div>
+                
                 <img
-                  src={product.image}
-                  alt={product.name}
+                  src={freeProduct.image}
+                  alt={freeProduct.name}
                   className="w-28 h-28 object-cover"
                   onError={(e) => {
                     e.target.src = "https://i.ibb.co.com/JhvzjC8/1.jpg";
                   }}
                 />
                 <div className="flex-1 p-3">
-                  <h3 className="font-bold text-gray-800 text-sm mb-1">{product.name}</h3>
-                  <p className="text-green-600 font-bold text-sm"> ৳ মূল্য {formatNumber(product.price)}</p>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-gray-800 text-sm mb-1 flex items-center gap-1">
+                      <FaCrown className="text-amber-500 text-xs" />
+                      {freeProduct.name}
+                    </h3>
+                    {hasClaimedFreeProduct && (
+                      <span className="text-green-500 text-[10px] flex items-center gap-1 bg-green-50 px-2 py-0.5 rounded-full">
+                        <FaCheckCircle size={10} />
+                        প্রাপ্ত
+                      </span>
+                    )}
+                  </div>
+                  
+                  <p className="font-bold text-amber-600 text-sm">
+                    ফ্রি (বিআইপি অফার)
+                  </p>
+                  
                   <div className="flex items-center gap-3 mt-2 text-xs">
                     <span className="text-blue-500 flex items-center gap-1">
                       <FaClock size={10} />
-                      {product.duration}
+                      {freeProduct.duration}
                     </span>
                     <span className="text-green-500 flex items-center gap-1">
                       <FaChartLine size={10} />
-                      দৈনিক ৳{formatNumber(product.dailyIncome)}
+                      দৈনিক ৳{formatNumber(freeProduct.dailyIncome)}
                     </span>
                   </div>
                 </div>
               </div>
-              <div className="bg-green-50 px-3 py-2 border-t border-green-100">
+              
+              <div className="px-3 py-2 border-t border-amber-200 bg-gradient-to-r from-amber-100 to-orange-100">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-500">মোট আয়: <span className="text-purple-600 font-bold">৳ {formatNumber(product.totalIncome)}</span></span>
-                  <span className="text-green-100 text-sm flex items-center gap-1 bg-green-500 px-8 py-0.5 rounded-full">
-                    কিনুন
-                    <FaArrowRight size={10} />
+                  <span className="text-gray-600">
+                    মোট আয়: 
+                    <span className="font-bold text-amber-700">
+                      ৳ {formatNumber(freeProduct.totalIncome)}
+                    </span>
+                  </span>
+                  <span className={`text-sm flex items-center gap-1 px-4 py-0.5 rounded-full ${
+                    hasClaimedFreeProduct 
+                      ? "bg-gray-400 text-white cursor-not-allowed" 
+                      : "bg-gradient-to-r from-amber-500 to-orange-500 text-white"
+                  }`}>
+                    {hasClaimedFreeProduct ? "প্রাপ্ত" : "ফ্রি ক্লেইম করুন"}
+                    {!hasClaimedFreeProduct && <FaArrowRight size={10} />}
                   </span>
                 </div>
               </div>
             </div>
-          ))}
+          </div>
+        )}
 
-          {/* লোড মোর */}
+        {/* ========== বিনিয়োগ লিস্ট টাইটেল ========== */}
+        <div className="mb-3">
+          <h2 className="text-lg font-bold text-green-700 flex items-center gap-2">
+            <FaSeedling className="text-green-500" />
+            বিনিয়োগ লিস্ট
+            <span className="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+              {paidProducts.length} টি প্যাকেজ
+            </span>
+          </h2>
+          <div className="w-12 h-0.5 bg-green-500 rounded-full mt-1"></div>
+        </div>
+
+        {/* ========== পেইড পণ্যের তালিকা ========== */}
+        <div className="space-y-4">
+          {visibleProducts.map((product) => {
+            const isFree = product.type === "free";
+            
+            return (
+              <div
+                key={product._id}
+                onClick={() => openModal(product)}
+                className="bg-white rounded-xl shadow-md border border-green-100 overflow-hidden cursor-pointer hover:shadow-lg transition-all active:scale-[0.99]"
+              >
+                <div className="flex">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-28 h-28 object-cover"
+                    onError={(e) => {
+                      e.target.src = "https://i.ibb.co.com/JhvzjC8/1.jpg";
+                    }}
+                  />
+                  <div className="flex-1 p-3">
+                    <h3 className="font-bold text-gray-800 text-sm mb-1">{product.name}</h3>
+                    <p className="text-green-600 font-bold text-sm">মূল্য ৳ {formatNumber(product.price)}</p>
+                    <div className="flex items-center gap-3 mt-2 text-xs">
+                      <span className="text-blue-500 flex items-center gap-1">
+                        <FaClock size={10} />
+                        {product.duration}
+                      </span>
+                      <span className="text-green-500 flex items-center gap-1">
+                        <FaChartLine size={10} />
+                        দৈনিক ৳{formatNumber(product.dailyIncome)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-green-50 px-3 py-2 border-t border-green-100">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-gray-500">মোট আয়: <span className="text-purple-600 font-bold">৳ {formatNumber(product.totalIncome)}</span></span>
+                    <span className="bg-green-500 text-white text-sm flex items-center gap-1 px-4 py-0.5 rounded-full">
+                      কিনুন
+                      <FaArrowRight size={10} />
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* লোড মোর ইন্ডিকেটর */}
           <div ref={loaderRef} className="text-center py-3">
             {loading && (
               <div className="flex justify-center items-center gap-2">
@@ -384,16 +436,16 @@ const ProductList = ({ user, onUserUpdate }) => {
           </div>
         </div>
 
+        {/* পণ্য কেনার মডাল */}
         {isModalOpen && selectedProduct && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className={`w-full max-w-sm bg-white rounded-2xl shadow-xl p-4 animate-fadeIn ${
+              selectedProduct.type === "free" ? "ring-2 ring-amber-300" : ""
+            }`}>
 
-            {/* Modal Box */}
-            <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-4 animate-fadeIn">
-
-              {/* Header */}
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-gray-800">
-                  প্যাকেজ ডিটেইলস
+                  {selectedProduct.type === "free" ? "🎁 বিআইপি প্যাকেজ" : "প্যাকেজ ডিটেইলস"}
                 </h2>
                 <button
                   onClick={closeModal}
@@ -403,14 +455,12 @@ const ProductList = ({ user, onUserUpdate }) => {
                 </button>
               </div>
 
-              {/* Product Info */}
               <div className="flex items-center gap-3 mb-3">
                 <img
                   src={selectedProduct.image}
                   alt=""
                   className="w-14 h-14 rounded-xl object-cover border"
                 />
-
                 <div>
                   <h3 className="text-sm font-semibold text-gray-800">
                     {selectedProduct.name}
@@ -418,25 +468,27 @@ const ProductList = ({ user, onUserUpdate }) => {
                   <p className="text-xs text-gray-500">
                     ⏳ {selectedProduct.duration}
                   </p>
+                  {selectedProduct.type === "free" && (
+                    <span className="text-amber-600 text-[10px] font-bold bg-amber-50 px-2 py-0.5 rounded-full mt-1 inline-block">
+                      সম্পূর্ণ ফ্রি!
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* Info Grid */}
               <div className="grid grid-cols-3 gap-2 text-center mb-3">
-                <div className="bg-green-50 rounded-xl py-2">
+                <div className={`${selectedProduct.type === "free" ? "bg-amber-50" : "bg-green-50"} rounded-xl py-2`}>
                   <p className="text-[10px] text-gray-500">মূল্য</p>
-                  <p className="text-green-600 font-semibold text-sm">
-                    ৳{formatNumber(selectedProduct.price)}
+                  <p className={`font-semibold text-sm ${selectedProduct.type === "free" ? "text-amber-600" : "text-green-600"}`}>
+                    {selectedProduct.type === "free" ? "ফ্রি" : `৳${formatNumber(selectedProduct.price)}`}
                   </p>
                 </div>
-
                 <div className="bg-blue-50 rounded-xl py-2">
                   <p className="text-[10px] text-gray-500">দৈনিক</p>
                   <p className="text-blue-600 font-semibold text-sm">
                     ৳{formatNumber(selectedProduct.dailyIncome)}
                   </p>
                 </div>
-
                 <div className="bg-purple-50 rounded-xl py-2">
                   <p className="text-[10px] text-gray-500">মোট</p>
                   <p className="text-purple-600 font-semibold text-sm">
@@ -445,30 +497,43 @@ const ProductList = ({ user, onUserUpdate }) => {
                 </div>
               </div>
 
-              {/* Profit */}
-              <div className="flex justify-between items-center bg-amber-50 rounded-xl px-3 py-2 mb-4">
+              <div className={`flex justify-between items-center rounded-xl px-3 py-2 mb-4 ${
+                selectedProduct.type === "free" ? "bg-amber-50" : "bg-amber-50"
+              }`}>
                 <span className="text-xs text-gray-600">মোট লাভ</span>
                 <span className="text-green-600 font-bold text-sm">
-                  ৳{formatNumber(
-                    selectedProduct.totalIncome - selectedProduct.price
-                  )}
+                  ৳{formatNumber(selectedProduct.totalIncome - (selectedProduct.price || 0))}
                 </span>
               </div>
 
-              {/* Button */}
+              {selectedProduct.type === "free" && (
+                <div className="bg-blue-50 rounded-xl px-3 py-2 mb-4 text-center">
+                  <p className="text-xs text-blue-600">
+                    ⚡ শুধুমাত্র প্রথমবারের জন্য ফ্রি! একবার নিলেই দৈনিক আয় শুরু হবে।
+                  </p>
+                </div>
+              )}
+
               <button
                 onClick={() => handlePurchase(selectedProduct)}
                 disabled={processing}
-                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-2.5 rounded-xl text-sm font-semibold transition active:scale-95 disabled:opacity-50"
+                className={`w-full text-white py-2.5 rounded-xl text-sm font-semibold transition active:scale-95 disabled:opacity-50 ${
+                  selectedProduct.type === "free" 
+                    ? "bg-gradient-to-r from-amber-500 to-orange-600" 
+                    : "bg-gradient-to-r from-green-500 to-emerald-600"
+                }`}
               >
                 {processing
                   ? "প্রসেসিং..."
-                  : `৳${formatNumber(selectedProduct.price)} বিনিয়োগ করুন`}
+                  : selectedProduct.type === "free" 
+                    ? "🎁 ফ্রি প্যাকেজ নিন"
+                    : `৳${formatNumber(selectedProduct.price)} বিনিয়োগ করুন`}
               </button>
 
             </div>
           </div>
         )}
+
         {/* ফুটার */}
         <div className="text-center mt-6 pt-4 border-t border-green-100">
           <div className="flex justify-center gap-2 mb-1">
@@ -480,23 +545,6 @@ const ProductList = ({ user, onUserUpdate }) => {
         </div>
 
       </div>
-
-      {/* অ্যানিমেশন স্টাইল */}
-      <style>{`
-        @keyframes slideUp {
-          from {
-            transform: translateY(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-        .animate-slideUp {
-          animation: slideUp 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 };

@@ -301,9 +301,8 @@ const AddAccount = () => {
                 </span>
                 <input
                   name="accountName"
-                  value={formData.accountName}
+                  value="ব্যক্তিগত অ্যাকাউন্ট"
                   onChange={handleChange}
-                  placeholder="যেমন: ব্যক্তিগত অ্যাকাউন্ট"
                   className="w-full pl-9 pr-3 py-2.5 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm placeholder:text-green-300 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100"
                 />
               </div>
@@ -312,7 +311,7 @@ const AddAccount = () => {
             {/* হোল্ডার নাম */}
             <div className="mb-4">
               <label className="block text-green-800 text-sm font-semibold mb-2">
-                হোল্ডারের নাম
+                ব্যবহারকারীর নাম
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2">

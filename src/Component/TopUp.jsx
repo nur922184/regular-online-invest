@@ -13,7 +13,7 @@ const TopUp = () => {
   const navigate = useNavigate();
 
   const MINIMUM_AMOUNT = 400;
-  const quickAmounts = [400, 500, 1000, 2000, 5000, 10000];
+  const quickAmounts = [400, 700, 1500, 2500, 6000, 15000];
 
   // কুইক অ্যামাউন্ট ক্লিক করলে ফিল্ডে বসানো
   const handleAmountSelect = (amount) => {
@@ -225,7 +225,7 @@ const TopUp = () => {
             </div>
             <div className="flex items-start gap-1.5">
               <span className="text-green-500 text-xs">✓</span>
-              <p className="text-green-700 text-[10px]">রিচার্জ কমপ্লিট হতে ২-৩ মিনিট সময় লাগতে পারে</p>
+              <p className="text-green-700 text-[10px]">রিচার্জ কমপ্লিট হতে 1-60 মিনিট সময় লাগতে পারে</p>
             </div>
             <div className="flex items-start gap-1.5">
               <span className="text-green-500 text-xs">✓</span>
