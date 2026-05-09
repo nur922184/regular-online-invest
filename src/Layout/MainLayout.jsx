@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import Footer from "../Component/Footer";
 import MobileBottomNav from "../Component/MobileBottomNav";
+import TelegramNotice from "../Component/TelegramNotice";
 
 
 
@@ -20,6 +21,7 @@ const MainLayout = () => {
         <main className="flex-1 ">
           <Outlet />
         </main>
+        <TelegramNotice></TelegramNotice>
 
         {/* Footer */}
         <Footer />
