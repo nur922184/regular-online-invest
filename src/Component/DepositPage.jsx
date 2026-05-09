@@ -165,8 +165,8 @@ const DepositPage = () => {
       icon: "https://i.ibb.co.com/m5YqjDpS/image.png",
       minAmount: 400,
       maxAmount: 50000,
-      txnPattern: /^[0-9]{6,12}$/,
-      txnExample: "1234567890"
+      txnPattern: /^[A-Z0-9]{8,15}$/i,
+      txnExample: "8X7X6X5X"
     }
   };
 

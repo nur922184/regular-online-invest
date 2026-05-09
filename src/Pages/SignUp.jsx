@@ -128,7 +128,7 @@ const SignUp = () => {
         confirmButtonText: 'প্রোফাইলে যান',
         confirmButtonColor: '#059669',
         confirmButtonClass: 'px-6 py-2 rounded-lg',
-      }).then(() => navigate('/profile'));
+      }).then(() => navigate('/'));
 
     } catch (err) {
       setErrorMessage(err.response?.data?.message || "নিবন্ধন ব্যর্থ হয়েছে");

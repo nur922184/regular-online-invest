@@ -1,4 +1,4 @@
-// WithdrawPage.jsx - আপডেটেড (সাবমিট বাটনে ডিপোজিট চেক)
+// WithdrawPage.jsx - শুধু সাবমিট এ চেক করবে
 
 import React, { useEffect, useState, useRef } from "react";
 import Swal from "sweetalert2";
@@ -16,8 +16,7 @@ import {
   FaEye,
   FaEyeSlash,
   FaInfoCircle,
-  FaMoneyBill,
-  FaTimesCircle
+  FaMoneyBill
 } from "react-icons/fa";
 import { FaBangladeshiTakaSign } from "react-icons/fa6";
 import useUser from "../hooks/useUsers";
@@ -31,7 +30,11 @@ const WithdrawPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [checkingDeposit, setCheckingDeposit] = useState(false); // শুধু সাবমিট এ চেক করবে
+  const [checkingDeposit, setCheckingDeposit] = useState(false);
+  
+  // ✅ শুধু সাবমিট এর পর মেসেজ দেখানোর জন্য স্টেট
+  const [showDepositWarning, setShowDepositWarning] = useState(false);
+  const [showDepositSuccess, setShowDepositSuccess] = useState(false);
 
   const hasLoaded = useRef(false);
   const isMaxAccountReached = accounts.length >= 2;
@@ -41,22 +44,23 @@ const WithdrawPage = () => {
     password: ""
   });
 
-  // ✅ সার্ভিস চার্জ ১৩%
+  // সার্ভিস চার্জ ১৩%
   const AMOUNT = Number(form.amount) || 0;
   const SERVICE_CHARGE = AMOUNT * 0.13;
   const TOTAL_DEDUCTION = AMOUNT + SERVICE_CHARGE;
   const REMAINING_BALANCE = user?.balance - TOTAL_DEDUCTION;
 
-  // ✅ ডিপোজিট চেক করার ফাংশন (শুধু সাবমিট এ কল হবে)
+  // ✅ ডিপোজিট চেক করার ফাংশন
   const checkUserDeposit = async () => {
     try {
       const res = await fetch(`https://investify-backend.vercel.app/api/transactions/user/${user._id}`);
       const data = await res.json();
       const transactions = data?.transactions || [];
       
-      // চেক করা কোন অ্যাপ্রুভড ডিপোজিট আছে কিনা
-      const hasApprovedDeposit = transactions.some(t => t.type === "deposit" && t.status === "approved");
-      return hasApprovedDeposit;
+      // যেকোনো approved ট্রানজেকশন থাকলেই ডিপোজিট আছে ধরা হবে
+      const hasApproved = transactions.some(t => t.status === "approved");
+      
+      return hasApproved;
     } catch (error) {
       console.error("Error checking deposit:", error);
       return false;
@@ -127,6 +131,10 @@ const WithdrawPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // ✅ আগের মেসেজ ক্লিয়ার করা
+    setShowDepositWarning(false);
+    setShowDepositSuccess(false);
+
     if (!selectedAccount) {
       return Swal.fire("অ্যাকাউন্ট সিলেক্ট করুন", "", "warning");
     }
@@ -160,25 +168,30 @@ const WithdrawPage = () => {
         `,
         confirmButtonColor: "#ef4444"
       });
-      return;
     }
 
-    // ✅ সাবমিট বাটন টিপলে ডিপোজিট চেক করা হবে
+    // সাবমিট বাটন টিপলে ডিপোজিট চেক করা হবে
     setCheckingDeposit(true);
+    
     try {
       const hasDeposit = await checkUserDeposit();
       
       if (!hasDeposit) {
+        // ✅ ডিপোজিট না থাকলে ওয়ার্নিং মেসেজ দেখানো
+        setShowDepositWarning(true);
+        setShowDepositSuccess(false);
+        
         Swal.fire({
           icon: "warning",
           title: "প্রথমে ডিপোজিট করুন!",
           html: `
             <div class="text-center">
               <div class="text-6xl mb-3">💰</div>
-              <p class="text-gray-800 font-semibold mb-2">আপনি এখনো ডিপোজিট করেননি!</p>
-              <p class="text-sm text-gray-600">উত্তোলন করতে হলে আপনাকে <span class="font-bold text-green-600">অন্তত একবার ডিপোজিট</span> করতে হবে।</p>
+              <p class="text-gray-800 font-semibold mb-2">আপনার কোনো অনুমোদিত ডিপোজিট নেই!</p>
+              <p class="text-sm text-gray-600">উত্তোলন করতে হলে আপনাকে <span class="font-bold text-green-600">অন্তত একবার ডিপোজিট</span> করতে হবে এবং তা <span class="font-bold text-green-600">অনুমোদিত</span> হতে হবে।</p>
               <div class="bg-yellow-50 p-3 rounded-lg mt-3">
-                <p class="text-xs text-gray-600">ডিপোজিট করার পর আপনি উত্তোলন করতে পারবেন।</p>
+                <p class="text-xs text-gray-600">ডিপোজিট করার পর অ্যাডমিন অনুমোদন দিলে আপনি উত্তোলন করতে পারবেন।</p>
+                <p class="text-xs text-blue-600 mt-2">💡 টিপ: আপনার ডিপোজিট অনুমোদিত হতে 1-24 ঘন্টা সময় লাগতে পারে।</p>
               </div>
             </div>
           `,
@@ -194,6 +207,11 @@ const WithdrawPage = () => {
         setCheckingDeposit(false);
         return;
       }
+      
+      // ✅ ডিপোজিট থাকলে সাকসেস মেসেজ দেখানো
+      setShowDepositSuccess(true);
+      setShowDepositWarning(false);
+      
     } catch (error) {
       console.error("Error checking deposit:", error);
       Swal.fire("ত্রুটি!", "ডিপোজিট চেক করতে সমস্যা হয়েছে", "error");
@@ -201,7 +219,7 @@ const WithdrawPage = () => {
       return;
     }
 
-    // যদি ডিপোজিট থাকে তাহলে উত্তোলন প্রসেস চালিয়ে যাওয়া
+    // যদি ডিপোজিট থাকে তাহলে উত্তোলন প্রসেস
     try {
       setSubmitting(true);
 
@@ -256,16 +274,24 @@ const WithdrawPage = () => {
         refetchUser && refetchUser();
         navigate("/withdrawHistory");
       } else {
-        throw new Error(data.message);
+        throw new Error(data.message || "উত্তোলন রিকোয়েস্ট ব্যর্থ হয়েছে");
       }
     } catch (err) {
-      Swal.fire("ত্রুটি!", err.message, "error");
+      console.error("Withdraw error:", err);
+      const errorMessage = err.message || "উত্তোলন ব্যর্থ হয়েছে";
+      Swal.fire({
+        icon: "error",
+        title: "ত্রুটি!",
+        text: errorMessage,
+        confirmButtonColor: "#ef4444"
+      });
     } finally {
       setSubmitting(false);
       setCheckingDeposit(false);
     }
   };
 
+  // শুধু অ্যাকাউন্ট লোডিং দেখাবে
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center">
@@ -308,6 +334,41 @@ const WithdrawPage = () => {
             </div>
           </div>
         </div>
+
+        {/* ⚠️ ডিপোজিট ওয়ার্নিং - শুধু সাবমিট এর পর দেখাবে */}
+        {showDepositWarning && (
+          <div className="mb-5 bg-orange-50 border border-orange-200 rounded-xl p-4 animate-pulse">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <FaInfoCircle className="text-orange-500 text-sm" />
+              </div>
+              <div className="flex-1">
+                <p className="text-orange-800 text-sm font-semibold mb-1">⚠️ ডিপোজিট প্রয়োজন!</p>
+                <p className="text-orange-700 text-xs mb-2">
+                  উত্তোলন করতে হলে আপনাকে প্রথমে একটি ডিপোজিট করতে হবে এবং তা অনুমোদিত হতে হবে।
+                </p>
+                <button
+                  onClick={() => navigate("/topup")}
+                  className="bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition"
+                >
+                  এখনই ডিপোজিট করুন →
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ✅ ডিপোজিট আছে - সাকসেস মেসেজ - শুধু সাবমিট এর পর দেখাবে */}
+        {showDepositSuccess && (
+          <div className="mb-5 bg-green-50 border border-green-200 rounded-xl p-3 animate-pulse">
+            <div className="flex items-center gap-2">
+              <FaCheckCircle className="text-green-500 text-sm" />
+              <p className="text-green-700 text-xs font-medium">
+                ✅ আপনার একটি অনুমোদিত ডিপোজিট আছে। আপনি উত্তোলন করতে পারবেন।
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* অ্যাকাউন্ট সিলেক্ট */}
         <div className="mb-5">
@@ -449,11 +510,11 @@ const WithdrawPage = () => {
               </div>
             )}
 
-            {/* বাটন */}
+            {/* বাটন - সব সময় সক্রিয় থাকবে */}
             <button
               onClick={handleSubmit}
               disabled={submitting || checkingDeposit}
-              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-2.5 rounded-lg font-semibold text-sm transition-all active:scale-95 disabled:opacity-50 mb-3"
+              className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all active:scale-95 disabled:opacity-50 mb-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white`}
             >
               {submitting || checkingDeposit ? (
                 <div className="flex items-center justify-center gap-2">
@@ -468,10 +529,11 @@ const WithdrawPage = () => {
             <Link to={isMaxAccountReached ? "#" : "/add_account"}>
               <button
                 disabled={isMaxAccountReached}
-                className={`w-full py-2 rounded-lg font-medium text-sm transition ${isMaxAccountReached
+                className={`w-full py-2 rounded-lg font-medium text-sm transition ${
+                  isMaxAccountReached
                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                     : "bg-orange-500 hover:bg-orange-600 text-white"
-                  }`}
+                }`}
               >
                 + নতুন অ্যাকাউন্ট যোগ করুন
               </button>
@@ -480,16 +542,24 @@ const WithdrawPage = () => {
         )}
 
         {/* তথ্য বক্স */}
-        <div className="bg-green-100 rounded-lg p-3">
+        <div className="bg-green-100 rounded-lg p-4">
           <div className="flex items-start gap-2">
             <FaCheckCircle className="text-green-600 text-sm mt-0.5" />
             <div>
-              <p className="text-green-800 text-xs font-semibold mb-1">উত্তোলন নির্দেশিকা</p>
-              <p className="text-green-700 text-[10px]">• ন্যূনতম উত্তোলন: ২০০ টাকা</p>
-              <p className="text-green-700 text-[10px]">• সার্ভিস চার্জ: <span className="font-bold">১৩%</span></p>
-              <p className="text-green-700 text-[10px]">• <span className="font-bold text-orange-600">ডিপোজিটের পরেই উত্তোলন করা যাবে</span></p>
-              <p className="text-green-700 text-[10px]">• 1-24 ঘন্টার মধ্যে টাকা পাঠানো হবে</p>
-              <p className="text-green-700 text-[10px]">• উত্তোলন + ১৩% চার্জ = মোট কাটা হবে</p>
+              <p className="text-green-800 text-sm font-semibold mb-2">উত্তোলন নির্দেশিকা</p>
+              <div className="space-y-1 text-green-700 text-[11px]">
+                <p>• ন্যূনতম উত্তোলন: <span className="font-bold">২০০ টাকা</span></p>
+                <p>• সার্ভিস চার্জ: <span className="font-bold text-orange-600">১৩%</span></p>
+                <p className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                  <span><span className="font-bold text-green-800">ডিপোজিটের পরেই</span> উত্তোলন করা যাবে</span>
+                </p>
+                <p>• অনুমোদিত হতে <span className="font-bold">1-24 ঘন্টা</span> সময় লাগতে পারে</p>
+                <p>• উত্তোলন + ১৩% চার্জ = মোট কাটা হবে</p>
+                <p className="text-blue-600 text-[10px] mt-2 pt-1 border-t border-green-200">
+                  💡 টিপ: দ্রুত অনুমোদনের জন্য সঠিক তথ্য দিন
+                </p>
+              </div>
             </div>
           </div>
         </div>
