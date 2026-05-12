@@ -31,7 +31,7 @@ const WithdrawPage = () => {
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [checkingDeposit, setCheckingDeposit] = useState(false);
-  
+
   // ✅ শুধু সাবমিট এর পর মেসেজ দেখানোর জন্য স্টেট
   const [showDepositWarning, setShowDepositWarning] = useState(false);
   const [showDepositSuccess, setShowDepositSuccess] = useState(false);
@@ -56,10 +56,10 @@ const WithdrawPage = () => {
       const res = await fetch(`https://investify-backend.vercel.app/api/transactions/user/${user._id}`);
       const data = await res.json();
       const transactions = data?.transactions || [];
-      
+
       // যেকোনো approved ট্রানজেকশন থাকলেই ডিপোজিট আছে ধরা হবে
       const hasApproved = transactions.some(t => t.status === "approved");
-      
+
       return hasApproved;
     } catch (error) {
       console.error("Error checking deposit:", error);
@@ -172,15 +172,15 @@ const WithdrawPage = () => {
 
     // সাবমিট বাটন টিপলে ডিপোজিট চেক করা হবে
     setCheckingDeposit(true);
-    
+
     try {
       const hasDeposit = await checkUserDeposit();
-      
+
       if (!hasDeposit) {
         // ✅ ডিপোজিট না থাকলে ওয়ার্নিং মেসেজ দেখানো
         setShowDepositWarning(true);
         setShowDepositSuccess(false);
-        
+
         Swal.fire({
           icon: "warning",
           title: "প্রথমে ডিপোজিট করুন!",
@@ -207,11 +207,11 @@ const WithdrawPage = () => {
         setCheckingDeposit(false);
         return;
       }
-      
+
       // ✅ ডিপোজিট থাকলে সাকসেস মেসেজ দেখানো
       setShowDepositSuccess(true);
       setShowDepositWarning(false);
-      
+
     } catch (error) {
       console.error("Error checking deposit:", error);
       Swal.fire("ত্রুটি!", "ডিপোজিট চেক করতে সমস্যা হয়েছে", "error");
@@ -392,14 +392,14 @@ const WithdrawPage = () => {
                   key={account._id}
                   onClick={() => handleAccountSelect(account)}
                   className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${selectedAccount?._id === account._id
-                      ? "border-green-500 bg-green-50 shadow-md"
-                      : "border-gray-200 bg-white hover:border-green-300"
+                    ? "border-green-500 bg-green-50 shadow-md"
+                    : "border-gray-200 bg-white hover:border-green-300"
                     }`}
                 >
                   <div className="text-center">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 ${selectedAccount?._id === account._id
-                        ? "bg-green-100"
-                        : "bg-gray-50"
+                      ? "bg-green-100"
+                      : "bg-gray-50"
                       }`}>
                       {getAccountIcon(account.accountType)}
                     </div>
@@ -529,11 +529,10 @@ const WithdrawPage = () => {
             <Link to={isMaxAccountReached ? "#" : "/add_account"}>
               <button
                 disabled={isMaxAccountReached}
-                className={`w-full py-2 rounded-lg font-medium text-sm transition ${
-                  isMaxAccountReached
+                className={`w-full py-2 rounded-lg font-medium text-sm transition ${isMaxAccountReached
                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                     : "bg-orange-500 hover:bg-orange-600 text-white"
-                }`}
+                  }`}
               >
                 + নতুন অ্যাকাউন্ট যোগ করুন
               </button>
@@ -545,19 +544,61 @@ const WithdrawPage = () => {
         <div className="bg-green-100 rounded-lg p-4">
           <div className="flex items-start gap-2">
             <FaCheckCircle className="text-green-600 text-sm mt-0.5" />
+
             <div>
-              <p className="text-green-800 text-sm font-semibold mb-2">উত্তোলন নির্দেশিকা</p>
+              <p className="text-green-800 text-sm font-semibold mb-2">
+                উত্তোলন নির্দেশিকা
+              </p>
+
               <div className="space-y-1 text-green-700 text-[11px]">
-                <p>• ন্যূনতম উত্তোলন: <span className="font-bold">২০০ টাকা</span></p>
-                <p>• সার্ভিস চার্জ: <span className="font-bold text-orange-600">১৩%</span></p>
+                <p>
+                  • নগদ উত্তোলনের জন্য আগে{" "}
+                  <span className="font-bold"> ব্যাংক অ্যাকাউন্ট</span> যুক্ত করতে হবে
+                </p>
+
+                <p>
+                  • সর্বনিম্ন উত্তোলন:{" "}
+                  <span className="font-bold">২০০ টাকা</span>
+                </p>
+
+                <p>
+                  • সঠিক ব্যাংক/ওয়ালেট নম্বর দিন এবং{" "}
+                  <span className="font-bold text-red-600">কোনও স্পেস ব্যবহার করবেন না</span>
+                </p>
+
                 <p className="flex items-center gap-1">
                   <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                  <span><span className="font-bold text-green-800">ডিপোজিটের পরেই</span> উত্তোলন করা যাবে</span>
+                  <span>
+                    <span className="font-bold text-green-800">
+                      ডিপোজিটের পরেই
+                    </span>{" "}
+                    উত্তোলন করা যাবে
+                  </span>
                 </p>
-                <p>• অনুমোদিত হতে <span className="font-bold">1-24 ঘন্টা</span> সময় লাগতে পারে</p>
-                <p>• উত্তোলন + ১৩% চার্জ = মোট কাটা হবে</p>
+
+                <p>
+                  • উত্তোলনের সময়:{" "}
+                  <span className="font-bold">
+                    সোম–শুক্র সকাল ৯টা – বিকেল ৫টা
+                  </span>
+                </p>
+
+                <p>
+                  • লেনদেন সম্পন্ন হতে{" "}
+                  <span className="font-bold">০–২৪ ঘণ্টা</span> সময় লাগতে পারে
+                </p>
+
+                <p>
+                  • সার্ভিস চার্জ / কর:{" "}
+                  <span className="font-bold text-orange-600">১৩%</span>
+                </p>
+
+                <p>
+                  • উত্তোলন + ১৩% চার্জ = মোট ব্যালেন্স থেকে কাটা হবে
+                </p>
+
                 <p className="text-blue-600 text-[10px] mt-2 pt-1 border-t border-green-200">
-                  💡 টিপ: দ্রুত অনুমোদনের জন্য সঠিক তথ্য দিন
+                  💡 টিপ: দ্রুত অনুমোদনের জন্য সঠিক তথ্য প্রদান করুন
                 </p>
               </div>
             </div>

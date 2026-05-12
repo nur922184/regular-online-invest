@@ -258,7 +258,7 @@ const WithdrawHistory = () => {
                     </div>
                     {item.serviceCharge && (
                       <div className="flex justify-between">
-                        <span className="text-gray-500">সার্ভিস চার্জ (৫%):</span>
+                        <span className="text-gray-500">সার্ভিস চার্জ (13%):</span>
                         <span className="text-yellow-600">৳ {item.serviceCharge?.toFixed(2)}</span>
                       </div>
                     )}
