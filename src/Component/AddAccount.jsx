@@ -30,7 +30,7 @@ const AddAccount = () => {
 
   const [formData, setFormData] = useState({
     accountType: "bkash",
-    accountName: "",
+    accountName: "ব্যক্তিগত অ্যাকাউন্ট", // সরাসরি সেট করে দেওয়া হয়েছে
     accountNumber: "",
     holderName: ""
   });
@@ -59,15 +59,19 @@ const AddAccount = () => {
 
     checkAccountCount();
   }, [user]);
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    // accountName যেন পরিবর্তন না হয় সেদিকে খেয়াল রাখা হয়েছে
+    if (name === "accountName") return;
+    setFormData({ ...formData, [name]: value });
   };
 
   // ভ্যালিডেশন
   const validate = () => {
-    const { accountName, accountNumber, holderName } = formData;
+    const { accountNumber, holderName } = formData;
 
-    if (!accountName || !accountNumber || !holderName) {
+    if (!accountNumber || !holderName) {
       Swal.fire("ত্রুটি!", "সব তথ্য পূরণ করুন", "warning");
       return false;
     }
@@ -257,10 +261,11 @@ const AddAccount = () => {
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, accountType: "bkash" })}
-                  className={`p-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${formData.accountType === "bkash"
+                  className={`p-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${
+                    formData.accountType === "bkash"
                       ? "border-green-500 bg-green-50"
                       : "border-gray-200 bg-white hover:border-green-300"
-                    }`}
+                  }`}
                 >
                   <FaBangladeshiTakaSign className={`text-xl ${formData.accountType === "bkash" ? "text-pink-500" : "text-gray-400"}`} />
                   <span className={`font-medium ${formData.accountType === "bkash" ? "text-green-700" : "text-gray-600"}`}>
@@ -274,10 +279,11 @@ const AddAccount = () => {
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, accountType: "nagad" })}
-                  className={`p-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${formData.accountType === "nagad"
+                  className={`p-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${
+                    formData.accountType === "nagad"
                       ? "border-green-500 bg-green-50"
                       : "border-gray-200 bg-white hover:border-green-300"
-                    }`}
+                  }`}
                 >
                   <FaBangladeshiTakaSign className={`text-xl ${formData.accountType === "nagad" ? "text-orange-500" : "text-gray-400"}`} />
                   <span className={`font-medium ${formData.accountType === "nagad" ? "text-green-700" : "text-gray-600"}`}>
@@ -290,7 +296,7 @@ const AddAccount = () => {
               </div>
             </div>
 
-            {/* অ্যাকাউন্ট নাম */}
+            {/* অ্যাকাউন্ট নাম - শুধুমাত্র পঠনযোগ্য (readonly) */}
             <div className="mb-4">
               <label className="block text-green-800 text-sm font-semibold mb-2">
                 অ্যাকাউন্ট নাম
@@ -301,9 +307,9 @@ const AddAccount = () => {
                 </span>
                 <input
                   name="accountName"
-                  value="ব্যক্তিগত অ্যাকাউন্ট"
-                  onChange={handleChange}
-                  className="w-full pl-9 pr-3 py-2.5 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm placeholder:text-green-300 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100"
+                  value={formData.accountName}
+                  readOnly
+                  className="w-full pl-9 pr-3 py-2.5 bg-gray-100 border border-gray-200 rounded-lg text-gray-600 text-sm cursor-not-allowed"
                 />
               </div>
             </div>
