@@ -1,4 +1,4 @@
-// MyInvestments.jsx - Professional Green Theme with 24h Timer
+// MyInvestments.jsx - Professional Green Theme (বোনাস কার্ড বাদ)
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -6,7 +6,6 @@ import axios from "axios";
 import { 
   FaCalendarAlt, 
   FaClock, 
-  FaGift, 
   FaMoneyBillWave, 
   FaHourglassHalf,
   FaLeaf,
@@ -27,26 +26,19 @@ const MyInvestments = () => {
   const { user, refresh } = useUser();
 
   const [investments, setInvestments] = useState([]);
-  const [bonus, setBonus] = useState({});
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState({});
   const [timers, setTimers] = useState({});
-  const [bonusTimer, setBonusTimer] = useState(0);
   const timerIntervalRef = useRef(null);
 
   // ডাটা ফেচ
   const fetchData = useCallback(async () => {
     try {
       if (!user?._id) return;
-
-      const [invRes, bonusRes] = await Promise.all([
-        axios.get(`https://investify-backend.vercel.app/api/investments/user/${user._id}`),
-        axios.get(`https://investify-backend.vercel.app/api/bonus/status/${user._id}`),
-      ]);
-
+      
+      const invRes = await axios.get(`https://investify-backend.vercel.app/api/investments/user/${user._id}`);
       const userInvestments = invRes.data?.investments || [];
       setInvestments(userInvestments);
-      setBonus(bonusRes.data || {});
 
       // টাইমার ক্যালকুলেশন
       const newTimers = {};
@@ -67,17 +59,6 @@ const MyInvestments = () => {
       });
 
       setTimers(newTimers);
-
-      // বোনাস টাইমার
-      if (bonusRes.data?.lastClaimDate) {
-        const lastBonus = new Date(bonusRes.data.lastClaimDate);
-        const nextBonusTime = new Date(lastBonus);
-        nextBonusTime.setHours(nextBonusTime.getHours() + 24);
-        const bonusDiff = nextBonusTime - now;
-        setBonusTimer(bonusDiff > 0 ? bonusDiff : 0);
-      } else {
-        setBonusTimer(0);
-      }
 
     } catch (err) {
       console.error("Fetch Data Error:", err);
@@ -111,8 +92,6 @@ const MyInvestments = () => {
 
         return hasChanges ? { ...updated } : prevTimers;
       });
-
-      setBonusTimer((prev) => (prev > 0 ? prev - 1000 : 0));
     }, 1000);
 
     return () => {
@@ -133,50 +112,6 @@ const MyInvestments = () => {
       return `${minutes}মি ${seconds}স`;
     } else {
       return `${seconds}সেকেন্ড`;
-    }
-  };
-
-  // বোনাস ক্লেইম
-  const handleClaimBonus = async () => {
-    if (bonusTimer > 0) {
-      Swal.fire({
-        icon: "warning",
-        title: "অপেক্ষা করুন!",
-        text: `আপনি ${formatTime(bonusTimer)} পর বোনাস ক্লেইম করতে পারবেন`,
-        confirmButtonColor: "#16a34a"
-      });
-      return;
-    }
-
-    try {
-      const response = await axios.post("https://investify-backend.vercel.app/api/bonus/claim", {
-        userId: user._id
-      });
-
-      if (response.data.success) {
-        Swal.fire({
-          icon: "success",
-          title: "বোনাস ক্লেইম সফল! 🎉",
-          html: `
-            <div class="text-center">
-              <div class="text-4xl mb-2">🎁</div>
-              <p class="text-lg font-bold text-green-600">৳${response.data.amount || 50}</p>
-              <p class="text-sm text-gray-500">আপনার ব্যালেন্সে যোগ করা হয়েছে</p>
-            </div>
-          `,
-          confirmButtonColor: "#16a34a",
-          timer: 3000
-        });
-        await fetchData();
-        refresh();
-      }
-    } catch (err) {
-      Swal.fire({
-        icon: "error",
-        title: "ব্যর্থ!",
-        text: err.response?.data?.message || "বোনাস ক্লেইম করতে ব্যর্থ হয়েছে",
-        confirmButtonColor: "#ef4444"
-      });
     }
   };
 
@@ -242,7 +177,7 @@ const MyInvestments = () => {
     return new Intl.NumberFormat("bn-BD").format(num);
   };
 
-   if (loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
@@ -279,45 +214,6 @@ const MyInvestments = () => {
             <div className="bg-white/20 p-2 rounded-xl">
               <FaWallet className="text-white text-xl" />
             </div>
-          </div>
-        </div>
-
-        {/* বোনাস কার্ড */}
-        <div className={`rounded-xl p-4 mb-5 shadow-md transition-all ${bonus.claimed && bonusTimer === 0 ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 'bg-gradient-to-r from-amber-400 to-orange-500'}`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <FaGift className="text-white text-2xl" />
-              </div>
-              <div>
-                <p className="text-white/80 text-xs">বোনাস প্যাকেজ</p>
-                <p className="text-white font-bold text-sm">ফ্রি বোনাস</p>
-                {bonusTimer > 0 ? (
-                  <p className="text-white/80 text-[10px] flex items-center gap-1 mt-1">
-                    <FaHourglassHalf size={10} />
-                    {formatTime(bonusTimer)}
-                  </p>
-                ) : bonus.claimed ? (
-                  <p className="text-white/80 text-[10px] flex items-center gap-1 mt-1">
-                    <FaCheckCircle size={10} />
-                    বোনাস নেওয়া হয়েছে
-                  </p>
-                ) : (
-                  <p className="text-white/80 text-[10px]">ক্লেইম করুন ৳৫০</p>
-                )}
-              </div>
-            </div>
-            <button
-              onClick={handleClaimBonus}
-              disabled={bonus.claimed && bonusTimer === 0}
-              className={`px-4 py-2 rounded-lg font-semibold text-sm transition ${
-                bonus.claimed && bonusTimer === 0
-                  ? "bg-gray-500 text-white cursor-not-allowed"
-                  : "bg-white text-orange-600 hover:bg-gray-100"
-              }`}
-            >
-              {bonusTimer > 0 ? formatTime(bonusTimer) : (bonus.claimed ? "ক্লেইম করা হয়েছে" : "ক্লেইম করুন")}
-            </button>
           </div>
         </div>
 

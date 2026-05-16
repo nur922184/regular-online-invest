@@ -1,4 +1,4 @@
-// WithdrawPage.jsx - শুধু সাবমিট এ চেক করবে
+// WithdrawPage.jsx - Paid Investment Check Version
 
 import React, { useEffect, useState, useRef } from "react";
 import Swal from "sweetalert2";
@@ -16,7 +16,8 @@ import {
   FaEye,
   FaEyeSlash,
   FaInfoCircle,
-  FaMoneyBill
+  FaMoneyBill,
+  FaChartLine
 } from "react-icons/fa";
 import { FaBangladeshiTakaSign } from "react-icons/fa6";
 import useUser from "../hooks/useUsers";
@@ -30,11 +31,11 @@ const WithdrawPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [checkingDeposit, setCheckingDeposit] = useState(false);
+  const [checkingInvestment, setCheckingInvestment] = useState(false);
 
-  // ✅ শুধু সাবমিট এর পর মেসেজ দেখানোর জন্য স্টেট
-  const [showDepositWarning, setShowDepositWarning] = useState(false);
-  const [showDepositSuccess, setShowDepositSuccess] = useState(false);
+  // শুধু সাবমিট এর পর মেসেজ দেখানোর জন্য স্টেট
+  const [showInvestmentWarning, setShowInvestmentWarning] = useState(false);
+  const [showInvestmentSuccess, setShowInvestmentSuccess] = useState(false);
 
   const hasLoaded = useRef(false);
   const isMaxAccountReached = accounts.length >= 2;
@@ -50,20 +51,27 @@ const WithdrawPage = () => {
   const TOTAL_DEDUCTION = AMOUNT + SERVICE_CHARGE;
   const REMAINING_BALANCE = user?.balance - TOTAL_DEDUCTION;
 
-  // ✅ ডিপোজিট চেক করার ফাংশন
-  const checkUserDeposit = async () => {
+  // ✅ চেক করা হবে ইউজারের paid investment আছে কিনা
+  const checkUserHasPaidInvestment = async () => {
     try {
-      const res = await fetch(`https://investify-backend.vercel.app/api/transactions/user/${user._id}`);
+      const res = await fetch(`https://investify-backend.vercel.app/api/investments/user/${user._id}`);
+
+      // যদি ৫০০ এরর আসে
+      if (!res.ok) {
+        console.error("API Error:", res.status);
+        throw new Error(`সার্ভার সমস্যা (${res.status})`);
+      }
+
       const data = await res.json();
-      const transactions = data?.transactions || [];
+      const investments = data?.investments || [];
 
-      // যেকোনো approved ট্রানজেকশন থাকলেই ডিপোজিট আছে ধরা হবে
-      const hasApproved = transactions.some(t => t.status === "approved");
+      // চেক করা productType === "paid" আছে কিনা
+      const hasPaidInvestment = investments.some(inv => inv.productType === "paid");
 
-      return hasApproved;
+      return hasPaidInvestment;
     } catch (error) {
-      console.error("Error checking deposit:", error);
-      return false;
+      console.error("Error checking paid investment:", error);
+      throw new Error("ইনভেস্টমেন্ট চেক করতে সমস্যা হয়েছে। পরে আবার চেষ্টা করুন।");
     }
   };
 
@@ -131,9 +139,9 @@ const WithdrawPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ আগের মেসেজ ক্লিয়ার করা
-    setShowDepositWarning(false);
-    setShowDepositSuccess(false);
+    // আগের মেসেজ ক্লিয়ার
+    setShowInvestmentWarning(false);
+    setShowInvestmentSuccess(false);
 
     if (!selectedAccount) {
       return Swal.fire("অ্যাকাউন্ট সিলেক্ট করুন", "", "warning");
@@ -170,56 +178,82 @@ const WithdrawPage = () => {
       });
     }
 
-    // সাবমিট বাটন টিপলে ডিপোজিট চেক করা হবে
-    setCheckingDeposit(true);
+    // সাবমিট বাটন টিপলে পেইড ইনভেস্টমেন্ট চেক করা হবে
+    setCheckingInvestment(true);
 
     try {
-      const hasDeposit = await checkUserDeposit();
+      const hasPaidInvestment = await checkUserHasPaidInvestment();
 
-      if (!hasDeposit) {
-        // ✅ ডিপোজিট না থাকলে ওয়ার্নিং মেসেজ দেখানো
-        setShowDepositWarning(true);
-        setShowDepositSuccess(false);
+      if (!hasPaidInvestment) {
+        // পেইড ইনভেস্টমেন্ট না থাকলে ওয়ার্নিং
+        setShowInvestmentWarning(true);
+        setShowInvestmentSuccess(false);
 
         Swal.fire({
-          icon: "warning",
-          title: "প্রথমে ডিপোজিট করুন!",
+          icon: "info",
+          title: "🛒 একটি পণ্য ক্রয় করুন",
           html: `
-            <div class="text-center">
-              <div class="text-6xl mb-3">💰</div>
-              <p class="text-gray-800 font-semibold mb-2">আপনার কোনো অনুমোদিত ডিপোজিট নেই!</p>
-              <p class="text-sm text-gray-600">উত্তোলন করতে হলে আপনাকে <span class="font-bold text-green-600">অন্তত একবার ডিপোজিট</span> করতে হবে এবং তা <span class="font-bold text-green-600">অনুমোদিত</span> হতে হবে।</p>
-              <div class="bg-yellow-50 p-3 rounded-lg mt-3">
-                <p class="text-xs text-gray-600">ডিপোজিট করার পর অ্যাডমিন অনুমোদন দিলে আপনি উত্তোলন করতে পারবেন।</p>
-                <p class="text-xs text-blue-600 mt-2">💡 টিপ: আপনার ডিপোজিট অনুমোদিত হতে 1-24 ঘন্টা সময় লাগতে পারে।</p>
-              </div>
+          <div class="text-center">
+            <div class="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-xl mb-3">
+              <div class="text-5xl mb-2">🌾</div>
+              <p class="text-amber-800 font-bold">প্রয়োজন: সক্রিয় পণ্য</p>
             </div>
-          `,
-          confirmButtonText: "ডিপোজিট পেজে যান",
-          confirmButtonColor: "#16a34a",
+            
+            <p class="text-gray-700 text-sm mb-3">
+              উত্তোলন করতে হলে <span class="font-bold text-green-600">অন্তত একটি পেইড পণ্য</span> ক্রয় করতে হবে।
+            </p>
+            
+            <div class="bg-green-50 p-3 rounded-lg text-left mb-3">
+              <p class="text-green-800 text-xs font-semibold mb-1">✨ পণ্য ক্রয়ের সুবিধা:</p>
+              <p class="text-green-700 text-[11px]">✓ উত্তোলন সুবিধা পাবেন</p>
+              <p class="text-green-700 text-[11px]">✓ লাভ শেয়ার পাবেন</p>
+              <p class="text-green-700 text-[11px]">✓ প্রিমিয়াম সাপোর্ট পাবেন</p>
+            </div>
+            
+            <button id="buy-product-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition w-full">
+              🛒 এখনই পণ্য কিনুন
+            </button>
+            
+            <p class="text-gray-400 text-[10px] mt-2">
+              পণ্য ক্রয় করলেই সরাসরি উত্তোলন করতে পারবেন
+            </p>
+          </div>
+        `,
+          showConfirmButton: false,
+          showCancelButton: true,
           cancelButtonText: "পরে",
-          showCancelButton: true
-        }).then((result) => {
-          if (result.isConfirmed) {
-            navigate("/topup");
+          cancelButtonColor: "#6b7280",
+          didOpen: () => {
+            const buyBtn = document.getElementById("buy-product-btn");
+            if (buyBtn) {
+              buyBtn.onclick = () => {
+                Swal.close();
+                navigate("/"); 
+              };
+            }
           }
         });
-        setCheckingDeposit(false);
+        setCheckingInvestment(false);
         return;
       }
 
-      // ✅ ডিপোজিট থাকলে সাকসেস মেসেজ দেখানো
-      setShowDepositSuccess(true);
-      setShowDepositWarning(false);
+      // পেইড ইনভেস্টমেন্ট থাকলে সাকসেস মেসেজ দেখানো
+      setShowInvestmentSuccess(true);
+      setShowInvestmentWarning(false);
 
     } catch (error) {
-      console.error("Error checking deposit:", error);
-      Swal.fire("ত্রুটি!", "ডিপোজিট চেক করতে সমস্যা হয়েছে", "error");
-      setCheckingDeposit(false);
+      console.error("Error checking investment:", error);
+      Swal.fire({
+        icon: "error",
+        title: "ত্রুটি!",
+        text: error.message || "ইনভেস্টমেন্ট চেক করতে সমস্যা হয়েছে",
+        confirmButtonColor: "#ef4444"
+      });
+      setCheckingInvestment(false);
       return;
     }
 
-    // যদি ডিপোজিট থাকে তাহলে উত্তোলন প্রসেস
+    // যদি পেইড ইনভেস্টমেন্ট থাকে তাহলে উত্তোলন প্রসেস
     try {
       setSubmitting(true);
 
@@ -287,7 +321,7 @@ const WithdrawPage = () => {
       });
     } finally {
       setSubmitting(false);
-      setCheckingDeposit(false);
+      setCheckingInvestment(false);
     }
   };
 
@@ -335,36 +369,36 @@ const WithdrawPage = () => {
           </div>
         </div>
 
-        {/* ⚠️ ডিপোজিট ওয়ার্নিং - শুধু সাবমিট এর পর দেখাবে */}
-        {showDepositWarning && (
+        {/* ⚠️ পেইড ইনভেস্টমেন্ট ওয়ার্নিং */}
+        {showInvestmentWarning && (
           <div className="mb-5 bg-orange-50 border border-orange-200 rounded-xl p-4 animate-pulse">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
                 <FaInfoCircle className="text-orange-500 text-sm" />
               </div>
               <div className="flex-1">
-                <p className="text-orange-800 text-sm font-semibold mb-1">⚠️ ডিপোজিট প্রয়োজন!</p>
+                <p className="text-orange-800 text-sm font-semibold mb-1">⚠️ পেইড ইনভেস্টমেন্ট প্রয়োজন!</p>
                 <p className="text-orange-700 text-xs mb-2">
-                  উত্তোলন করতে হলে আপনাকে প্রথমে একটি ডিপোজিট করতে হবে এবং তা অনুমোদিত হতে হবে।
+                  উত্তোলন করতে হলে আপনাকে প্রথমে একটি পেইড ইনভেস্টমেন্ট করতে হবে।
                 </p>
                 <button
-                  onClick={() => navigate("/topup")}
+                  onClick={() => navigate("/invest")}
                   className="bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition"
                 >
-                  এখনই ডিপোজিট করুন →
+                  এখনই ইনভেস্ট করুন →
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* ✅ ডিপোজিট আছে - সাকসেস মেসেজ - শুধু সাবমিট এর পর দেখাবে */}
-        {showDepositSuccess && (
+        {/* ✅ পেইড ইনভেস্টমেন্ট আছে - সাকসেস মেসেজ */}
+        {showInvestmentSuccess && (
           <div className="mb-5 bg-green-50 border border-green-200 rounded-xl p-3 animate-pulse">
             <div className="flex items-center gap-2">
               <FaCheckCircle className="text-green-500 text-sm" />
               <p className="text-green-700 text-xs font-medium">
-                ✅ আপনার একটি অনুমোদিত ডিপোজিট আছে। আপনি উত্তোলন করতে পারবেন।
+                ✅ আপনার একটি পেইড ইনভেস্টমেন্ট আছে। আপনি উত্তোলন করতে পারবেন।
               </p>
             </div>
           </div>
@@ -510,16 +544,16 @@ const WithdrawPage = () => {
               </div>
             )}
 
-            {/* বাটন - সব সময় সক্রিয় থাকবে */}
+            {/* বাটন */}
             <button
               onClick={handleSubmit}
-              disabled={submitting || checkingDeposit}
+              disabled={submitting || checkingInvestment}
               className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all active:scale-95 disabled:opacity-50 mb-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white`}
             >
-              {submitting || checkingDeposit ? (
+              {submitting || checkingInvestment ? (
                 <div className="flex items-center justify-center gap-2">
                   <FaSpinner className="animate-spin" />
-                  <span>{checkingDeposit ? "ডিপোজিট চেক করা হচ্ছে..." : "প্রসেসিং..."}</span>
+                  <span>{checkingInvestment ? "ইনভেস্টমেন্ট চেক করা হচ্ছে..." : "প্রসেসিং..."}</span>
                 </div>
               ) : (
                 "উত্তোলন করুন"
@@ -530,8 +564,8 @@ const WithdrawPage = () => {
               <button
                 disabled={isMaxAccountReached}
                 className={`w-full py-2 rounded-lg font-medium text-sm transition ${isMaxAccountReached
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-orange-500 hover:bg-orange-600 text-white"
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-orange-500 hover:bg-orange-600 text-white"
                   }`}
               >
                 + নতুন অ্যাকাউন্ট যোগ করুন
@@ -540,66 +574,38 @@ const WithdrawPage = () => {
           </div>
         )}
 
-        {/* তথ্য বক্স */}
+        {/* তথ্য বক্স - আপডেটেড */}
+        {/* তথ্য বক্স - আপডেটেড */}
         <div className="bg-green-100 rounded-lg p-4">
           <div className="flex items-start gap-2">
             <FaCheckCircle className="text-green-600 text-sm mt-0.5" />
-
             <div>
               <p className="text-green-800 text-sm font-semibold mb-2">
                 উত্তোলন নির্দেশিকা
               </p>
-
               <div className="space-y-1 text-green-700 text-[11px]">
+                <p className="flex items-center gap-1 bg-white/50 p-2 rounded-lg">
+                  <span className="text-lg">🛒</span>
+                  <span><span className="font-bold text-green-800">পণ্য ক্রয়ের পরেই</span> উত্তোলন করা যাবে</span>
+                </p>
                 <p>
-                  • নগদ উত্তোলনের জন্য আগে{" "}
-                  <span className="font-bold"> ব্যাংক অ্যাকাউন্ট</span> যুক্ত করতে হবে
+                  • ন্যূনতম উত্তোলন: <span className="font-bold">২০০ টাকা</span>
                 </p>
-
                 <p>
-                  • সর্বনিম্ন উত্তোলন:{" "}
-                  <span className="font-bold">২০০ টাকা</span>
+                  • সার্ভিস চার্জ: <span className="font-bold text-orange-600">১৩%</span>
                 </p>
-
-                <p>
-                  • সঠিক ব্যাংক/ওয়ালেট নম্বর দিন এবং{" "}
-                  <span className="font-bold text-red-600">কোনও স্পেস ব্যবহার করবেন না</span>
-                </p>
-
-                <p className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                  <span>
-                    <span className="font-bold text-green-800">
-                      ডিপোজিটের পরেই
-                    </span>{" "}
-                    উত্তোলন করা যাবে
-                  </span>
-                </p>
-
-                <p>
-                  • উত্তোলনের সময়:{" "}
-                  <span className="font-bold">
-                    সোম–শুক্র সকাল ৯টা – বিকেল ৫টা
-                  </span>
-                </p>
-
-                <p>
-                  • লেনদেন সম্পন্ন হতে{" "}
-                  <span className="font-bold">০–২৪ ঘণ্টা</span> সময় লাগতে পারে
-                </p>
-
-                <p>
-                  • সার্ভিস চার্জ / কর:{" "}
-                  <span className="font-bold text-orange-600">১৩%</span>
-                </p>
-
                 <p>
                   • উত্তোলন + ১৩% চার্জ = মোট ব্যালেন্স থেকে কাটা হবে
                 </p>
-
-                <p className="text-blue-600 text-[10px] mt-2 pt-1 border-t border-green-200">
-                  💡 টিপ: দ্রুত অনুমোদনের জন্য সঠিক তথ্য প্রদান করুন
+                <p>
+                  • অনুমোদিত হতে <span className="font-bold">1-24 ঘন্টা</span> সময় লাগতে পারে
                 </p>
+                <Link to="/products">
+                  <button className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white py-1.5 rounded-lg text-xs font-medium transition flex items-center justify-center gap-2">
+                    <span>🛒</span>
+                    পণ্যের তালিকা দেখুন
+                  </button>
+                </Link>
               </div>
             </div>
           </div>
