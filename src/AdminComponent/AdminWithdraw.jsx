@@ -1,4 +1,5 @@
-// AdminWithdraw.jsx - Professional Green Theme
+// AdminWithdraw.jsx - সংশোধিত ভার্সন
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -34,7 +35,7 @@ const AdminWithdraw = () => {
   const loadData = async () => {
     try {
       setRefreshing(true);
-      const res = await fetch("https://investify-backend.vercel.app/api/withdrawals/admin/all");
+      const res = await fetch("https://investify-fixed.vercel.app/api/withdrawals/admin/all");
       const result = await res.json();
       setData(result.withdrawals || []);
     } catch (error) {
@@ -53,27 +54,37 @@ const AdminWithdraw = () => {
   useEffect(() => {
     loadData();
   }, []);
+  // AdminWithdraw.jsx - আপডেটেড অংশ
 
-  const updateStatus = async (id, status) => {
-    const actionText = status === "approved" ? "অনুমোদন" : "বাতিল";
+  // ✅ আলাদা approve ফাংশন
+  const handleApprove = async (id) => {
     const confirm = await Swal.fire({
-      title: `${actionText} করবেন?`,
-      html: `<p>আপনি কি এই উত্তোলন রিকোয়েস্ট ${actionText} করতে চান?</p>`,
+      title: "অনুমোদন করবেন?",
+      text: "আপনি কি এই উত্তোলন রিকোয়েস্ট অনুমোদন করতে চান?",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: `হ্যাঁ, ${actionText} করুন`,
+      confirmButtonText: "হ্যাঁ, অনুমোদন করুন",
       cancelButtonText: "না",
-      confirmButtonColor: status === "approved" ? "#16a34a" : "#ef4444",
+      confirmButtonColor: "#16a34a",
       cancelButtonColor: "#6b7280"
     });
 
     if (!confirm.isConfirmed) return;
 
     try {
-      const res = await fetch(`https://investify-backend.vercel.app/api/withdrawals/admin/update/${id}`, {
+      const token = localStorage.getItem('token');
+      const admin = JSON.parse(localStorage.getItem('user'));
+
+      const res = await fetch(`https://investify-fixed.vercel.app/api/withdrawals/admin/approve/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status })
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          adminId: admin?._id || null,
+          adminNote: "অনুমোদন করা হয়েছে"
+        })
       });
 
       const result = await res.json();
@@ -82,7 +93,7 @@ const AdminWithdraw = () => {
         Swal.fire({
           icon: "success",
           title: "সফল!",
-          text: result.message || `উত্তোলন ${actionText} করা হয়েছে`,
+          text: "উত্তোলন অনুমোদন করা হয়েছে",
           confirmButtonColor: "#16a34a",
           timer: 1500
         });
@@ -94,12 +105,67 @@ const AdminWithdraw = () => {
       Swal.fire({
         icon: "error",
         title: "ত্রুটি!",
-        text: error.message || `${actionText} করতে ব্যর্থ হয়েছে`,
+        text: error.message || "অনুমোদন করতে ব্যর্থ হয়েছে",
         confirmButtonColor: "#ef4444"
       });
     }
   };
 
+  // ✅ আলাদা reject ফাংশন (টাকা রিটার্ন সহ)
+  const handleReject = async (id) => {
+    const { value: rejectReason } = await Swal.fire({
+      title: "বাতিলের কারণ",
+      text: "উত্তোলন বাতিল করার কারণ লিখুন (টাকা ফেরত দেওয়া হবে)",
+      input: "textarea",
+      inputPlaceholder: "কারণ লিখুন...",
+      showCancelButton: true,
+      confirmButtonText: "বাতিল করুন ও টাকা ফেরত দিন",
+      cancelButtonText: "ফিরে যান",
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#6b7280"
+    });
+
+    try {
+      const token = localStorage.getItem('token');
+      const admin = JSON.parse(localStorage.getItem('user'));
+
+      const res = await fetch(`https://investify-fixed.vercel.app/api/withdrawals/admin/reject/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          adminId: admin?._id || null,
+          rejectReason: rejectReason || "প্রশাসক কর্তৃক বাতিল"
+        })
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        Swal.fire({
+          icon: "success",
+          title: "বাতিল করা হয়েছে",
+          html: `
+          <p>উত্তোলন রিকোয়েস্ট বাতিল করা হয়েছে</p>
+          <p class="text-green-600 mt-2">টাকা ফেরত দেওয়া হয়েছে: ৳${result.data.refundedAmount}</p>
+        `,
+          confirmButtonColor: "#16a34a"
+        });
+        loadData();
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "ত্রুটি!",
+        text: error.message || "বাতিল করতে ব্যর্থ হয়েছে",
+        confirmButtonColor: "#ef4444"
+      });
+    }
+  };
   const getStatusConfig = (status) => {
     switch (status) {
       case "approved":
@@ -134,22 +200,20 @@ const AdminWithdraw = () => {
     return new Intl.NumberFormat("bn-BD").format(num);
   };
 
-  // ফিল্টার এবং সার্চ
   const filteredData = data.filter((item) => {
     const matchFilter = filter === "all" ? true : item.status === filter;
     const matchSearch = item.userId?.name?.toLowerCase().includes(search.toLowerCase()) ||
-                       item.accountNumber?.toLowerCase().includes(search.toLowerCase()) ||
-                       item.amount?.toString().includes(search);
+      item.accountNumber?.toLowerCase().includes(search.toLowerCase()) ||
+      item.amount?.toString().includes(search);
     return matchFilter && matchSearch;
   });
 
-  // পরিসংখ্যান
   const totalWithdraw = data.reduce((sum, item) => sum + item.amount, 0);
   const pendingAmount = data.filter(item => item.status === "pending").reduce((sum, item) => sum + item.amount, 0);
   const approvedAmount = data.filter(item => item.status === "approved").reduce((sum, item) => sum + item.amount, 0);
 
   const getAccountName = (type) => {
-    switch(type) {
+    switch (type) {
       case "bkash": return "বিকাশ";
       case "nagad": return "নগদ";
       default: return type || "N/A";
@@ -170,11 +234,11 @@ const AdminWithdraw = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
       <div className="max-w-md mx-auto px-4 py-5">
-        
+
         {/* হেডার */}
         <div className="flex items-center justify-between mb-5">
-          <button 
-            onClick={() => navigate(-1)} 
+          <button
+            onClick={() => navigate(-1)}
             className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center active:bg-green-200 transition"
           >
             <FaArrowLeft className="text-green-700 text-sm" />
@@ -228,41 +292,37 @@ const AdminWithdraw = () => {
         <div className="flex gap-2 mb-4">
           <button
             onClick={() => setFilter("all")}
-            className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition ${
-              filter === "all"
+            className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition ${filter === "all"
                 ? "bg-green-600 text-white shadow-md"
                 : "bg-white border border-green-200 text-green-700 hover:bg-green-50"
-            }`}
+              }`}
           >
             সব ({data.length})
           </button>
           <button
             onClick={() => setFilter("pending")}
-            className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition ${
-              filter === "pending"
+            className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition ${filter === "pending"
                 ? "bg-yellow-500 text-white shadow-md"
                 : "bg-white border border-yellow-200 text-yellow-700 hover:bg-yellow-50"
-            }`}
+              }`}
           >
             পেন্ডিং ({data.filter(item => item.status === "pending").length})
           </button>
           <button
             onClick={() => setFilter("approved")}
-            className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition ${
-              filter === "approved"
+            className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition ${filter === "approved"
                 ? "bg-green-600 text-white shadow-md"
                 : "bg-white border border-green-200 text-green-700 hover:bg-green-50"
-            }`}
+              }`}
           >
             অনুমোদিত ({data.filter(item => item.status === "approved").length})
           </button>
           <button
             onClick={() => setFilter("rejected")}
-            className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition ${
-              filter === "rejected"
+            className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition ${filter === "rejected"
                 ? "bg-red-600 text-white shadow-md"
                 : "bg-white border border-red-200 text-red-700 hover:bg-red-50"
-            }`}
+              }`}
           >
             বাতিল ({data.filter(item => item.status === "rejected").length})
           </button>
@@ -336,23 +396,23 @@ const AdminWithdraw = () => {
                     {/* সার্ভিস চার্জ তথ্য */}
                     {item.serviceCharge && (
                       <div className="flex items-center justify-between text-xs mb-3 pt-1 border-t border-gray-100">
-                        <span className="text-gray-500">সার্ভিস চার্জ (৫%):</span>
+                        <span className="text-gray-500">সার্ভিস চার্জ (১৩%):</span>
                         <span className="text-yellow-600 font-medium">৳{formatNumber(item.serviceCharge)}</span>
                       </div>
                     )}
 
-                    {/* অ্যাকশন বাটন */}
+                    {/* ✅ সঠিক অ্যাকশন বাটন */}
                     {item.status === "pending" && (
                       <div className="flex gap-3 mt-3">
                         <button
-                          onClick={() => updateStatus(item._id, "approved")}
+                          onClick={() => handleApprove(item._id)}
                           className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium text-sm transition flex items-center justify-center gap-2"
                         >
                           <FaCheckCircle size={12} />
                           অনুমোদন দিন
                         </button>
                         <button
-                          onClick={() => updateStatus(item._id, "rejected")}
+                          onClick={() => handleReject(item._id)}
                           className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-medium text-sm transition flex items-center justify-center gap-2"
                         >
                           <FaTimesCircle size={12} />
@@ -361,8 +421,18 @@ const AdminWithdraw = () => {
                       </div>
                     )}
 
+                    {/* বাতিলের কারণ দেখানো */}
+                    {item.status === "rejected" && item.rejectReason && (
+                      <div className="mt-3 pt-2 border-t border-gray-100">
+                        <p className="text-red-500 text-[10px] flex items-start gap-1">
+                          <FaInfoCircle size={8} className="mt-0.5" />
+                          <span>বাতিলের কারণ: {item.rejectReason}</span>
+                        </p>
+                      </div>
+                    )}
+
                     {/* অনুমোদিত/বাতিলের জন্য তথ্য */}
-                    {item.status !== "pending" && (
+                    {item.status !== "pending" && !item.rejectReason && (
                       <div className="mt-3 pt-2 border-t border-gray-100">
                         <p className="text-gray-400 text-[10px] flex items-center gap-1">
                           <FaInfoCircle size={8} />

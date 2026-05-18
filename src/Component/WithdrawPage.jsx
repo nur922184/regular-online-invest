@@ -1,4 +1,4 @@
-// WithdrawPage.jsx - Paid Investment Check Version
+// WithdrawPage.jsx - শুধুমাত্র Withdrawal Collection এ ডাটা সেভ হবে
 
 import React, { useEffect, useState, useRef } from "react";
 import Swal from "sweetalert2";
@@ -17,13 +17,12 @@ import {
   FaEyeSlash,
   FaInfoCircle,
   FaMoneyBill,
-  FaChartLine
 } from "react-icons/fa";
 import { FaBangladeshiTakaSign } from "react-icons/fa6";
 import useUser from "../hooks/useUsers";
 
 const WithdrawPage = () => {
-  const { user, refetchUser } = useUser();
+  const { user, refresh } = useUser();
   const navigate = useNavigate();
 
   const [accounts, setAccounts] = useState([]);
@@ -32,10 +31,8 @@ const WithdrawPage = () => {
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [checkingInvestment, setCheckingInvestment] = useState(false);
-
-  // শুধু সাবমিট এর পর মেসেজ দেখানোর জন্য স্টেট
-  const [showInvestmentWarning, setShowInvestmentWarning] = useState(false);
-  const [showInvestmentSuccess, setShowInvestmentSuccess] = useState(false);
+  const [hasPaidInvestment, setHasPaidInvestment] = useState(false);
+  const [investmentChecked, setInvestmentChecked] = useState(false);
 
   const hasLoaded = useRef(false);
   const isMaxAccountReached = accounts.length >= 2;
@@ -51,42 +48,61 @@ const WithdrawPage = () => {
   const TOTAL_DEDUCTION = AMOUNT + SERVICE_CHARGE;
   const REMAINING_BALANCE = user?.balance - TOTAL_DEDUCTION;
 
-  // ✅ চেক করা হবে ইউজারের paid investment আছে কিনা
+  // ✅ পেইড ইনভেস্টমেন্ট চেক করা (শুধুমাত্র সাবমিটের সময়)
   const checkUserHasPaidInvestment = async () => {
+    if (!user?._id) return false;
+    
     try {
-      const res = await fetch(`https://investify-backend.vercel.app/api/investments/user/${user._id}`);
+      const token = localStorage.getItem('token');
+      const res = await fetch(`https://investify-fixed.vercel.app/api/investments/user/${user._id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
 
-      // যদি ৫০০ এরর আসে
       if (!res.ok) {
         console.error("API Error:", res.status);
-        throw new Error(`সার্ভার সমস্যা (${res.status})`);
+        return false;
       }
 
       const data = await res.json();
       const investments = data?.investments || [];
 
       // চেক করা productType === "paid" আছে কিনা
-      const hasPaidInvestment = investments.some(inv => inv.productType === "paid");
-
-      return hasPaidInvestment;
+      const hasPaid = investments.some(inv => inv.productType === "paid");
+      setHasPaidInvestment(hasPaid);
+      setInvestmentChecked(true);
+      return hasPaid;
     } catch (error) {
       console.error("Error checking paid investment:", error);
-      throw new Error("ইনভেস্টমেন্ট চেক করতে সমস্যা হয়েছে। পরে আবার চেষ্টা করুন।");
+      setInvestmentChecked(true);
+      return false;
     }
   };
 
   useEffect(() => {
     if (!user) return;
-    if (!hasLoaded.current) {
-      hasLoaded.current = true;
-      loadAccounts();
-    }
+    
+    const init = async () => {
+      if (!hasLoaded.current) {
+        hasLoaded.current = true;
+        await loadAccounts();
+        // ❌ পেইড ইনভেস্টমেন্ট চেক করা হচ্ছে না (পেজ লোড হলে না)
+        // checkUserHasPaidInvestment() - এটি সরানো হয়েছে
+      }
+    };
+    init();
   }, [user]);
 
   const loadAccounts = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`https://investify-backend.vercel.app/api/accounts/user/${user._id}`);
+      const token = localStorage.getItem('token');
+      const res = await fetch(`https://investify-fixed.vercel.app/api/accounts/user/${user._id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const data = await res.json();
 
       if (!data.accounts || data.accounts.length === 0) {
@@ -139,10 +155,6 @@ const WithdrawPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // আগের মেসেজ ক্লিয়ার
-    setShowInvestmentWarning(false);
-    setShowInvestmentSuccess(false);
-
     if (!selectedAccount) {
       return Swal.fire("অ্যাকাউন্ট সিলেক্ট করুন", "", "warning");
     }
@@ -178,101 +190,75 @@ const WithdrawPage = () => {
       });
     }
 
-    // সাবমিট বাটন টিপলে পেইড ইনভেস্টমেন্ট চেক করা হবে
+    // ✅ পেইড ইনভেস্টমেন্ট চেক করা (শুধুমাত্র সাবমিটের সময়)
     setCheckingInvestment(true);
-
-    try {
-      const hasPaidInvestment = await checkUserHasPaidInvestment();
-
-      if (!hasPaidInvestment) {
-        // পেইড ইনভেস্টমেন্ট না থাকলে ওয়ার্নিং
-        setShowInvestmentWarning(true);
-        setShowInvestmentSuccess(false);
-
-        Swal.fire({
-          icon: "info",
-          title: "🛒 একটি পণ্য ক্রয় করুন",
-          html: `
+    const hasPaid = await checkUserHasPaidInvestment();
+    setCheckingInvestment(false);
+    
+    if (!hasPaid) {
+      Swal.fire({
+        icon: "info",
+        title: "🛒 ডিপজিট করে একটি পণ্য ক্রয় করুন",
+        html: `
           <div class="text-center">
             <div class="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-xl mb-3">
-              <div class="text-5xl mb-2">🌾</div>
               <p class="text-amber-800 font-bold">প্রয়োজন: সক্রিয় পণ্য</p>
             </div>
-            
             <p class="text-gray-700 text-sm mb-3">
-              উত্তোলন করতে হলে <span class="font-bold text-green-600">অন্তত একটি পেইড পণ্য</span> ক্রয় করতে হবে।
+              উত্তোলন করতে হলে ডিপজিট করে <span class="font-bold text-green-600">অন্তত একটি পেইড পণ্য</span> ক্রয় করতে হবে।
             </p>
-            
-            <div class="bg-green-50 p-3 rounded-lg text-left mb-3">
-              <p class="text-green-800 text-xs font-semibold mb-1">✨ পণ্য ক্রয়ের সুবিধা:</p>
-              <p class="text-green-700 text-[11px]">✓ উত্তোলন সুবিধা পাবেন</p>
-              <p class="text-green-700 text-[11px]">✓ লাভ শেয়ার পাবেন</p>
-              <p class="text-green-700 text-[11px]">✓ প্রিমিয়াম সাপোর্ট পাবেন</p>
-            </div>
-            
             <button id="buy-product-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition w-full">
               🛒 এখনই পণ্য কিনুন
             </button>
-            
-            <p class="text-gray-400 text-[10px] mt-2">
-              পণ্য ক্রয় করলেই সরাসরি উত্তোলন করতে পারবেন
-            </p>
           </div>
         `,
-          showConfirmButton: false,
-          showCancelButton: true,
-          cancelButtonText: "পরে",
-          cancelButtonColor: "#6b7280",
-          didOpen: () => {
-            const buyBtn = document.getElementById("buy-product-btn");
-            if (buyBtn) {
-              buyBtn.onclick = () => {
-                Swal.close();
-                navigate("/"); 
-              };
-            }
+        showConfirmButton: false,
+        showCancelButton: true,
+        cancelButtonText: "পরে",
+        cancelButtonColor: "#6b7280",
+        didOpen: () => {
+          const buyBtn = document.getElementById("buy-product-btn");
+          if (buyBtn) {
+            buyBtn.onclick = () => {
+              Swal.close();
+              navigate("/");
+            };
           }
-        });
-        setCheckingInvestment(false);
-        return;
-      }
-
-      // পেইড ইনভেস্টমেন্ট থাকলে সাকসেস মেসেজ দেখানো
-      setShowInvestmentSuccess(true);
-      setShowInvestmentWarning(false);
-
-    } catch (error) {
-      console.error("Error checking investment:", error);
-      Swal.fire({
-        icon: "error",
-        title: "ত্রুটি!",
-        text: error.message || "ইনভেস্টমেন্ট চেক করতে সমস্যা হয়েছে",
-        confirmButtonColor: "#ef4444"
+        }
       });
-      setCheckingInvestment(false);
       return;
     }
 
-    // যদি পেইড ইনভেস্টমেন্ট থাকে তাহলে উত্তোলন প্রসেস
+    // ✅ শুধুমাত্র Withdrawal Collection-এ ডাটা সেভ হবে
     try {
       setSubmitting(true);
+      const token = localStorage.getItem('token');
 
-      const res = await fetch("https://investify-backend.vercel.app/api/withdrawals/request", {
+      const res = await fetch(`https://investify-fixed.vercel.app/api/withdrawals/request`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({
           userId: user._id,
           amount: withdrawAmount,
           accountId: selectedAccount._id,
           password: form.password,
           serviceCharge: SERVICE_CHARGE,
-          totalDeduction: TOTAL_DEDUCTION
+          totalDeduction: TOTAL_DEDUCTION,
+          accountType: selectedAccount.accountType,
+          accountNumber: selectedAccount.accountNumber,
+          accountHolderName: selectedAccount.accountHolderName
         })
       });
 
       const data = await res.json();
 
       if (data.success) {
+        // ✅ সফল হলে ইউজার ডাটা রিফ্রেশ
+        if (refresh) await refresh();
+        
         Swal.fire({
           icon: "success",
           title: "সফল!",
@@ -292,40 +278,38 @@ const WithdrawPage = () => {
                   <span class="font-bold">মোট কাটা:</span>
                   <span class="font-bold text-red-600">৳${TOTAL_DEDUCTION.toFixed(2)}</span>
                 </div>
-                <div class="flex justify-between mt-2">
-                  <span>নতুন ব্যালেন্স:</span>
-                  <span class="font-bold text-green-600">৳${(user.balance - TOTAL_DEDUCTION).toFixed(2)}</span>
-                </div>
               </div>
-              <p class="text-xs text-gray-500 mt-3 flex items-center justify-center gap-1">
-                ⏱️ এডমিন অ্যাপ্রুভ করার পর টাকা পাঠানো হবে (1-24 ঘন্টা)
+              <p class="text-xs text-gray-500 mt-3">
+                ⏱️ এডমিন অনুমোদন সাপেক্ষে টাকা পাঠানো হবে (১-২৪ ঘন্টা)
+              </p>
+              <p class="text-xs text-green-600 mt-2">
+                📌 ট্র্যাকিং আইডি: ${data.withdrawal?._id?.slice(-8) || 'N/A'}
               </p>
             </div>
           `,
           confirmButtonColor: "#16a34a"
         });
 
-        refetchUser && refetchUser();
+        // ফর্ম রিসেট
+        setForm({ amount: "", password: "" });
         navigate("/withdrawHistory");
       } else {
         throw new Error(data.message || "উত্তোলন রিকোয়েস্ট ব্যর্থ হয়েছে");
       }
     } catch (err) {
       console.error("Withdraw error:", err);
-      const errorMessage = err.message || "উত্তোলন ব্যর্থ হয়েছে";
       Swal.fire({
         icon: "error",
         title: "ত্রুটি!",
-        text: errorMessage,
+        text: err.message || "উত্তোলন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।",
         confirmButtonColor: "#ef4444"
       });
     } finally {
       setSubmitting(false);
-      setCheckingInvestment(false);
     }
   };
 
-  // শুধু অ্যাকাউন্ট লোডিং দেখাবে
+  // লোডিং স্টেট
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center">
@@ -369,40 +353,7 @@ const WithdrawPage = () => {
           </div>
         </div>
 
-        {/* ⚠️ পেইড ইনভেস্টমেন্ট ওয়ার্নিং */}
-        {showInvestmentWarning && (
-          <div className="mb-5 bg-orange-50 border border-orange-200 rounded-xl p-4 animate-pulse">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <FaInfoCircle className="text-orange-500 text-sm" />
-              </div>
-              <div className="flex-1">
-                <p className="text-orange-800 text-sm font-semibold mb-1">⚠️ পেইড ইনভেস্টমেন্ট প্রয়োজন!</p>
-                <p className="text-orange-700 text-xs mb-2">
-                  উত্তোলন করতে হলে আপনাকে প্রথমে একটি পেইড ইনভেস্টমেন্ট করতে হবে।
-                </p>
-                <button
-                  onClick={() => navigate("/invest")}
-                  className="bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition"
-                >
-                  এখনই ইনভেস্ট করুন →
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ✅ পেইড ইনভেস্টমেন্ট আছে - সাকসেস মেসেজ */}
-        {showInvestmentSuccess && (
-          <div className="mb-5 bg-green-50 border border-green-200 rounded-xl p-3 animate-pulse">
-            <div className="flex items-center gap-2">
-              <FaCheckCircle className="text-green-500 text-sm" />
-              <p className="text-green-700 text-xs font-medium">
-                ✅ আপনার একটি পেইড ইনভেস্টমেন্ট আছে। আপনি উত্তোলন করতে পারবেন।
-              </p>
-            </div>
-          </div>
-        )}
+        {/* ❌ পেইড ইনভেস্টমেন্ট ওয়ার্নিং সরানো হয়েছে - এখন শুধুমাত্র সাবমিটের সময় দেখাবে */}
 
         {/* অ্যাকাউন্ট সিলেক্ট */}
         <div className="mb-5">
@@ -480,7 +431,7 @@ const WithdrawPage = () => {
                     key={amt}
                     type="button"
                     onClick={() => setForm({ ...form, amount: amt })}
-                    className="flex-1 py-1.5 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-green-100 transition"
+                    className="flex-1 py-1.5 text-xs rounded-lg transition bg-gray-100 text-gray-700 hover:bg-green-100"
                   >
                     ৳{amt}
                   </button>
@@ -548,7 +499,7 @@ const WithdrawPage = () => {
             <button
               onClick={handleSubmit}
               disabled={submitting || checkingInvestment}
-              className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all active:scale-95 disabled:opacity-50 mb-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white`}
+              className="w-full py-2.5 rounded-lg font-semibold text-sm transition-all active:scale-95 disabled:opacity-50 mb-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
             >
               {submitting || checkingInvestment ? (
                 <div className="flex items-center justify-center gap-2">
@@ -574,8 +525,7 @@ const WithdrawPage = () => {
           </div>
         )}
 
-        {/* তথ্য বক্স - আপডেটেড */}
-        {/* তথ্য বক্স - আপডেটেড */}
+        {/* তথ্য বক্স */}
         <div className="bg-green-100 rounded-lg p-4">
           <div className="flex items-start gap-2">
             <FaCheckCircle className="text-green-600 text-sm mt-0.5" />
@@ -598,9 +548,9 @@ const WithdrawPage = () => {
                   • উত্তোলন + ১৩% চার্জ = মোট ব্যালেন্স থেকে কাটা হবে
                 </p>
                 <p>
-                  • অনুমোদিত হতে <span className="font-bold">1-24 ঘন্টা</span> সময় লাগতে পারে
+                  • অনুমোদিত হতে <span className="font-bold">১-২৪ ঘন্টা</span> সময় লাগতে পারে
                 </p>
-                <Link to="/products">
+                <Link to="/">
                   <button className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white py-1.5 rounded-lg text-xs font-medium transition flex items-center justify-center gap-2">
                     <span>🛒</span>
                     পণ্যের তালিকা দেখুন

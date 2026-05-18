@@ -1,4 +1,4 @@
-// AddAccount.jsx - Green Agriculture Theme with Limit Check
+// AddAccount.jsx - Dynamic Account Name based on Account Type
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -28,12 +28,25 @@ const AddAccount = () => {
   const [checkingCount, setCheckingCount] = useState(true);
   const [maxAccounts] = useState(2); // সর্বোচ্চ ২টি অ্যাকাউন্ট
 
+  // অ্যাকাউন্ট টাইপ অনুযায়ী নাম নির্ধারণের ফাংশন
+  const getAccountNameByType = (type) => {
+    switch (type) {
+      case "bkash":
+        return "বিকাশ ব্যক্তিগত অ্যাকাউন্ট";
+      case "nagad":
+        return "নগদ ব্যক্তিগত অ্যাকাউন্ট";
+      default:
+        return "ব্যক্তিগত অ্যাকাউন্ট";
+    }
+  };
+
   const [formData, setFormData] = useState({
     accountType: "bkash",
-    accountName: "ব্যক্তিগত অ্যাকাউন্ট", // সরাসরি সেট করে দেওয়া হয়েছে
+    accountName: "বিকাশ ব্যক্তিগত অ্যাকাউন্ট", // ডিফল্ট নাম
     accountNumber: "",
     holderName: ""
   });
+  
   const hasChecked = useRef(false);
 
   useEffect(() => {
@@ -41,10 +54,10 @@ const AddAccount = () => {
       if (!user?._id || hasChecked.current) return;
 
       try {
-        hasChecked.current = true; // ✅ একবার run lock
+        hasChecked.current = true;
         setCheckingCount(true);
 
-        const res = await fetch(`https://investify-backend.vercel.app/api/accounts/user/${user._id}`);
+        const res = await fetch(`https://investify-fixed.vercel.app/api/accounts/user/${user._id}`);
         const data = await res.json();
 
         if (data.success && data.accounts) {
@@ -62,9 +75,17 @@ const AddAccount = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    // accountName যেন পরিবর্তন না হয় সেদিকে খেয়াল রাখা হয়েছে
-    if (name === "accountName") return;
     setFormData({ ...formData, [name]: value });
+  };
+
+  // অ্যাকাউন্ট টাইপ পরিবর্তনের হ্যান্ডলার
+  const handleAccountTypeChange = (type) => {
+    const newAccountName = getAccountNameByType(type);
+    setFormData({
+      ...formData,
+      accountType: type,
+      accountName: newAccountName
+    });
   };
 
   // ভ্যালিডেশন
@@ -128,7 +149,7 @@ const AddAccount = () => {
       setLoading(true);
 
       const res = await fetch(
-        "https://investify-backend.vercel.app/api/accounts/add",
+        "https://investify-fixed.vercel.app/api/accounts/add",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -260,10 +281,10 @@ const AddAccount = () => {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, accountType: "bkash" })}
+                  onClick={() => handleAccountTypeChange("bkash")}
                   className={`p-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${
                     formData.accountType === "bkash"
-                      ? "border-green-500 bg-green-50"
+                      ? "border-green-500 bg-green-50 shadow-md"
                       : "border-gray-200 bg-white hover:border-green-300"
                   }`}
                 >
@@ -278,10 +299,10 @@ const AddAccount = () => {
 
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, accountType: "nagad" })}
+                  onClick={() => handleAccountTypeChange("nagad")}
                   className={`p-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${
                     formData.accountType === "nagad"
-                      ? "border-green-500 bg-green-50"
+                      ? "border-green-500 bg-green-50 shadow-md"
                       : "border-gray-200 bg-white hover:border-green-300"
                   }`}
                 >
@@ -296,7 +317,7 @@ const AddAccount = () => {
               </div>
             </div>
 
-            {/* অ্যাকাউন্ট নাম - শুধুমাত্র পঠনযোগ্য (readonly) */}
+            {/* অ্যাকাউন্ট নাম - ডায়নামিক (অ্যাকাউন্ট টাইপ অনুযায়ী পরিবর্তন হবে) */}
             <div className="mb-4">
               <label className="block text-green-800 text-sm font-semibold mb-2">
                 অ্যাকাউন্ট নাম
@@ -309,15 +330,19 @@ const AddAccount = () => {
                   name="accountName"
                   value={formData.accountName}
                   readOnly
-                  className="w-full pl-9 pr-3 py-2.5 bg-gray-100 border border-gray-200 rounded-lg text-gray-600 text-sm cursor-not-allowed"
+                  className="w-full pl-9 pr-3 py-2.5 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm font-medium cursor-default"
+                  style={{ backgroundColor: '#f0fdf4' }}
                 />
               </div>
+              <p className="text-gray-400 text-[10px] mt-1">
+                অ্যাকাউন্ট টাইপ অনুযায়ী নাম স্বয়ংক্রিয়ভাবে সেট হবে
+              </p>
             </div>
 
             {/* হোল্ডার নাম */}
             <div className="mb-4">
               <label className="block text-green-800 text-sm font-semibold mb-2">
-                ব্যবহারকারীর নাম
+                অ্যাকাউন্ট হোল্ডারের নাম
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2">
@@ -355,15 +380,42 @@ const AddAccount = () => {
               </p>
             </div>
 
+            {/* অ্যাকাউন্ট টাইপের আইকন প্রিভিউ */}
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 mb-5 border border-green-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {formData.accountType === "bkash" ? (
+                    <>
+                      <FaBangladeshiTakaSign className="text-pink-500 text-lg" />
+                      <span className="text-green-800 text-sm font-semibold">বিকাশ অ্যাকাউন্ট</span>
+                    </>
+                  ) : (
+                    <>
+                      <FaBangladeshiTakaSign className="text-orange-500 text-lg" />
+                      <span className="text-green-800 text-sm font-semibold">নগদ অ্যাকাউন্ট</span>
+                    </>
+                  )}
+                </div>
+                <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
+                  {formData.accountType === "bkash" ? (
+                    <span className="text-pink-500 text-xs font-bold">bKash</span>
+                  ) : (
+                    <span className="text-orange-500 text-xs font-bold">Nagad</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* তথ্য বক্স */}
-            <div className="bg-green-50 rounded-lg p-3 mb-5">
+            <div className="bg-blue-50 rounded-lg p-3 mb-5 border-l-4 border-blue-500">
               <div className="flex items-start gap-2">
-                <FaCheckCircle className="text-green-600 text-sm mt-0.5" />
+                <FaCheckCircle className="text-blue-600 text-sm mt-0.5" />
                 <div>
-                  <p className="text-green-800 text-xs font-semibold mb-1">গুরুত্বপূর্ণ তথ্য</p>
-                  <p className="text-green-700 text-[10px]">✓ এই অ্যাকাউন্ট উত্তোলনের জন্য ব্যবহার হবে</p>
-                  <p className="text-green-700 text-[10px]">✓ সঠিক তথ্য প্রদান করুন</p>
-                  <p className="text-green-700 text-[10px]">✓ সর্বোচ্চ {maxAccounts}টি অ্যাকাউন্ট যোগ করা যাবে</p>
+                  <p className="text-blue-800 text-xs font-semibold mb-1">গুরুত্বপূর্ণ তথ্য</p>
+                  <p className="text-blue-700 text-[10px]">✓ এই অ্যাকাউন্ট উত্তোলনের জন্য ব্যবহার হবে</p>
+                  <p className="text-blue-700 text-[10px]">✓ সঠিক তথ্য প্রদান করুন</p>
+                  <p className="text-blue-700 text-[10px]">✓ সর্বোচ্চ {maxAccounts}টি অ্যাকাউন্ট যোগ করা যাবে</p>
+                  <p className="text-blue-700 text-[10px]">✓ অ্যাকাউন্ট টাইপ অনুযায়ী নাম স্বয়ংক্রিয়ভাবে সেট হয়</p>
                 </div>
               </div>
             </div>

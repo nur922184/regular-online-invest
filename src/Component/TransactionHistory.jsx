@@ -47,7 +47,7 @@ const TransactionHistory = () => {
       }
 
       const res = await fetch(
-        `https://investify-backend.vercel.app/api/transactions/user/${user._id}`
+        `https://investify-fixed.vercel.app/api/transactions/user/${user._id}`
       );
 
       const data = await res.json();

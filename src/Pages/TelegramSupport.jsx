@@ -43,7 +43,7 @@ const TelegramSupport = () => {
     },
     {
       id: 2,
-      title: "সাপোর্ট গ্রুপ",
+      title: "কাস্টমার সাপোর্ট ",
       description: " পরামর্শ ও সমস্যার সমাধান",
       icon: FaHeadset,
       link: "https://t.me/AgroSupport1",

@@ -39,7 +39,7 @@ const AdminTransactions = () => {
     try {
       setRefreshing(true);
       const res = await axios.get(
-        "https://investify-backend.vercel.app/api/transactions/all"
+        "https://investify-fixed.vercel.app/api/transactions/all"
       );
       setTransactions(res.data.transactions || []);
     } catch (err) {
@@ -86,7 +86,7 @@ const AdminTransactions = () => {
     try {
       // ✅ adminId সহ রিকোয়েস্ট পাঠানো হচ্ছে
       const res = await axios.patch(
-        `https://investify-backend.vercel.app/api/transactions/approve/${id}`,
+        `https://investify-fixed.vercel.app/api/transactions/approve/${id}`,
         {
           adminId: user?._id || "admin"  // এডমিন আইডি পাঠানো হচ্ছে
         }
@@ -161,7 +161,7 @@ const AdminTransactions = () => {
 
     try {
       await axios.patch(
-        `https://investify-backend.vercel.app/api/transactions/reject/${id}`,
+        `https://investify-fixed.vercel.app/api/transactions/reject/${id}`,
         {
           adminId: user?._id || "admin"
         }

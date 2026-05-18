@@ -45,7 +45,7 @@ const ProductList = ({ user, onUserUpdate }) => {
       
       try {
         const res = await fetch(
-          `https://investify-backend.vercel.app/api/investments/user/${userId}`
+          `https://investify-fixed.vercel.app/api/investments/user/${userId}`
         );
         const data = await res.json();
         
@@ -71,7 +71,7 @@ const ProductList = ({ user, onUserUpdate }) => {
         setIsFetchingProducts(true);
 
         const res = await fetch(
-          "https://investify-backend.vercel.app/api/products/all"
+          "https://investify-fixed.vercel.app/api/products/all"
         );
         const data = await res.json();
 
@@ -198,7 +198,7 @@ const ProductList = ({ user, onUserUpdate }) => {
       };
 
       const res = await fetch(
-        "https://investify-backend.vercel.app/api/investments/create",
+        "https://investify-fixed.vercel.app/api/investments/create",
         {
           method: "POST",
           headers: {

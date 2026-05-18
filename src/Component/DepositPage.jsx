@@ -1,4 +1,5 @@
-// components/DepositPage.jsx - আপডেটেড ভার্সন (টাইমআউট বন্ধের সুবিধা সহ)
+// components/DepositPage.jsx - Complete fixed version
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -17,7 +18,6 @@ import {
   FaLeaf,
   FaTractor,
   FaSeedling,
-  FaUserCheck,
   FaSyncAlt
 } from "react-icons/fa";
 import { FaBangladeshiTakaSign } from "react-icons/fa6";
@@ -44,7 +44,6 @@ const DepositPage = () => {
     checkPendingTransaction();
     loadLastSubmissionTime();
 
-    // টাইমার ইন্টারভাল
     const interval = setInterval(() => {
       if (lastSubmissionTime) {
         updateRemainingTime(lastSubmissionTime);
@@ -54,32 +53,28 @@ const DepositPage = () => {
     return () => clearInterval(interval);
   }, [location, user]);
 
-  // পেন্ডিং ট্রানজেকশন চেক করা
   const checkPendingTransaction = async () => {
     if (!user?._id) return;
 
     try {
       setCheckingStatus(true);
-      const res = await fetch(`https://investify-backend.vercel.app/api/transactions/user/${user._id}`);
+      const res = await fetch(`https://investify-fixed.vercel.app/api/transactions/user/${user._id}`);
       const data = await res.json();
 
       if (data.success && data.transactions) {
         const pendingTransactions = data.transactions.filter(t => t.status === "pending");
 
         if (pendingTransactions.length > 0) {
-          const latestPending = pendingTransactions[0];
           const submitTime = localStorage.getItem(`last_deposit_${user._id}`);
 
           if (submitTime) {
             setLastSubmissionTime(parseInt(submitTime));
             updateRemainingTime(parseInt(submitTime));
           } else {
-            // যদি লোকাল স্টোরেজে না থাকে তবুও টাইমার সেট করা
-            setLastSubmissionTime(Date.now() - 30 * 60 * 1000); // 30 মিনিট আগে ধরে
+            setLastSubmissionTime(Date.now() - 30 * 60 * 1000);
             updateRemainingTime(Date.now() - 30 * 60 * 1000);
           }
         } else {
-          // কোনো পেন্ডিং ট্রানজেকশন নেই, টাইমার রিসেট
           clearTimer();
         }
       }
@@ -106,32 +101,28 @@ const DepositPage = () => {
       setRemainingSeconds(Math.floor(remaining / 1000));
     } else {
       setRemainingSeconds(0);
-      // টাইমআউট শেষ হলে লোকাল স্টোরেজ ক্লিয়ার করা
       if (remaining <= 0) {
         localStorage.removeItem(`last_deposit_${user?._id}`);
       }
     }
   };
 
-  // টাইমার রিসেট ফাংশন
   const clearTimer = () => {
     localStorage.removeItem(`last_deposit_${user?._id}`);
     setLastSubmissionTime(null);
     setRemainingSeconds(0);
   };
 
-  // ট্রানজেকশন স্ট্যাটাস চেক করে টাইমার রিসেট করা
   const checkAndResetTimer = async () => {
     if (!user?._id) return;
 
     try {
-      const res = await fetch(`https://investify-backend.vercel.app/api/transactions/user/${user._id}`);
+      const res = await fetch(`https://investify-fixed.vercel.app/api/transactions/user/${user._id}`);
       const data = await res.json();
 
       if (data.success && data.transactions) {
         const pendingTransactions = data.transactions.filter(t => t.status === "pending");
 
-        // যদি কোনো পেন্ডিং ট্রানজেকশন না থাকে, টাইমার রিসেট
         if (pendingTransactions.length === 0) {
           clearTimer();
           Swal.fire({
@@ -151,7 +142,7 @@ const DepositPage = () => {
     bkash: {
       name: "বিকাশ",
       number: "01745624188",
-      accountHolder: "Md. Abdur Rahman",
+      accountHolder: "......",
       icon: "https://i.ibb.co.com/gZpmSgNq/image.png",
       minAmount: 400,
       maxAmount: 50000,
@@ -161,7 +152,7 @@ const DepositPage = () => {
     nagad: {
       name: "নগদ",
       number: "01345124414",
-      accountHolder: "Md. Abdur Rahman",
+      accountHolder: "..........",
       icon: "https://i.ibb.co.com/m5YqjDpS/image.png",
       minAmount: 400,
       maxAmount: 50000,
@@ -287,57 +278,47 @@ const DepositPage = () => {
     setSubmitting(true);
 
     try {
-      const res = await fetch("https://investify-backend.vercel.app/api/transactions/create", {
+      const res = await fetch("https://investify-fixed.vercel.app/api/transactions/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: user._id,
           amount: parseFloat(amount),
           transactionId: transactionId.toUpperCase(),
-          paymentMethod: currentMethod.name,
+          paymentMethod: selectedMethod,
           phoneNumber: currentMethod.number,
-          accountHolder: currentMethod.accountHolder,
-          status: "pending"
         })
       });
 
       const data = await res.json();
+
       if (!res.ok) throw new Error(data.message);
 
       const submitTime = Date.now();
       localStorage.setItem(`last_deposit_${user._id}`, submitTime.toString());
       setLastSubmissionTime(submitTime);
+      updateRemainingTime(submitTime);
 
       Swal.fire({
         title: "ডিপোজিট সাবমিট হয়েছে! ✅",
         html: `
-          <div class="text-center">
-            <div class="text-6xl mb-3">💰</div>
-            <p class="font-bold text-green-600">৳${parseFloat(amount).toLocaleString()} ডিপোজিট সাবমিট হয়েছে!</p>
-            <div class="bg-green-50 p-3 rounded-lg mt-3">
-              <p class="text-sm text-green-800">⏰ এডমিন অনুমোদনের জন্য অপেক্ষা করুন</p>
-              <p class="text-xs text-gray-600 mt-1">আমাদের টিম আপনার ট্রানজেকশন যাচাই করছে</p>
-            </div>
-            <p class="text-xs text-gray-500 mt-3 font-mono">ট্রানজেকশন আইডি: ${transactionId}</p>
-            <button id="checkStatusBtn2" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">স্ট্যাটাস চেক করুন</button>
+        <div class="text-center">
+          <div class="text-6xl mb-3">💰</div>
+          <p class="font-bold text-green-600">৳${parseFloat(amount).toLocaleString()} ডিপোজিট সাবমিট হয়েছে!</p>
+          <div class="bg-green-50 p-3 rounded-lg mt-3">
+            <p class="text-sm text-green-800">⏰ এডমিন অনুমোদনের জন্য অপেক্ষা করুন</p>
+            <p class="text-xs text-gray-600 mt-1">আমাদের টিম আপনার ট্রানজেকশন যাচাই করছে</p>
           </div>
-        `,
+          <p class="text-xs text-gray-500 mt-3 font-mono">ট্রানজেকশন আইডি: ${transactionId}</p>
+        </div>
+      `,
         icon: "success",
-        showConfirmButton: false,
-        showCancelButton: true,
-        cancelButtonText: "বন্ধ করুন",
-        didOpen: () => {
-          const btn = document.getElementById("checkStatusBtn2");
-          if (btn) {
-            btn.onclick = () => {
-              Swal.close();
-              navigate("/transition_history");
-            };
-          }
-        }
+        confirmButtonText: "ঠিক আছে",
+        confirmButtonColor: "#16a34a"
       });
 
       setTransactionId("");
+      setAmount("");
 
     } catch (error) {
       Swal.fire({
@@ -350,7 +331,7 @@ const DepositPage = () => {
       setSubmitting(false);
     }
   };
-
+  
   const isSubmitDisabled = submitting || !canSubmitAgain();
 
   return (
@@ -431,8 +412,8 @@ const DepositPage = () => {
                 key={key}
                 onClick={() => !isSubmitDisabled && setSelectedMethod(key)}
                 className={`flex-1 py-2 rounded-lg border flex items-center justify-center gap-2 transition ${selectedMethod === key
-                    ? "border-green-600 bg-green-50 shadow-sm"
-                    : "border-gray-200"
+                  ? "border-green-600 bg-green-50 shadow-sm"
+                  : "border-gray-200"
                   } ${isSubmitDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                 disabled={isSubmitDisabled}
               >
@@ -446,6 +427,27 @@ const DepositPage = () => {
                 </span>
               </button>
             ))}
+          </div>
+
+          {/* ADD AMOUNT INPUT FIELD - THIS WAS MISSING! */}
+          <div className="mb-3">
+            <label className="text-gray-600 text-xs mb-1 block flex items-center gap-1">
+              <FaBangladeshiTakaSign className="text-gray-400" />
+              ডিপোজিট পরিমাণ (টাকা)
+            </label>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder={`ন্যূনতম ${currentMethod.minAmount} - সর্বোচ্চ ${currentMethod.maxAmount} টাকা`}
+              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+              disabled={isSubmitDisabled}
+              min={currentMethod.minAmount}
+              max={currentMethod.maxAmount}
+            />
+            <p className="text-gray-400 text-[9px] mt-1">
+              ন্যূনতম {currentMethod.minAmount} টাকা থেকে সর্বোচ্চ {currentMethod.maxAmount} টাকা পর্যন্ত ডিপোজিট করতে পারবেন
+            </p>
           </div>
 
           {/* পেমেন্ট ইনফো */}
@@ -468,15 +470,8 @@ const DepositPage = () => {
               {currentMethod.number}
             </p>
             <p className="text-gray-500 text-[10px] text-center mt-1">
-              অ্যাকাউন্ট হোল্ডার: {currentMethod.accountHolder}
+              {currentMethod.accountHolder}
             </p>
-            <div className="flex justify-between mt-2 pt-2 border-t border-green-200">
-              <span className="text-gray-500 text-xs">ডিপোজিট পরিমাণ</span>
-              <div className="flex items-center gap-1">
-                <FaBangladeshiTakaSign className="text-green-600 text-xs" />
-                <span className="text-green-700 font-bold">{amount || '0'}</span>
-              </div>
-            </div>
           </div>
 
           {/* ইনফরমেশন বক্স */}
@@ -519,8 +514,8 @@ const DepositPage = () => {
               type="submit"
               disabled={isSubmitDisabled}
               className={`w-full py-2.5 rounded-lg font-medium text-sm transition active:scale-95 flex items-center justify-center gap-2 ${isSubmitDisabled
-                  ? "bg-gray-300 cursor-not-allowed"
-                  : "bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:shadow-md"
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:shadow-md"
                 }`}
             >
               {submitting ? (
