@@ -536,7 +536,7 @@ const WithdrawPage = () => {
               <div className="space-y-1 text-green-700 text-[11px]">
                 <p className="flex items-center gap-1 bg-white/50 p-2 rounded-lg">
                   <span className="text-lg">🛒</span>
-                  <span><span className="font-bold text-green-800">পণ্য ক্রয়ের পরেই</span> উত্তোলন করা যাবে</span>
+                  <span><span className="font-bold text-green-800">ডিপজিট করে পণ্য ক্রয়ের পরেই</span> উত্তোলন করা যাবে</span>
                 </p>
                 <p>
                   • ন্যূনতম উত্তোলন: <span className="font-bold">২০০ টাকা</span>
@@ -549,6 +549,12 @@ const WithdrawPage = () => {
                 </p>
                 <p>
                   • অনুমোদিত হতে <span className="font-bold">১-২৪ ঘন্টা</span> সময় লাগতে পারে
+                </p>
+                <p>
+                  •  উত্তোলনের সময় সোমবার থেকে শুক্রবার সকাল <span className="font-bold"> ৯ টা থেকে বিকেল ৫ টা</span>  পর্যন্ত, এবং আপনি যে কোনও সময় নগদ টাকা তুলতে পারবেন। 
+                </p>
+                <p>
+                  • <span className="font-bold">শনি থেকে সোম বার </span>  কোনো উত্তোলণ এপরূপ করা হবে না। 
                 </p>
                 <Link to="/">
                   <button className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white py-1.5 rounded-lg text-xs font-medium transition flex items-center justify-center gap-2">

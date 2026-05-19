@@ -33,6 +33,7 @@ import ManageProducts from "../AdminComponent/ManageProducts";
 import AdminBonus from "../AdminComponent/AdminBonus";
 import UserBonus from "../Component/UserBonus";
 import SalaryBonus from "../Component/SalaryBonus";
+import AdminPaymentMethods from "../AdminComponent/AdminPaymentMethods";
 
 
 const Router = createBrowserRouter([
@@ -162,6 +163,14 @@ const Router = createBrowserRouter([
         element: (
           <AdminRoute>
             <AdminBonus />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "/admin/bank",
+        element: (
+          <AdminRoute>
+            <AdminPaymentMethods></AdminPaymentMethods>
           </AdminRoute>
         ),
       },
