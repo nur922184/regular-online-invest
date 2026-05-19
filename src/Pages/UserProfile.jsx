@@ -90,7 +90,7 @@ const UserProfile = () => {
 
   // ইউজার মেনু আইটেম
   const userMenuItems = [
-    { icon: FaUserPlus, label: "অ্যাকাউন্ট সমূহ", path: "/account_list", color: "text-emerald-600" },
+    { icon: FaUserPlus, label: "ব্যাংক সমূহ", path: "/account_list", color: "text-emerald-600" },
     { icon: FaSyncAlt, label: "রিচার্জ", path: "/topup", color: "text-blue-600" },
     { icon: FaHandHoldingUsd, label: "উত্তোলন", path: "/withdraw", color: "text-orange-600" },
     { icon: FaUsers, label: "আমার দল", path: "/refer", color: "text-purple-600" },
@@ -101,7 +101,7 @@ const UserProfile = () => {
 
   // এডমিন মেনু আইটেম
   const adminMenuItems = [
-    { icon: FaProductHunt, label: "ব্যাংক ব্যবস্থাপনা", path: "/admin/bank", color: "text-emerald-600" },
+    { icon: FaMoneyCheckAlt, label: "ব্যাংক ব্যবস্থাপনা", path: "/admin/bank", color: "text-emerald-600" },
     { icon: FaProductHunt, label: "পণ্য ব্যবস্থাপনা", path: "/admin/product_manage", color: "text-emerald-600" },
     { icon: FaUserShield, label: "ইউজার ব্যবস্থাপনা", path: "/admin/users", color: "text-blue-600" },
     { icon: FaBoxOpen, label: "বোনাস ব্যবস্থাপনা", path: "/admin/bonus", color: "text-blue-600" },
