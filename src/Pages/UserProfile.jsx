@@ -1,5 +1,6 @@
-// UserProfile.jsx - Professional Clean Design
-import React, { useState } from "react";
+// UserProfile.jsx - Professional Clean Design with Caching
+
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaUserCircle,
@@ -29,7 +30,8 @@ import {
   FaUserShield,
   FaFileInvoiceDollar,
   FaArrowLeft,
-  FaBoxOpen
+  FaBoxOpen,
+  FaSpinner
 } from "react-icons/fa";
 import Swal from "sweetalert2";
 import useUser from "../hooks/useUsers";
@@ -38,13 +40,138 @@ const UserProfile = () => {
   const navigate = useNavigate();
   const { user, loading, refresh } = useUser();
   const [copying, setCopying] = useState(false);
+  const [cachedUser, setCachedUser] = useState(null);
+  const [isCacheLoading, setIsCacheLoading] = useState(true);
+  
+  const isDataLoaded = useRef(false);
+  const cacheTimeoutRef = useRef(null);
 
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "admin" || cachedUser?.role === "admin";
+
+  // ✅ ক্যাশ থেকে ইউজার ডাটা লোড করা
+  const loadFromCache = useCallback(() => {
+    try {
+      const userId = localStorage.getItem("userId") || JSON.parse(localStorage.getItem("user"))?._id;
+      if (!userId) return null;
+      
+      const cached = localStorage.getItem(`user_profile_cache_${userId}`);
+      if (cached) {
+        const { data, timestamp, expiry } = JSON.parse(cached);
+        // ৫ মিনিটের ক্যাশ (300000 milliseconds)
+        if (Date.now() - timestamp < 300000) {
+          console.log("ক্যাশ থেকে প্রোফাইল ডাটা লোড করা হচ্ছে...");
+          return data;
+        }
+      }
+    } catch (error) {
+      console.error("ক্যাশ লোড করতে সমস্যা:", error);
+    }
+    return null;
+  }, []);
+
+  // ✅ ক্যাশে ইউজার ডাটা সেভ করা
+  const saveToCache = useCallback((userData) => {
+    try {
+      const userId = userData?._id || localStorage.getItem("userId") || JSON.parse(localStorage.getItem("user"))?._id;
+      if (!userId) return;
+      
+      const cacheData = {
+        data: userData,
+        timestamp: Date.now(),
+        expiry: 300000 // 5 minutes
+      };
+      localStorage.setItem(`user_profile_cache_${userId}`, JSON.stringify(cacheData));
+      console.log("প্রোফাইল ডাটা ক্যাশে সেভ করা হয়েছে");
+    } catch (error) {
+      console.error("ক্যাশ সেভ করতে সমস্যা:", error);
+    }
+  }, []);
+
+  // ✅ ক্যাশ ক্লিয়ার ফাংশন
+  const clearCache = useCallback(() => {
+    try {
+      const userId = localStorage.getItem("userId") || JSON.parse(localStorage.getItem("user"))?._id;
+      if (userId) {
+        localStorage.removeItem(`user_profile_cache_${userId}`);
+        console.log("প্রোফাইল ক্যাশ ক্লিয়ার করা হয়েছে");
+      }
+    } catch (error) {
+      console.error("ক্যাশ ক্লিয়ার করতে সমস্যা:", error);
+    }
+  }, []);
+
+  // ✅ ম্যানুয়াল রিফ্রেশ ফাংশন
+  const handleManualRefresh = useCallback(async () => {
+    Swal.fire({
+      title: "রিফ্রেশ করছি...",
+      text: "দয়া করে অপেক্ষা করুন",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+    
+    // ক্যাশ ক্লিয়ার করা
+    clearCache();
+    isDataLoaded.current = false;
+    
+    // ইউজার ডাটা রিফ্রেশ করা
+    await refresh();
+    
+    Swal.close();
+    
+    Swal.fire({
+      icon: "success",
+      title: "রিফ্রেশ করা হয়েছে",
+      text: "সর্বশেষ ডাটা লোড করা হয়েছে",
+      timer: 1500,
+      showConfirmButton: false
+    });
+  }, [refresh, clearCache]);
+
+  // ✅ useEffect - ক্যাশ থেকে ডাটা লোড করা এবং আপডেট করা
+  useEffect(() => {
+    // যদি ইতিমধ্যে ডাটা লোড হয়ে থাকে এবং ক্যাশড ইউজার থাকে
+    if (isDataLoaded.current && cachedUser) {
+      setIsCacheLoading(false);
+      return;
+    }
+
+    // ক্যাশ থেকে ডাটা লোড করা
+    const cachedData = loadFromCache();
+    if (cachedData && !user) {
+      setCachedUser(cachedData);
+      setIsCacheLoading(false);
+      isDataLoaded.current = true;
+    }
+
+    // যদি রিয়েল ইউজার ডাটা আসে, তাহলে ক্যাশ আপডেট করা
+    if (user && user._id) {
+      setCachedUser(user);
+      saveToCache(user);
+      isDataLoaded.current = true;
+      setIsCacheLoading(false);
+    }
+
+    // টাইমআউট সেট করা (যদি ১০ সেকেন্ডের মধ্যে ডাটা না আসে)
+    cacheTimeoutRef.current = setTimeout(() => {
+      if (!user && !cachedUser) {
+        setIsCacheLoading(false);
+      }
+    }, 10000);
+
+    return () => {
+      if (cacheTimeoutRef.current) {
+        clearTimeout(cacheTimeoutRef.current);
+      }
+    };
+  }, [user, loadFromCache, saveToCache, cachedUser]);
 
   const copyReferralCode = async () => {
-    if (!user?.refCode) return;
+    const refCode = user?.refCode || cachedUser?.refCode;
+    if (!refCode) return;
     setCopying(true);
-    await navigator.clipboard.writeText(user.refCode);
+    await navigator.clipboard.writeText(refCode);
     Swal.fire({
       icon: "success",
       title: "কপি হয়েছে!",
@@ -69,24 +196,29 @@ const UserProfile = () => {
     });
 
     if (res.isConfirmed) {
+      // লগআউট করার সময় ক্যাশ ক্লিয়ার করা
+      clearCache();
       localStorage.clear();
       sessionStorage.clear();
       navigate("/login");
     }
   };
 
-  if (loading) {
+  // ডাটা দেখানোর জন্য ব্যবহার করা হবে (user অথবা cachedUser)
+  const displayUser = user || cachedUser;
+
+  if (loading || (isCacheLoading && !displayUser)) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center">
         <div className="text-center">
-          <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <FaSpinner className="animate-spin text-4xl text-green-600 mx-auto mb-3" />
           <p className="text-green-600 text-sm">লোড হচ্ছে...</p>
         </div>
       </div>
     );
   }
 
-  const totalReferrals = (user?.level1Count || 0) + (user?.level2Count || 0) + (user?.level3Count || 0);
+  const totalReferrals = (displayUser?.level1Count || 0) + (displayUser?.level2Count || 0) + (displayUser?.level3Count || 0);
 
   // ইউজার মেনু আইটেম
   const userMenuItems = [
@@ -113,7 +245,7 @@ const UserProfile = () => {
 
   // স্ট্যাটিসটিক্স ডাটা
   const stats = [
-    { icon: FaWallet, label: "ব্যালেন্স", value: user?.balance || 0, color: "from-green-600 to-emerald-600" },
+    { icon: FaWallet, label: "ব্যালেন্স", value: displayUser?.balance || 0, color: "from-green-600 to-emerald-600" },
   ];
 
   return (
@@ -138,7 +270,7 @@ const UserProfile = () => {
           
           <div className="flex gap-2">
             <button 
-              onClick={refresh} 
+              onClick={handleManualRefresh} 
               className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center active:bg-green-200 transition"
               title="রিফ্রেশ"
             >
@@ -154,6 +286,14 @@ const UserProfile = () => {
           </div>
         </div>
 
+        {/* ক্যাশ স্ট্যাটাস ইন্ডিকেটর */}
+        <div className="text-right mb-2">
+          <span className="text-[9px] text-gray-400 flex items-center justify-end gap-1">
+            <FaDatabase size={8} />
+            {user ? "লাইভ ডাটা" : cachedUser ? "ক্যাশড ডাটা" : "লোডিং..."}
+          </span>
+        </div>
+
         {/* প্রোফাইল কার্ড */}
         <div className="bg-white rounded-xl shadow-md border border-green-100 p-4 mb-5">
           <div className="flex items-center gap-4">
@@ -161,11 +301,11 @@ const UserProfile = () => {
               <FaUserCircle className="text-white text-4xl" />
             </div>
             <div className="flex-1">
-              <h2 className="text-lg font-bold text-gray-800">{user?.name || "ইউজার"}</h2>
-              <p className="text-gray-500 text-xs">{user?.phone || "নম্বর নেই"}</p>
+              <h2 className="text-lg font-bold text-gray-800">{displayUser?.name || "ইউজার"}</h2>
+              <p className="text-gray-500 text-xs">{displayUser?.phone || "নম্বর নেই"}</p>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-green-700 text-xs font-mono bg-green-50 px-2 py-0.5 rounded">
-                  {user?.refCode || "N/A"}
+                  {displayUser?.refCode || "N/A"}
                 </span>
                 <button onClick={copyReferralCode} className="text-green-500 hover:text-green-700">
                   <FaCopy size={12} />

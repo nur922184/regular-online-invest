@@ -1,5 +1,6 @@
-// ReferPage.jsx - আপডেটেড (শুধু ডিপোজিট কমিশন দেখাবে)
-import React, { useState, useEffect } from "react";
+// ReferPage.jsx - ক্যাশিং সহ (একবার লোড হবে)
+
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   FaCopy, 
@@ -22,7 +23,9 @@ import {
   FaSpinner,
   FaLeaf,
   FaSeedling,
-  FaTractor
+  FaTractor,
+  FaDatabase,
+  FaSyncAlt
 } from "react-icons/fa";
 import { FaBangladeshiTakaSign } from "react-icons/fa6";
 import Swal from "sweetalert2";
@@ -32,6 +35,7 @@ const ReferPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [showBalance, setShowBalance] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [stats, setStats] = useState({
     refCode: "",
     name: "",
@@ -47,11 +51,107 @@ const ReferPage = () => {
     referredUsers: []
   });
 
-  useEffect(() => {
-    loadUserData();
+  const isDataLoaded = useRef(false);
+  const cacheRef = useRef(null);
+
+  // ✅ ক্যাশ থেকে ডাটা লোড করা
+  const loadFromCache = useCallback((userId) => {
+    try {
+      const cached = localStorage.getItem(`refer_cache_${userId}`);
+      if (cached) {
+        const { data, timestamp, expiry } = JSON.parse(cached);
+        // ৫ মিনিটের ক্যাশ (300000 milliseconds)
+        if (Date.now() - timestamp < 300000) {
+          return data;
+        }
+      }
+    } catch (error) {
+      console.error("ক্যাশ লোড করতে সমস্যা:", error);
+    }
+    return null;
   }, []);
 
-  const loadUserData = async () => {
+  // ✅ ক্যাশে ডাটা সেভ করা
+  const saveToCache = useCallback((userId, data) => {
+    try {
+      const cacheData = {
+        data: data,
+        timestamp: Date.now(),
+        expiry: 300000 // 5 minutes
+      };
+      localStorage.setItem(`refer_cache_${userId}`, JSON.stringify(cacheData));
+    } catch (error) {
+      console.error("ক্যাশ সেভ করতে সমস্যা:", error);
+    }
+  }, []);
+
+  // ✅ ইউজারের ডিপোজিট তথ্য নেওয়া (ক্যাশ সহ)
+  const getUserDepositInfo = useCallback(async (user) => {
+    try {
+      // চেক করা ক্যাশে আছে কিনা
+      const cachedDeposit = localStorage.getItem(`user_deposit_${user._id}`);
+      if (cachedDeposit) {
+        const { data, timestamp } = JSON.parse(cachedDeposit);
+        if (Date.now() - timestamp < 300000) {
+          return data;
+        }
+      }
+
+      const txRes = await axios.get(`https://investify-fixed.vercel.app/api/transactions/user/${user._id}`);
+      const transactions = txRes.data?.transactions || [];
+      const approvedDeposits = transactions.filter(t => t.status === "approved");
+      const totalDeposit = approvedDeposits.reduce((sum, t) => sum + t.amount, 0);
+      const lastDeposit = approvedDeposits[approvedDeposits.length - 1];
+      
+      const depositInfo = {
+        ...user,
+        totalDeposit,
+        lastDepositAmount: lastDeposit?.amount || 0,
+        lastDepositDate: lastDeposit?.createdAt || null,
+        transactionCount: approvedDeposits.length
+      };
+
+      // ক্যাশে সেভ করা
+      localStorage.setItem(`user_deposit_${user._id}`, JSON.stringify({
+        data: depositInfo,
+        timestamp: Date.now()
+      }));
+
+      return depositInfo;
+    } catch (error) {
+      console.error(`Error fetching deposits for user ${user._id}:`, error);
+      return {
+        ...user,
+        totalDeposit: 0,
+        lastDepositAmount: 0,
+        lastDepositDate: null,
+        transactionCount: 0
+      };
+    }
+  }, []);
+
+  // ✅ ম্যানুয়াল রিফ্রেশ ফাংশন
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    // ক্যাশ ক্লিয়ার করা
+    const userId = localStorage.getItem("userId") || JSON.parse(localStorage.getItem("user"))?._id;
+    if (userId) {
+      localStorage.removeItem(`refer_cache_${userId}`);
+    }
+    // রিলোড করা
+    await loadUserData(true);
+    setIsRefreshing(false);
+    
+    Swal.fire({
+      icon: "success",
+      title: "রিফ্রেশ করা হয়েছে",
+      text: "সর্বশেষ ডাটা লোড করা হয়েছে",
+      timer: 1500,
+      showConfirmButton: false
+    });
+  };
+
+  const loadUserData = async (forceRefresh = false) => {
     try {
       setLoading(true);
       const userId = localStorage.getItem("userId") || JSON.parse(localStorage.getItem("user"))?._id;
@@ -61,6 +161,25 @@ const ReferPage = () => {
         return;
       }
 
+      // ✅ যদি ফোর্স রিফ্রেশ না হয় এবং ক্যাশে ডাটা থাকে তাহলে ক্যাশ থেকে লোড করা
+      if (!forceRefresh && isDataLoaded.current) {
+        console.log("ডাটা ইতিমধ্যে লোড করা আছে, স্কিপিং...");
+        setLoading(false);
+        return;
+      }
+
+      // ✅ ক্যাশ চেক করা
+      const cachedData = loadFromCache(userId);
+      if (!forceRefresh && cachedData) {
+        console.log("ক্যাশ থেকে ডাটা লোড করা হচ্ছে...");
+        setStats(cachedData);
+        isDataLoaded.current = true;
+        setLoading(false);
+        return;
+      }
+
+      console.log("API থেকে ডাটা লোড করা হচ্ছে...");
+      
       // সব ইউজার লোড
       const res = await axios.get("https://investify-fixed.vercel.app/api/users/all");
       const users = res.data?.users || [];
@@ -76,34 +195,7 @@ const ReferPage = () => {
         // Level 3: Level 2 এর রেফারেল
         const level3Users = users.filter(u => level2Users.some(l2 => u.referredBy === l2.refCode));
         
-        // প্রতিটি ইউজারের ডিপোজিট তথ্য নেওয়া
-        const getUserDepositInfo = async (user) => {
-          try {
-            const txRes = await axios.get(`https://investify-fixed.vercel.app/api/transactions/user/${user._id}`);
-            const transactions = txRes.data?.transactions || [];
-            const approvedDeposits = transactions.filter(t => t.status === "approved");
-            const totalDeposit = approvedDeposits.reduce((sum, t) => sum + t.amount, 0);
-            const lastDeposit = approvedDeposits[approvedDeposits.length - 1];
-            
-            return {
-              ...user,
-              totalDeposit,
-              lastDepositAmount: lastDeposit?.amount || 0,
-              lastDepositDate: lastDeposit?.createdAt || null,
-              transactionCount: approvedDeposits.length
-            };
-          } catch (error) {
-            return {
-              ...user,
-              totalDeposit: 0,
-              lastDepositAmount: 0,
-              lastDepositDate: null,
-              transactionCount: 0
-            };
-          }
-        };
-        
-        // Level 1 ইউজারদের ডিপোজিট তথ্য সহ আনা
+        // Level 1 ইউজারদের ডিপোজিট তথ্য সহ আনা (প্যারালালে)
         const level1WithDeposits = await Promise.all(level1Users.map(getUserDepositInfo));
         
         // Level 2 ইউজারদের ডিপোজিট তথ্য সহ আনা
@@ -113,16 +205,11 @@ const ReferPage = () => {
         const level3WithDeposits = await Promise.all(level3Users.map(getUserDepositInfo));
         
         // কমিশন ক্যালকুলেশন (শুধু ডিপোজিটের ভিত্তিতে)
-        // Level 1: 10% কমিশন
         const level1Commission = level1WithDeposits.reduce((sum, u) => sum + (u.totalDeposit * 0.10), 0);
-        
-        // Level 2: 5% কমিশন
         const level2Commission = level2WithDeposits.reduce((sum, u) => sum + (u.totalDeposit * 0.05), 0);
-        
-        // Level 3: 2% কমিশন
         const level3Commission = level3WithDeposits.reduce((sum, u) => sum + (u.totalDeposit * 0.02), 0);
         
-        setStats({
+        const newStats = {
           refCode: currentUser.refCode,
           name: currentUser.name,
           phone: currentUser.phone,
@@ -135,7 +222,13 @@ const ReferPage = () => {
           level3Commission: level3Commission,
           totalCommission: level1Commission + level2Commission + level3Commission,
           referredUsers: level1WithDeposits
-        });
+        };
+        
+        setStats(newStats);
+        
+        // ✅ ক্যাশে সেভ করা
+        saveToCache(userId, newStats);
+        isDataLoaded.current = true;
       }
     } catch (error) {
       console.error("Error loading data:", error);
@@ -149,6 +242,15 @@ const ReferPage = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadUserData();
+    
+    // ✅ ক্লিনআপ ফাংশন (কম্পোনেন্ট আনমাউন্ট হলে)
+    return () => {
+      isDataLoaded.current = false;
+    };
+  }, []);
 
   const referLink = `${window.location.origin}/signup?ref=${stats.refCode}`;
 
@@ -186,7 +288,10 @@ const ReferPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center">
-        <FaSpinner className="animate-spin text-4xl text-green-600" />
+        <div className="text-center">
+          <FaSpinner className="animate-spin text-4xl text-green-600 mx-auto mb-3" />
+          <p className="text-green-600 text-sm">ডাটা লোড হচ্ছে...</p>
+        </div>
       </div>
     );
   }
@@ -196,14 +301,35 @@ const ReferPage = () => {
       <div className="max-w-md mx-auto px-4 py-5">
         
         {/* হেডার */}
-        <div className="flex items-center gap-3 mb-5">
-          <button onClick={() => navigate(-1)} className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-            <FaArrowLeft className="text-green-700 text-sm" />
-          </button>
-          <div className="flex items-center gap-2">
-            <FaUserFriends className="text-green-600 text-lg" />
-            <h1 className="text-lg font-bold text-green-800">রেফারেল প্রোগ্রাম</h1>
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
+            <button onClick={() => navigate(-1)} className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+              <FaArrowLeft className="text-green-700 text-sm" />
+            </button>
+            <div className="flex items-center gap-2">
+              <FaUserFriends className="text-green-600 text-lg" />
+              <h1 className="text-lg font-bold text-green-800">রেফারেল প্রোগ্রাম</h1>
+            </div>
           </div>
+          
+          {/* রিফ্রেশ বাটন */}
+          <div className="flex gap-1">
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center hover:bg-green-200 transition"
+            >
+              <FaSyncAlt className={`text-green-600 text-sm ${isRefreshing ? "animate-spin" : ""}`} />
+            </button>
+          </div>
+        </div>
+
+        {/* ক্যাশ স্ট্যাটাস ইন্ডিকেটর (স্মল) */}
+        <div className="text-right mb-2">
+          <span className="text-[9px] text-gray-400 flex items-center justify-end gap-1">
+            <FaDatabase size={8} />
+            ক্যাশড ডাটা
+          </span>
         </div>
 
         {/* ব্যালেন্স কার্ড */}
@@ -241,7 +367,7 @@ const ReferPage = () => {
           </div>
         </div>
 
-        {/* স্ট্যাটিসটিক্স গ্রিড - 2 কলাম */}
+        {/* স্ট্যাটিসটিক্স গ্রিড */}
         <div className="grid grid-cols-2 gap-3 mb-5">
           <div className="bg-white rounded-xl p-3 shadow-sm border border-green-100">
             <div className="flex items-center justify-between">
@@ -313,7 +439,7 @@ const ReferPage = () => {
           </div>
         </div>
 
-        {/* শেয়ার অপশন - 3 কলাম */}
+        {/* শেয়ার অপশন */}
         <div className="grid grid-cols-3 gap-2 mb-5">
           {[
             { name: "হোয়াটসঅ্যাপ", icon: FaWhatsapp, color: "bg-green-500 hover:bg-green-600", action: () => shareVia("whatsapp") },

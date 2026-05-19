@@ -1,4 +1,5 @@
-// MyInvestments.jsx - Professional Green Theme (বোনাস কার্ড বাদ)
+// MyInvestments.jsx - Professional Green Theme with Caching
+
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -16,7 +17,9 @@ import {
   FaCheckCircle,
   FaSpinner,
   FaArrowLeft,
-  FaInfoCircle
+  FaInfoCircle,
+  FaDatabase,
+  FaSyncAlt
 } from "react-icons/fa";
 import { FaBangladeshiTakaSign } from "react-icons/fa6";
 import useUser from "../hooks/useUsers";
@@ -29,27 +32,122 @@ const MyInvestments = () => {
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState({});
   const [timers, setTimers] = useState({});
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isCachedData, setIsCachedData] = useState(false);
+  
   const timerIntervalRef = useRef(null);
+  const isDataLoaded = useRef(false);
+  const cacheTimeoutRef = useRef(null);
 
-  // ডাটা ফেচ
-  const fetchData = useCallback(async () => {
+  // ✅ ক্যাশ থেকে ডাটা লোড করা
+  const loadFromCache = useCallback((userId) => {
     try {
-      if (!user?._id) return;
+      const cached = localStorage.getItem(`investments_cache_${userId}`);
+      if (cached) {
+        const { data, timestamp, expiry } = JSON.parse(cached);
+        // ৫ মিনিটের ক্যাশ (300000 milliseconds)
+        if (Date.now() - timestamp < 300000) {
+          console.log("ক্যাশ থেকে ইনভেস্টমেন্ট ডাটা লোড করা হচ্ছে...");
+          return data;
+        }
+      }
+    } catch (error) {
+      console.error("ক্যাশ লোড করতে সমস্যা:", error);
+    }
+    return null;
+  }, []);
+
+  // ✅ ক্যাশে ডাটা সেভ করা
+  const saveToCache = useCallback((userId, data) => {
+    try {
+      const cacheData = {
+        data: data,
+        timestamp: Date.now(),
+        expiry: 300000 // 5 minutes
+      };
+      localStorage.setItem(`investments_cache_${userId}`, JSON.stringify(cacheData));
+      console.log("ইনভেস্টমেন্ট ডাটা ক্যাশে সেভ করা হয়েছে");
+    } catch (error) {
+      console.error("ক্যাশ সেভ করতে সমস্যা:", error);
+    }
+  }, []);
+
+  // ✅ ক্যাশ ক্লিয়ার ফাংশন
+  const clearCache = useCallback((userId) => {
+    try {
+      if (userId) {
+        localStorage.removeItem(`investments_cache_${userId}`);
+        console.log("ইনভেস্টমেন্ট ক্যাশ ক্লিয়ার করা হয়েছে");
+      }
+    } catch (error) {
+      console.error("ক্যাশ ক্লিয়ার করতে সমস্যা:", error);
+    }
+  }, []);
+
+  // ✅ ডাটা ফেচ (ক্যাশ সহ)
+  const fetchData = useCallback(async (forceRefresh = false) => {
+    try {
+      if (!user?._id) {
+        setLoading(false);
+        return;
+      }
       
+      // যদি ফোর্স রিফ্রেশ না হয় এবং ইতিমধ্যে ডাটা লোড হয়ে থাকে
+      if (!forceRefresh && isDataLoaded.current && investments.length > 0) {
+        console.log("ডাটা ইতিমধ্যে লোড করা আছে, স্কিপিং...");
+        setLoading(false);
+        return;
+      }
+      
+      // ক্যাশ চেক করা (যদি ফোর্স রিফ্রেশ না হয়)
+      if (!forceRefresh) {
+        const cachedData = loadFromCache(user._id);
+        if (cachedData) {
+          setInvestments(cachedData);
+          setIsCachedData(true);
+          
+          // টাইমার ক্যালকুলেশন
+          const newTimers = {};
+          const now = new Date();
+          cachedData.forEach((inv) => {
+            if (inv.lastClaimDate) {
+              const lastClaim = new Date(inv.lastClaimDate);
+              const nextClaimTime = new Date(lastClaim);
+              nextClaimTime.setHours(nextClaimTime.getHours() + 24);
+              let diff = nextClaimTime - now;
+              diff = diff > 0 ? diff : 0;
+              newTimers[inv._id] = diff;
+            } else {
+              newTimers[inv._id] = 0;
+            }
+          });
+          setTimers(newTimers);
+          setLoading(false);
+          return;
+        }
+      }
+      
+      setIsCachedData(false);
+      
+      // API থেকে ডাটা লোড করা
+      console.log("API থেকে ইনভেস্টমেন্ট ডাটা লোড করা হচ্ছে...");
       const invRes = await axios.get(`https://investify-fixed.vercel.app/api/investments/user/${user._id}`);
       const userInvestments = invRes.data?.investments || [];
       setInvestments(userInvestments);
+      
+      // ক্যাশে সেভ করা
+      saveToCache(user._id, userInvestments);
+      isDataLoaded.current = true;
+      setIsCachedData(false);
 
       // টাইমার ক্যালকুলেশন
       const newTimers = {};
       const now = new Date();
-
       userInvestments.forEach((inv) => {
         if (inv.lastClaimDate) {
           const lastClaim = new Date(inv.lastClaimDate);
           const nextClaimTime = new Date(lastClaim);
           nextClaimTime.setHours(nextClaimTime.getHours() + 24);
-
           let diff = nextClaimTime - now;
           diff = diff > 0 ? diff : 0;
           newTimers[inv._id] = diff;
@@ -57,7 +155,6 @@ const MyInvestments = () => {
           newTimers[inv._id] = 0;
         }
       });
-
       setTimers(newTimers);
 
     } catch (err) {
@@ -65,15 +162,65 @@ const MyInvestments = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, investments.length, loadFromCache, saveToCache]);
 
+  // ✅ ম্যানুয়াল রিফ্রেশ ফাংশন
+  const handleManualRefresh = useCallback(async () => {
+    if (!user?._id) return;
+    
+    setIsRefreshing(true);
+    Swal.fire({
+      title: "রিফ্রেশ করছি...",
+      text: "দয়া করে অপেক্ষা করুন",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+    
+    // ক্যাশ ক্লিয়ার করা
+    clearCache(user._id);
+    isDataLoaded.current = false;
+    
+    // নতুন ডাটা লোড করা
+    await fetchData(true);
+    
+    // ইউজার ডাটাও রিফ্রেশ করা
+    if (refresh) {
+      await refresh();
+    }
+    
+    Swal.close();
+    setIsRefreshing(false);
+    
+    Swal.fire({
+      icon: "success",
+      title: "রিফ্রেশ করা হয়েছে",
+      text: "সর্বশেষ ডাটা লোড করা হয়েছে",
+      timer: 1500,
+      showConfirmButton: false
+    });
+  }, [user, clearCache, fetchData, refresh]);
+
+  // ✅ ইনিশিয়াল ডাটা লোড
   useEffect(() => {
     fetchData();
-    const refreshInterval = setInterval(fetchData, 10000);
-    return () => clearInterval(refreshInterval);
+    
+    // টাইমআউট সেট করা (যদি ১০ সেকেন্ডের মধ্যে ডাটা না আসে)
+    cacheTimeoutRef.current = setTimeout(() => {
+      if (loading) {
+        setLoading(false);
+      }
+    }, 10000);
+    
+    return () => {
+      if (cacheTimeoutRef.current) {
+        clearTimeout(cacheTimeoutRef.current);
+      }
+    };
   }, [fetchData]);
 
-  // টাইমার আপডেট
+  // ✅ টাইমার আপডেট (প্রতি সেকেন্ডে)
   useEffect(() => {
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
 
@@ -157,8 +304,16 @@ const MyInvestments = () => {
           [investmentId]: 24 * 60 * 60 * 1000
         }));
 
-        await fetchData();
-        refresh();
+        // ক্লেইম করার পর ক্যাশ ক্লিয়ার করে নতুন ডাটা লোড করা
+        if (user?._id) {
+          clearCache(user._id);
+          isDataLoaded.current = false;
+          await fetchData(true);
+        }
+        
+        if (refresh) {
+          await refresh();
+        }
       }
     } catch (err) {
       Swal.fire({
@@ -180,7 +335,10 @@ const MyInvestments = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="text-center">
+          <FaSpinner className="animate-spin text-4xl text-green-600 mx-auto mb-3" />
+          <p className="text-green-600 text-sm">লোড হচ্ছে...</p>
+        </div>
       </div>
     );
   }
@@ -190,18 +348,41 @@ const MyInvestments = () => {
       <div className="max-w-md mx-auto px-4 py-5">
         
         {/* হেডার */}
-        <div className="flex items-center gap-3 mb-5">
-          <button 
-            onClick={() => navigate(-1)} 
-            className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center active:bg-green-200 transition"
-          >
-            <FaArrowLeft className="text-green-700 text-sm" />
-          </button>
-          <div className="flex items-center gap-2">
-            <FaChartLine className="text-green-600 text-lg" />
-            <h1 className="text-lg font-bold text-green-800">আমার বিনিয়োগ</h1>
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => navigate(-1)} 
+              className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center active:bg-green-200 transition"
+            >
+              <FaArrowLeft className="text-green-700 text-sm" />
+            </button>
+            <div className="flex items-center gap-2">
+              <FaChartLine className="text-green-600 text-lg" />
+              <h1 className="text-lg font-bold text-green-800">আমার বিনিয়োগ</h1>
+            </div>
           </div>
-          <FaWallet className="text-green-600 ml-auto text-sm" />
+          
+          <div className="flex gap-2">
+            <button 
+              onClick={handleManualRefresh}
+              disabled={isRefreshing}
+              className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center active:bg-green-200 transition"
+              title="রিফ্রেশ"
+            >
+              <FaSyncAlt className={`text-green-600 text-sm ${isRefreshing ? "animate-spin" : ""}`} />
+            </button>
+          </div>
+        </div>
+
+        {/* ক্যাশ স্ট্যাটাস ইন্ডিকেটর */}
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-[9px] text-gray-400 flex items-center gap-1">
+            <FaDatabase size={8} />
+            {isCachedData ? "ক্যাশড ডাটা" : "লাইভ ডাটা"}
+          </span>
+          <span className="text-[9px] text-gray-400">
+            {investments.length} টি বিনিয়োগ
+          </span>
         </div>
 
         {/* ব্যালেন্স কার্ড */}

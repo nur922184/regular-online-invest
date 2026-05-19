@@ -77,7 +77,7 @@ const DepositPage = () => {
             name: "bkash",
             displayName: "বিকাশ",
             number: "01745624188",
-            accountHolder: "Md. Abdur Rahman",
+            accountHolder: "-------",
             icon: "https://i.ibb.co.com/gZpmSgNq/image.png",
             minAmount: 400,
             maxAmount: 50000,
@@ -109,7 +109,7 @@ const DepositPage = () => {
           name: "bkash",
           displayName: "বিকাশ",
           number: "01745624188",
-          accountHolder: "Md. Abdur Rahman",
+          accountHolder: "--------",
           icon: "https://i.ibb.co.com/gZpmSgNq/image.png",
           minAmount: 400,
           maxAmount: 50000,
@@ -488,8 +488,8 @@ const DepositPage = () => {
                 <button
                   key={method._id}
                   onClick={() => !isSubmitDisabled && setSelectedMethod(method)}
-                  className={`flex-1 py-2 rounded-lg border flex items-center justify-center gap-2 transition ${selectedMethod?._id === method._id
-                      ? "border-green-600 bg-green-50 shadow-sm"
+                  className={`flex-1 py-3 rounded-lg border flex items-center justify-center gap-2 transition ${selectedMethod?._id === method._id
+                      ? "border-green-700 bg-green-100 shadow-sm"
                       : "border-gray-200"
                     } ${isSubmitDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                   disabled={isSubmitDisabled}
@@ -513,16 +513,17 @@ const DepositPage = () => {
 
           {/* ADD AMOUNT INPUT FIELD */}
           <div className="mb-3">
-            <label className="text-gray-600 text-xs mb-1 block flex items-center gap-1">
+            <label className="text-gray-600 text-xs mb-1 flex items-center gap-1">
               <FaBangladeshiTakaSign className="text-gray-400" />
               ডিপোজিট পরিমাণ (টাকা)
             </label>
             <input
               type="number"
               value={amount}
+              readOnly
               onChange={(e) => setAmount(e.target.value)}
               placeholder={`ন্যূনতম ${currentMethod?.minAmount || 400} - সর্বোচ্চ ${currentMethod?.maxAmount || 50000} টাকা`}
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+              className="w-full px-3 py-2 bg-gray-100 border font-extrabold border-gray-200 rounded-lg text-green-600 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
               disabled={isSubmitDisabled}
               min={currentMethod?.minAmount || 400}
               max={currentMethod?.maxAmount || 50000}
@@ -538,7 +539,7 @@ const DepositPage = () => {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <FaMobileAlt className="text-green-600 text-xs" />
-                  <span className="text-green-700 text-xs">এই অ্যাকাউন্টে সেন্ট মানি করুন</span>
+                  <span className="text-green-700 ">এই অ্যাকাউন্টে সেন্ট মানি করুন</span>
                 </div>
                 <button
                   onClick={handleCopy}
@@ -549,7 +550,7 @@ const DepositPage = () => {
                   {copied ? "কপি হয়েছে" : "কপি"}
                 </button>
               </div>
-              <p className="text-green-700 font-bold text-center text-base tracking-wider">
+              <p className="text-green-700 font-bold text-center text-3xl  tracking-wider">
                 {currentMethod.number}
               </p>
               <p className="text-gray-500 text-[10px] text-center mt-1">
@@ -577,7 +578,7 @@ const DepositPage = () => {
           {/* ফর্ম */}
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
-              <label className="text-gray-600 text-xs mb-1 block flex items-center gap-1">
+              <label className="text-green-600 mb-1 flex items-center gap-1">
                 <FaInfoCircle className="text-gray-400" />
                 ট্রানজেকশন আইডি (TxnID)
               </label>
@@ -586,7 +587,7 @@ const DepositPage = () => {
                 value={transactionId}
                 onChange={(e) => setTransactionId(e.target.value.toUpperCase())}
                 placeholder={`যেমন: ${currentMethod?.txnExample || "8X7X6X5X"}`}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 font-mono"
+                className="w-full px-3 py-3 bg-gray-50 border border-gray-300 rounded-lg  focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 font-mono"
                 disabled={isSubmitDisabled}
               />
               <p className="text-gray-400 text-[9px] mt-1">

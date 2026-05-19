@@ -1,6 +1,6 @@
-// ProductList.jsx - আপডেটেড ভার্সন (ফ্রি প্রোডাক্ট সবার উপরে)
+// ProductList.jsx - পেজিনেশন বাটন সহ (নেক্সট/প্রিভিয়াস)
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
@@ -13,35 +13,77 @@ import {
   FaArrowRight,
   FaGift,
   FaCheckCircle,
-  FaCrown
+  FaCrown,
+  FaDatabase,
+  FaChevronLeft,
+  FaChevronRight
 } from "react-icons/fa";
 
 const ProductList = ({ user, onUserUpdate }) => {
   const navigate = useNavigate();
 
+  // স্টেট ম্যানেজমেন্ট
   const [products, setProducts] = useState([]);
   const [freeProduct, setFreeProduct] = useState(null);
   const [paidProducts, setPaidProducts] = useState([]);
-  const [visibleProducts, setVisibleProducts] = useState([]);
-  const [page, setPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [isFetchingProducts, setIsFetchingProducts] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [hasClaimedFreeProduct, setHasClaimedFreeProduct] = useState(false);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-  const loaderRef = useRef(null);
-  const productsPerPage = 5;
-
+  const productsPerPage = 6; // প্রতি পৃষ্ঠায় ৬ টি পণ্য
   const userId = user?._id;
   const balance = user?.balance || 0;
 
-  // চেক করা ইউজার আগে ফ্রি প্রোডাক্ট নিয়েছে কিনা
+  // পেজিনেশন ক্যালকুলেশন
+  const totalPages = Math.ceil(paidProducts.length / productsPerPage);
+  const startIndex = (currentPage - 1) * productsPerPage;
+  const endIndex = startIndex + productsPerPage;
+  const currentProducts = paidProducts.slice(startIndex, endIndex);
+
+  // ✅ ক্যাশ ফাংশন
+  const loadFromCache = useCallback(() => {
+    try {
+      const cached = localStorage.getItem('product_cache');
+      if (cached) {
+        const { data, timestamp, expiry } = JSON.parse(cached);
+        if (Date.now() - timestamp < 300000) { // 5 minutes
+          return data;
+        }
+      }
+    } catch (error) {
+      console.error("ক্যাশ লোড করতে সমস্যা:", error);
+    }
+    return null;
+  }, []);
+
+  const saveToCache = useCallback((data) => {
+    try {
+      const cacheData = {
+        data: data,
+        timestamp: Date.now(),
+        expiry: 300000
+      };
+      localStorage.setItem('product_cache', JSON.stringify(cacheData));
+    } catch (error) {
+      console.error("ক্যাশ সেভ করতে সমস্যা:", error);
+    }
+  }, []);
+
+  // ✅ ফ্রি প্রোডাক্ট চেক করা
   useEffect(() => {
     const checkFreeProductClaimed = async () => {
       if (!userId) return;
+      
+      const cachedClaim = localStorage.getItem(`free_claimed_${userId}`);
+      if (cachedClaim) {
+        setHasClaimedFreeProduct(JSON.parse(cachedClaim));
+        return;
+      }
       
       try {
         const res = await fetch(
@@ -50,11 +92,11 @@ const ProductList = ({ user, onUserUpdate }) => {
         const data = await res.json();
         
         if (data.success && data.investments) {
-          // ফ্রি টাইপের বিনিয়োগ আছে কিনা চেক করা
           const hasFree = data.investments.some(
             (inv) => inv.productType === "free" || inv.amount === 0
           );
           setHasClaimedFreeProduct(hasFree);
+          localStorage.setItem(`free_claimed_${userId}`, JSON.stringify(hasFree));
         }
       } catch (error) {
         console.error("ফ্রি প্রোডাক্ট চেক করতে সমস্যা:", error);
@@ -64,31 +106,45 @@ const ProductList = ({ user, onUserUpdate }) => {
     checkFreeProductClaimed();
   }, [userId]);
 
-  // API থেকে সকল পণ্য লোড করা
+  // ✅ API থেকে সকল পণ্য লোড করা
   useEffect(() => {
     const fetchProducts = async () => {
+      if (isDataLoaded) return;
+      
       try {
-        setIsFetchingProducts(true);
+        setInitialLoading(true);
+        
+        const cachedData = loadFromCache();
+        if (cachedData) {
+          console.log("ক্যাশ থেকে ডাটা লোড করা হচ্ছে...");
+          const { free, paid } = cachedData;
+          setFreeProduct(free);
+          setPaidProducts(paid);
+          setIsDataLoaded(true);
+          setInitialLoading(false);
+          return;
+        }
 
+        console.log("API থেকে ডাটা লোড করা হচ্ছে...");
         const res = await fetch(
           "https://investify-fixed.vercel.app/api/products/all"
         );
         const data = await res.json();
 
-        // API থেকে পাওয়া সকল পণ্য নেওয়া
         let list = (data.products || data.data || data || []).map((p) => ({
           ...p,
           id: p._id || p.id,
         }));
 
-        // ফ্রি প্রোডাক্ট আলাদা করা
         const free = list.find(p => p.type === "free") || null;
         const paid = list.filter(p => p.type !== "free").sort((a, b) => a.price - b.price);
 
         setFreeProduct(free);
         setPaidProducts(paid);
-        setVisibleProducts(paid.slice(0, productsPerPage));
-        setHasMore(paid.length > productsPerPage);
+        
+        saveToCache({ free, paid });
+        setIsDataLoaded(true);
+        
       } catch (error) {
         console.error("পণ্য লোড করতে সমস্যা:", error);
         Swal.fire({
@@ -98,48 +154,73 @@ const ProductList = ({ user, onUserUpdate }) => {
           confirmButtonColor: "#16a34a"
         });
       } finally {
-        setIsFetchingProducts(false);
+        setInitialLoading(false);
       }
     };
 
     fetchProducts();
+  }, [loadFromCache, saveToCache, isDataLoaded]);
+
+  // ✅ পেজ পরিবর্তন ফাংশন
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const goToPrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const goToPage = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // ✅ পেজ নম্বর জেনারেট করা
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  };
+
+  // ✅ ম্যানুয়াল রিফ্রেশ
+  const handleManualRefresh = useCallback(() => {
+    localStorage.removeItem('product_cache');
+    setIsDataLoaded(false);
+    setCurrentPage(1);
+    setPaidProducts([]);
+    window.location.reload();
   }, []);
 
-  // ইনফিনিটি স্ক্রল এর জন্য লোড মোর (পেইড প্রোডাক্টের জন্য)
-  const loadMore = useCallback(() => {
-    if (loading || !hasMore) return;
-
-    setLoading(true);
-
-    setTimeout(() => {
-      const start = page * productsPerPage;
-      const more = paidProducts.slice(start, start + productsPerPage);
-
-      if (more.length) {
-        setVisibleProducts((prev) => [...prev, ...more]);
-        setPage((p) => p + 1);
-      }
-
-      setHasMore(start + productsPerPage < paidProducts.length);
-      setLoading(false);
-    }, 300);
-  }, [page, paidProducts, hasMore, loading]);
-
-  useEffect(() => {
-    if (!loaderRef.current || isFetchingProducts) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => entries[0].isIntersecting && loadMore(),
-      { rootMargin: "100px" }
-    );
-
-    observer.observe(loaderRef.current);
-    return () => observer.disconnect();
-  }, [loadMore, isFetchingProducts]);
-
-  // মডাল খোলা
+  // মডাল ফাংশন
   const openModal = (product) => {
-    // ফ্রি প্রোডাক্ট এবং আগেই নিয়ে থাকলে অ্যালার্ট দেখানো
     if (product.type === "free" && hasClaimedFreeProduct) {
       Swal.fire({
         icon: "info",
@@ -153,13 +234,12 @@ const ProductList = ({ user, onUserUpdate }) => {
     setIsModalOpen(true);
   };
 
-  // মডাল বন্ধ
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedProduct(null);
   };
 
-  // পণ্য কেনার ফাংশন (ফ্রি ও পেইড একই API ব্যবহার করবে)
+  // পণ্য কেনার ফাংশন
   const handlePurchase = async (product) => {
     if (!userId) {
       closeModal();
@@ -175,7 +255,6 @@ const ProductList = ({ user, onUserUpdate }) => {
     setProcessing(true);
 
     try {
-      // ফ্রি প্রোডাক্টের জন্য ব্যালেন্স চেক করা হবে না
       if (product.type !== "free" && balance < product.price) {
         closeModal();
         return Swal.fire({
@@ -218,9 +297,9 @@ const ProductList = ({ user, onUserUpdate }) => {
       if (data.success) {
         closeModal();
 
-        // ফ্রি প্রোডাক্ট নিলে সেটা রেকর্ড করে রাখা
         if (product.type === "free") {
           setHasClaimedFreeProduct(true);
+          localStorage.setItem(`free_claimed_${userId}`, JSON.stringify(true));
         }
 
         if (onUserUpdate && data.newBalance) {
@@ -254,13 +333,55 @@ const ProductList = ({ user, onUserUpdate }) => {
     }
   };
 
-  // নম্বর ফরম্যাট করার ফাংশন
+  // নম্বর ফরম্যাট
   const formatNumber = (num) => {
     if (!num && num !== 0) return "০";
     return new Intl.NumberFormat("bn-BD").format(num);
   };
 
-  if (isFetchingProducts) {
+  // প্রোডাক্ট কার্ড কম্পোনেন্ট
+  const ProductCard = ({ product }) => (
+    <div
+      onClick={() => openModal(product)}
+      className="bg-white rounded-xl shadow-md border border-green-100 overflow-hidden cursor-pointer hover:shadow-lg transition-all active:scale-[0.99]"
+    >
+      <div className="flex">
+        <img
+          src={product.image}
+          alt={product.name}
+          className="w-28 h-28 object-cover"
+          onError={(e) => {
+            e.target.src = "https://i.ibb.co.com/JhvzjC8/1.jpg";
+          }}
+        />
+        <div className="flex-1 p-3">
+          <h3 className="font-bold text-gray-800 text-sm mb-1">{product.name}</h3>
+          <p className="text-green-600 font-bold text-sm">মূল্য ৳ {formatNumber(product.price)}</p>
+          <div className="flex items-center gap-3 mt-2 text-xs">
+            <span className="text-blue-500 flex items-center gap-1">
+              <FaClock size={10} />
+              {product.duration}
+            </span>
+            <span className="text-green-500 flex items-center gap-1">
+              <FaChartLine size={10} />
+              দৈনিক ৳{formatNumber(product.dailyIncome)}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div className="bg-green-50 px-3 py-2 border-t border-green-100">
+        <div className="flex justify-between items-center text-xs">
+          <span className="text-gray-500">মোট আয়: <span className="text-purple-600 font-bold">৳ {formatNumber(product.totalIncome)}</span></span>
+          <span className="bg-green-500 text-white text-sm flex items-center gap-1 px-4 py-0.5 rounded-full">
+            কিনুন
+            <FaArrowRight size={10} />
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (initialLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center">
         <div className="text-center">
@@ -275,7 +396,22 @@ const ProductList = ({ user, onUserUpdate }) => {
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
       <div className="max-w-md mx-auto px-4 py-2">
 
-        {/* ========== ফ্রি/বিআইপি প্রোডাক্ট সেকশন (সবার উপরে) ========== */}
+        {/* হেডার ও রিফ্রেশ বাটন */}
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center gap-2">
+            <FaSeedling className="text-green-500 text-lg" />
+            <h1 className="text-lg font-bold text-green-700">পণ্যের তালিকা</h1>
+          </div>
+          <button
+            onClick={handleManualRefresh}
+            className="text-xs text-gray-400 hover:text-green-600 flex items-center gap-1 bg-white px-2 py-1 rounded-full shadow-sm"
+          >
+            <FaDatabase size={10} />
+            ক্যাশ রিফ্রেশ
+          </button>
+        </div>
+
+        {/* ========== ফ্রি/বিআইপি প্রোডাক্ট সেকশন ========== */}
         {freeProduct && (
           <div className="mb-6">
             <div className="flex items-center justify-center gap-2 mb-3">
@@ -296,7 +432,6 @@ const ProductList = ({ user, onUserUpdate }) => {
               }`}
             >
               <div className="flex relative">
-                {/* ফ্রি ব্যাজ */}
                 <div className="absolute left-2 top-2 z-10">
                   <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-md">
                     <FaGift size={8} />
@@ -378,63 +513,77 @@ const ProductList = ({ user, onUserUpdate }) => {
         </div>
 
         {/* ========== পেইড পণ্যের তালিকা ========== */}
-        <div className="space-y-4">
-          {visibleProducts.map((product) => {
-            const isFree = product.type === "free";
-            
-            return (
-              <div
-                key={product._id}
-                onClick={() => openModal(product)}
-                className="bg-white rounded-xl shadow-md border border-green-100 overflow-hidden cursor-pointer hover:shadow-lg transition-all active:scale-[0.99]"
-              >
-                <div className="flex">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-28 h-28 object-cover"
-                    onError={(e) => {
-                      e.target.src = "https://i.ibb.co.com/JhvzjC8/1.jpg";
-                    }}
-                  />
-                  <div className="flex-1 p-3">
-                    <h3 className="font-bold text-gray-800 text-sm mb-1">{product.name}</h3>
-                    <p className="text-green-600 font-bold text-sm">মূল্য ৳ {formatNumber(product.price)}</p>
-                    <div className="flex items-center gap-3 mt-2 text-xs">
-                      <span className="text-blue-500 flex items-center gap-1">
-                        <FaClock size={10} />
-                        {product.duration}
-                      </span>
-                      <span className="text-green-500 flex items-center gap-1">
-                        <FaChartLine size={10} />
-                        দৈনিক ৳{formatNumber(product.dailyIncome)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-green-50 px-3 py-2 border-t border-green-100">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-gray-500">মোট আয়: <span className="text-purple-600 font-bold">৳ {formatNumber(product.totalIncome)}</span></span>
-                    <span className="bg-green-500 text-white text-sm flex items-center gap-1 px-4 py-0.5 rounded-full">
-                      কিনুন
-                      <FaArrowRight size={10} />
-                    </span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-
-          {/* লোড মোর ইন্ডিকেটর */}
-          <div ref={loaderRef} className="text-center py-3">
-            {loading && (
-              <div className="flex justify-center items-center gap-2">
-                <FaSpinner className="animate-spin text-green-600" />
-                <span className="text-green-600 text-xs">লোড হচ্ছে...</span>
-              </div>
-            )}
+        {currentProducts.length > 0 ? (
+          <div className="space-y-4">
+            {currentProducts.map((product) => (
+              <ProductCard key={product._id} product={product} />
+            ))}
           </div>
-        </div>
+        ) : (
+          <div className="text-center py-10 bg-white rounded-xl">
+            <p className="text-gray-500 text-sm">কোন পণ্য পাওয়া যায়নি</p>
+          </div>
+        )}
+
+        {/* ========== পেজিনেশন বাটন ========== */}
+        {totalPages > 1 && (
+          <div className="mt-6 mb-4">
+            <div className="flex items-center justify-center gap-2">
+              {/* প্রিভিয়াস বাটন */}
+              <button
+                onClick={goToPrevPage}
+                disabled={currentPage === 1}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition ${
+                  currentPage === 1
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-green-100 text-green-700 hover:bg-green-200"
+                }`}
+              >
+                <FaChevronLeft size={12} />
+              </button>
+
+              {/* পেজ নম্বর */}
+              <div className="flex gap-1">
+                {getPageNumbers().map((page, index) => (
+                  <button
+                    key={index}
+                    onClick={() => typeof page === 'number' && goToPage(page)}
+                    className={`w-8 h-8 rounded-lg text-sm font-medium transition ${
+                      currentPage === page
+                        ? "bg-green-600 text-white shadow-md"
+                        : page === '...'
+                        ? "bg-transparent text-gray-400 cursor-default"
+                        : "bg-gray-100 text-gray-700 hover:bg-green-100"
+                    }`}
+                    disabled={page === '...'}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+
+              {/* নেক্সট বাটন */}
+              <button
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition ${
+                  currentPage === totalPages
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-green-100 text-green-700 hover:bg-green-200"
+                }`}
+              >
+                <FaChevronRight size={12} />
+              </button>
+            </div>
+
+            {/* পেজ ইনফো */}
+            <div className="text-center mt-3">
+              <p className="text-[10px] text-gray-400">
+                পৃষ্ঠা {currentPage} / {totalPages} | মোট {paidProducts.length} টি পণ্য
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* পণ্য কেনার মডাল */}
         {isModalOpen && selectedProduct && (
@@ -442,7 +591,6 @@ const ProductList = ({ user, onUserUpdate }) => {
             <div className={`w-full max-w-sm bg-white rounded-2xl shadow-xl p-4 animate-fadeIn ${
               selectedProduct.type === "free" ? "ring-2 ring-amber-300" : ""
             }`}>
-
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-gray-800">
                   {selectedProduct.type === "free" ? "🎁 বিআইপি প্যাকেজ" : "প্যাকেজ ডিটেইলস"}
@@ -529,7 +677,6 @@ const ProductList = ({ user, onUserUpdate }) => {
                     ? "🎁 ফ্রি প্যাকেজ নিন"
                     : `৳${formatNumber(selectedProduct.price)} বিনিয়োগ করুন`}
               </button>
-
             </div>
           </div>
         )}
