@@ -5,14 +5,21 @@ import {
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import useUser from "../hooks/useUsers";
-
+import image1 from '.././assets/images/1.webp'
+import image2 from '.././assets/images/2.webp'
+import image3 from '.././assets/images/3.webp'
+import deposit from '.././assets/images/deposit.webp'
+import withdrew from '.././assets/images/writhderow.webp'
+import Bonus from '.././assets/images/bonus.webp'
+import salary from '.././assets/images/salary.webp'
+import company from '.././assets/images/compani.webp'
 const HeroSection = () => {
   const { user } = useUser();
 
   const images = [
-    "https://i.ibb.co.com/672R4zLk/121.jpg",
-    "https://i.ibb.co.com/twQkhPMr/1a53f950c0c24024bb395bdfd678523b.jpg",
-    "https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=800&auto=format",
+    image1, 
+    image2, 
+    image3
   ];
 
   const [current, setCurrent] = useState(0);
@@ -23,35 +30,35 @@ const HeroSection = () => {
       id: 1,
       name: "রিচার্জ",
       link: "/topup",
-      icon: "https://cdn-icons-png.flaticon.com/512/3135/3135706.png",
+      icon: deposit,
       bgGradient: "from-emerald-400 to-green-500",
     },
     {
       id: 2,
       name: "উত্তোলন",
       link: "/withdraw",
-      icon: "https://cdn-icons-png.flaticon.com/512/5024/5024665.png",
+      icon: withdrew,
       bgGradient: "from-green-400 to-emerald-500",
     },
     {
       id: 3,
       name: "বোনাস",
       link: "/bonus",
-      icon: "https://cdn-icons-png.flaticon.com/512/3390/3390993.png",
+      icon: Bonus,
       bgGradient: "from-teal-400 to-green-500",
     },
     {
       id: 4,
       name: "বেতন",
       link: "/SalaryBonus",
-      icon: "https://e7.pngegg.com/pngimages/99/761/png-clipart-person-holding-banknote-computer-icons-loan-bank-business-finance-icon-free-salary-miscellaneous-saving-thumbnail.png",
+      icon: salary,
       bgGradient: "from-cyan-400 to-teal-500",
     },
     {
       id: 5,
       name: "কোম্পানি",
       link: "/about",
-      icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTBg9zkf0PWdFupdiDjLIkF1rWzE_oC76dNaQ&s",
+      icon: company,
       bgGradient: "from-sky-400 to-cyan-500",
     },
   ];
