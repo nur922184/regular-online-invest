@@ -550,7 +550,7 @@ const DepositPage = () => {
                   {copied ? "কপি হয়েছে" : "কপি"}
                 </button>
               </div>
-              <p className="text-green-700 font-bold text-center text-3xl  tracking-wider">
+              <p className="text-green-700 font-bold text-center text-2xl  tracking-wider">
                 {currentMethod.number}
               </p>
               <p className="text-gray-500 text-[10px] text-center mt-1">

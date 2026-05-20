@@ -32,17 +32,17 @@ const AddAccount = () => {
   const getAccountNameByType = (type) => {
     switch (type) {
       case "bkash":
-        return "বিকাশ ব্যক্তিগত অ্যাকাউন্ট";
+        return "বিকাশ পার্সোনাল অ্যাকাউন্ট";
       case "nagad":
-        return "নগদ ব্যক্তিগত অ্যাকাউন্ট";
+        return "নগদ পার্সোনাল অ্যাকাউন্ট";
       default:
-        return "ব্যক্তিগত অ্যাকাউন্ট";
+        return "পার্সোনাল অ্যাকাউন্ট";
     }
   };
 
   const [formData, setFormData] = useState({
     accountType: "bkash",
-    accountName: "বিকাশ ব্যক্তিগত অ্যাকাউন্ট", // ডিফল্ট নাম
+    accountName: "বিকাশ পার্সোনাল অ্যাকাউন্ট", // ডিফল্ট নাম
     accountNumber: "",
     holderName: ""
   });
