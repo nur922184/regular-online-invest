@@ -535,7 +535,7 @@ const DepositPage = () => {
 
           {/* পেমেন্ট ইনফো */}
           {currentMethod && (
-            <div className="bg-green-50 rounded-lg p-3 mb-4">
+            <div className="bg-green-50 rounded-lg p-3">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <FaMobileAlt className="text-green-600 text-xs" />
@@ -550,11 +550,8 @@ const DepositPage = () => {
                   {copied ? "কপি হয়েছে" : "কপি"}
                 </button>
               </div>
-              <p className="text-green-700 font-bold text-center text-2xl  tracking-wider">
+              <p className="text-green-700 font-bold text-center text-xl  tracking-wider">
                 {currentMethod.number}
-              </p>
-              <p className="text-gray-500 text-[10px] text-center mt-1">
-                {currentMethod.accountHolder}
               </p>
             </div>
           )}
@@ -568,7 +565,6 @@ const DepositPage = () => {
                 <ul className="text-blue-700 text-[10px] space-y-1">
                   <li>• সঠিক নম্বরে সঠিক পরিমাণ টাকা পাঠান</li>
                   <li>• ট্রানজেকশন সম্পন্নের পর সঠিক TxnID দিন</li>
-                  <li>• ন্যূনতম {currentMethod?.minAmount || 400} টাকা ডিপোজিট করতে হবে</li>
                   <li>• ভুল TxnID দিলে ডিপোজিট গ্রহণযোগ্য হবে না</li>
                 </ul>
               </div>
