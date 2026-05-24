@@ -116,7 +116,7 @@ const ProductList = ({ user, onUserUpdate }) => {
         
         const cachedData = loadFromCache();
         if (cachedData) {
-          console.log("ক্যাশ থেকে ডাটা লোড করা হচ্ছে...");
+          // console.log("ক্যাশ থেকে ডাটা লোড করা হচ্ছে...");
           const { free, paid } = cachedData;
           setFreeProduct(free);
           setPaidProducts(paid);

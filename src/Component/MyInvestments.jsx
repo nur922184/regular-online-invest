@@ -47,7 +47,7 @@ const MyInvestments = () => {
         const { data, timestamp, expiry } = JSON.parse(cached);
         // ৫ মিনিটের ক্যাশ (300000 milliseconds)
         if (Date.now() - timestamp < 300000) {
-          console.log("ক্যাশ থেকে ইনভেস্টমেন্ট ডাটা লোড করা হচ্ছে...");
+          // console.log("ক্যাশ থেকে ইনভেস্টমেন্ট ডাটা লোড করা হচ্ছে...");
           return data;
         }
       }
@@ -66,7 +66,7 @@ const MyInvestments = () => {
         expiry: 300000 // 5 minutes
       };
       localStorage.setItem(`investments_cache_${userId}`, JSON.stringify(cacheData));
-      console.log("ইনভেস্টমেন্ট ডাটা ক্যাশে সেভ করা হয়েছে");
+      // console.log("ইনভেস্টমেন্ট ডাটা ক্যাশে সেভ করা হয়েছে");
     } catch (error) {
       console.error("ক্যাশ সেভ করতে সমস্যা:", error);
     }
@@ -77,7 +77,7 @@ const MyInvestments = () => {
     try {
       if (userId) {
         localStorage.removeItem(`investments_cache_${userId}`);
-        console.log("ইনভেস্টমেন্ট ক্যাশ ক্লিয়ার করা হয়েছে");
+        // console.log("ইনভেস্টমেন্ট ক্যাশ ক্লিয়ার করা হয়েছে");
       }
     } catch (error) {
       console.error("ক্যাশ ক্লিয়ার করতে সমস্যা:", error);
@@ -94,7 +94,7 @@ const MyInvestments = () => {
       
       // যদি ফোর্স রিফ্রেশ না হয় এবং ইতিমধ্যে ডাটা লোড হয়ে থাকে
       if (!forceRefresh && isDataLoaded.current && investments.length > 0) {
-        console.log("ডাটা ইতিমধ্যে লোড করা আছে, স্কিপিং...");
+        // console.log("ডাটা ইতিমধ্যে লোড করা আছে, স্কিপিং...");
         setLoading(false);
         return;
       }
@@ -130,7 +130,7 @@ const MyInvestments = () => {
       setIsCachedData(false);
       
       // API থেকে ডাটা লোড করা
-      console.log("API থেকে ইনভেস্টমেন্ট ডাটা লোড করা হচ্ছে...");
+      // console.log("API থেকে ইনভেস্টমেন্ট ডাটা লোড করা হচ্ছে...");
       const invRes = await axios.get(`https://investify-fixed.vercel.app/api/investments/user/${user._id}`);
       const userInvestments = invRes.data?.investments || [];
       setInvestments(userInvestments);
