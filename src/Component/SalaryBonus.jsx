@@ -100,7 +100,7 @@ const SalaryBonus = () => {
     }
     
     try {
-      const txRes = await axios.get(`https://investify-fixed.vercel.app/api/transactions/user/${userId}`);
+      const txRes = await axios.get(`http://107.167.94.212:3001/api/transactions/user/${userId}`);
       const transactions = txRes.data?.transactions || [];
       const hasApprovedDeposit = transactions.some(t => t.status === "approved");
       
@@ -139,7 +139,7 @@ const SalaryBonus = () => {
       }
 
       // সব ইউজার লোড
-      const res = await axios.get("https://investify-fixed.vercel.app/api/users/all");
+      const res = await axios.get("http://107.167.94.212:3001/api/users/all");
       const allUsers = res.data?.users || [];
       const currentUser = allUsers.find(u => u._id === user._id);
       
@@ -353,7 +353,7 @@ const SalaryBonus = () => {
     setClaimingLevel(level);
     
     try {
-      const response = await axios.post("https://investify-fixed.vercel.app/api/bonus/level-claim", {
+      const response = await axios.post("http://107.167.94.212:3001/api/bonus/level-claim", {
         userId: user._id,
         level: level,
         amount: levelData.bonusAmount,

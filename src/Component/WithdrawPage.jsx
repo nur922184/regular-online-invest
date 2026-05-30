@@ -54,7 +54,7 @@ const WithdrawPage = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`https://investify-fixed.vercel.app/api/investments/user/${user._id}`, {
+      const res = await fetch(`http://107.167.94.212:3001/api/investments/user/${user._id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -98,7 +98,7 @@ const WithdrawPage = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`https://investify-fixed.vercel.app/api/accounts/user/${user._id}`, {
+      const res = await fetch(`http://107.167.94.212:3001/api/accounts/user/${user._id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -234,7 +234,7 @@ const WithdrawPage = () => {
       setSubmitting(true);
       const token = localStorage.getItem('token');
 
-      const res = await fetch(`https://investify-fixed.vercel.app/api/withdrawals/request`, {
+      const res = await fetch(`http://107.167.94.212:3001/api/withdrawals/request`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

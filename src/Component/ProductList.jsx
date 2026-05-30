@@ -87,7 +87,7 @@ const ProductList = ({ user, onUserUpdate }) => {
       
       try {
         const res = await fetch(
-          `https://investify-fixed.vercel.app/api/investments/user/${userId}`
+          `http://107.167.94.212:3001/api/investments/user/${userId}`
         );
         const data = await res.json();
         
@@ -127,7 +127,7 @@ const ProductList = ({ user, onUserUpdate }) => {
 
         console.log("API থেকে ডাটা লোড করা হচ্ছে...");
         const res = await fetch(
-          "https://investify-fixed.vercel.app/api/products/all"
+          "http://107.167.94.212:3001/api/products/all"
         );
         const data = await res.json();
 
@@ -277,7 +277,7 @@ const ProductList = ({ user, onUserUpdate }) => {
       };
 
       const res = await fetch(
-        "https://investify-fixed.vercel.app/api/investments/create",
+        "http://107.167.94.212:3001/api/investments/create",
         {
           method: "POST",
           headers: {

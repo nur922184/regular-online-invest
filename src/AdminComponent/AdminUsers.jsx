@@ -31,7 +31,7 @@ const AdminUsers = () => {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const res = await fetch("https://investify-fixed.vercel.app/api/users/all");
+      const res = await fetch("http://107.167.94.212:3001/api/users/all");
       const data = await res.json();
       setUsers(data.users || []);
     } catch (error) {
@@ -68,7 +68,7 @@ const AdminUsers = () => {
 
     try {
       const res = await fetch(
-        `https://investify-fixed.vercel.app/api/users/admin/block-user/${id}`,
+        `http://107.167.94.212:3001/api/users/admin/block-user/${id}`,
         { method: "PUT" }
       );
 
@@ -111,7 +111,7 @@ const AdminUsers = () => {
 
     try {
       const res = await fetch(
-        `https://investify-fixed.vercel.app/api/users/admin/delete-user/${id}`,
+        `http://107.167.94.212:3001/api/users/admin/delete-user/${id}`,
         { method: "DELETE" }
       );
 

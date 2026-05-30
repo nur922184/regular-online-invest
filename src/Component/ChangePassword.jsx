@@ -96,7 +96,7 @@ const ChangePassword = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("https://investify-fixed.vercel.app/api/users/change-password", {
+      const res = await fetch("http://107.167.94.212:3001/api/users/change-password", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json"

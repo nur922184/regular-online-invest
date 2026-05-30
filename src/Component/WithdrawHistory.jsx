@@ -42,7 +42,7 @@ const WithdrawHistory = () => {
       else setRefreshing(true);
 
       const res = await fetch(
-        `https://investify-fixed.vercel.app/api/withdrawals/user/${user._id}`
+        `http://107.167.94.212:3001/api/withdrawals/user/${user._id}`
       );
       const json = await res.json();
 

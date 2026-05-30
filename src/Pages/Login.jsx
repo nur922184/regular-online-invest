@@ -48,7 +48,7 @@ const Login = () => {
     }
 
     try {
-      const res = await axios.post("https://investify-fixed.vercel.app/api/users/login", form);
+      const res = await axios.post("http://107.167.94.212:3001/api/users/login", form);
       const msg = res.data.message || "লগইন সফল হয়েছে!";
       setSuccessMessage(msg);
       setShowSuccess(true);

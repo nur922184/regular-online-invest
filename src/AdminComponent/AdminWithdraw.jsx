@@ -35,7 +35,7 @@ const AdminWithdraw = () => {
   const loadData = async () => {
     try {
       setRefreshing(true);
-      const res = await fetch("https://investify-fixed.vercel.app/api/withdrawals/admin/all");
+      const res = await fetch("http://107.167.94.212:3001/api/withdrawals/admin/all");
       const result = await res.json();
       setData(result.withdrawals || []);
     } catch (error) {
@@ -75,7 +75,7 @@ const AdminWithdraw = () => {
       const token = localStorage.getItem('token');
       const admin = JSON.parse(localStorage.getItem('user'));
 
-      const res = await fetch(`https://investify-fixed.vercel.app/api/withdrawals/admin/approve/${id}`, {
+      const res = await fetch(`http://107.167.94.212:3001/api/withdrawals/admin/approve/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -129,7 +129,7 @@ const AdminWithdraw = () => {
       const token = localStorage.getItem('token');
       const admin = JSON.parse(localStorage.getItem('user'));
 
-      const res = await fetch(`https://investify-fixed.vercel.app/api/withdrawals/admin/reject/${id}`, {
+      const res = await fetch(`http://107.167.94.212:3001/api/withdrawals/admin/reject/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

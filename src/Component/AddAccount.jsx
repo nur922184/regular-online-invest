@@ -57,7 +57,7 @@ const AddAccount = () => {
         hasChecked.current = true;
         setCheckingCount(true);
 
-        const res = await fetch(`https://investify-fixed.vercel.app/api/accounts/user/${user._id}`);
+        const res = await fetch(`http://107.167.94.212:3001/api/accounts/user/${user._id}`);
         const data = await res.json();
 
         if (data.success && data.accounts) {
@@ -149,7 +149,7 @@ const AddAccount = () => {
       setLoading(true);
 
       const res = await fetch(
-        "https://investify-fixed.vercel.app/api/accounts/add",
+        "http://107.167.94.212:3001/api/accounts/add",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

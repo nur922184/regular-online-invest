@@ -9,7 +9,7 @@ const ForgotPhone = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("https://investify-fixed.vercel.app/api/auth/forgot-password-phone", {
+    const res = await fetch("http://107.167.94.212:3001/api/auth/forgot-password-phone", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ phone })
