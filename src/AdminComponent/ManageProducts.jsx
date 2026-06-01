@@ -41,7 +41,7 @@ const ManageProducts = () => {
     });
 
     // API বেস URL
-    const API_URL = 'http://107.167.94.212:3001/api/products';
+    const API_URL = 'https://107.167.94.212/api/products';
 
     // সব পণ্য লোড করুন
     const fetchProducts = async () => {

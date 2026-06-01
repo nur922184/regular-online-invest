@@ -97,7 +97,7 @@ const ReferPage = () => {
         }
       }
 
-      const txRes = await axios.get(`http://107.167.94.212:3001/api/transactions/user/${user._id}`);
+      const txRes = await axios.get(`https://107.167.94.212/api/transactions/user/${user._id}`);
       const transactions = txRes.data?.transactions || [];
       const approvedDeposits = transactions.filter(t => t.status === "approved");
       const totalDeposit = approvedDeposits.reduce((sum, t) => sum + t.amount, 0);
@@ -181,7 +181,7 @@ const ReferPage = () => {
       console.log("API থেকে ডাটা লোড করা হচ্ছে...");
       
       // সব ইউজার লোড
-      const res = await axios.get("http://107.167.94.212:3001/api/users/all");
+      const res = await axios.get("https://107.167.94.212/api/users/all");
       const users = res.data?.users || [];
       const currentUser = users.find(u => u._id === userId) || JSON.parse(localStorage.getItem("user"));
 

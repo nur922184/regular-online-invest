@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: "http://107.167.94.212:3001/api",
+   baseURL: "https://107.167.94.212/api",  // ✅ বর্তমান URL এর সাথে /api যোগ করবে
   timeout: 10000,
 });
 

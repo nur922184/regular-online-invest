@@ -42,7 +42,7 @@ const WithdrawHistory = () => {
       else setRefreshing(true);
 
       const res = await fetch(
-        `http://107.167.94.212:3001/api/withdrawals/user/${user._id}`
+        `https://107.167.94.212/api/withdrawals/user/${user._id}`
       );
       const json = await res.json();
 

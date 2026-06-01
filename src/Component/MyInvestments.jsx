@@ -131,7 +131,7 @@ const MyInvestments = () => {
       
       // API থেকে ডাটা লোড করা
       // console.log("API থেকে ইনভেস্টমেন্ট ডাটা লোড করা হচ্ছে...");
-      const invRes = await axios.get(`http://107.167.94.212:3001/api/investments/user/${user._id}`);
+      const invRes = await axios.get(`https://107.167.94.212/api/investments/user/${user._id}`);
       const userInvestments = invRes.data?.investments || [];
       setInvestments(userInvestments);
       
@@ -280,7 +280,7 @@ const MyInvestments = () => {
     try {
       setClaiming(prev => ({ ...prev, [investmentId]: true }));
 
-      const response = await axios.post(`http://107.167.94.212:3001/api/investments/claim/${investmentId}`, {
+      const response = await axios.post(`https://107.167.94.212/api/investments/claim/${investmentId}`, {
         userId: user._id
       });
 

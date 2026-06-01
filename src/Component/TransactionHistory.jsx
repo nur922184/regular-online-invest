@@ -47,7 +47,7 @@ const TransactionHistory = () => {
       }
 
       const res = await fetch(
-        `http://107.167.94.212:3001/api/transactions/user/${user._id}`
+        `https://107.167.94.212/api/transactions/user/${user._id}`
       );
 
       const data = await res.json();
