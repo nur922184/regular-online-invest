@@ -137,7 +137,6 @@ const TelegramNotice = () => {
               onClick={handleRemindLater}
               className="text-gray-400 hover:text-gray-600 transition"
             >
-              পরে মনে করিয়ে দিন
             </button>
           </div>
         </div>
