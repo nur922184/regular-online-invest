@@ -539,7 +539,7 @@ const DepositPage = () => {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <FaMobileAlt className="text-green-600 text-xs" />
-                  <span className="text-green-700 ">এই অ্যাকাউন্টে সেন্ট মানি করুন</span>
+                  <span className="text-green-700 ">এই অ্যাকাউন্টে সেন্ড মানি করুন</span>
                 </div>
                 <button
                   onClick={handleCopy}

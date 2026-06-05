@@ -139,7 +139,7 @@ const AboutUs = () => {
         {/* বোনাস সিস্টেম */}
         <div className="bg-amber-50 rounded-xl p-5 border border-amber-200 mb-5">
           <h2 className="text-lg font-bold text-amber-800 text-center mb-3">
-            🏆 লেভেল বোনাস
+            🏆 বেতন বোনাস
           </h2>
           
           <div className="space-y-2">
@@ -148,27 +148,45 @@ const AboutUs = () => {
                 <div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-xs font-bold">1</span>
                 </div>
-                <span className="text-gray-700 text-xs">Level 1 (30 জন)</span>
+                <span className="text-gray-700 text-xs">Level 1 (10 জন)</span>
               </div>
-              <span className="text-amber-600 font-bold text-sm">৳২০০</span>
+              <span className="text-amber-600 font-bold text-sm">৳২5০</span>
             </div>
             <div className="flex justify-between items-center p-2 bg-white rounded-lg">
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-xs font-bold">2</span>
                 </div>
-                <span className="text-gray-700 text-xs">Level 2 (60 জন)</span>
+                <span className="text-gray-700 text-xs">Level 2 (30 জন)</span>
               </div>
-              <span className="text-amber-600 font-bold text-sm">৳২০০</span>
+              <span className="text-amber-600 font-bold text-sm">৳8০০</span>
             </div>
             <div className="flex justify-between items-center p-2 bg-white rounded-lg">
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-xs font-bold">3</span>
                 </div>
-                <span className="text-gray-700 text-xs">Level 3 (120 জন)</span>
+                <span className="text-gray-700 text-xs">Level 3 (50 জন)</span>
               </div>
-              <span className="text-amber-600 font-bold text-sm">৳২০০</span>
+              <span className="text-amber-600 font-bold text-sm">৳1500</span>
+            </div>
+            <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">4</span>
+                </div>
+                <span className="text-gray-700 text-xs">Level 4 (100 জন)</span>
+              </div>
+              <span className="text-amber-600 font-bold text-sm">৳4000</span>
+            </div>
+            <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">5</span>
+                </div>
+                <span className="text-gray-700 text-xs">Level 5 (200 জন)</span>
+              </div>
+              <span className="text-amber-600 font-bold text-sm">৳10000</span>
             </div>
           </div>
         </div>
