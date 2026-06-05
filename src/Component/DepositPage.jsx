@@ -63,7 +63,7 @@ const DepositPage = () => {
   const loadPaymentMethods = async () => {
     try {
       setLoadingMethods(true);
-      const res = await fetch("https://107.167.94.212/api/payment-methods/active");
+      const res = await fetch("https://investify-api.duckdns.org/api/payment-methods/active");
       const data = await res.json();
 
       if (data.success && data.methods.length > 0) {
@@ -169,7 +169,7 @@ const DepositPage = () => {
 
     try {
       setCheckingStatus(true);
-      const res = await fetch(`https://107.167.94.212/api/transactions/user/${user._id}`);
+      const res = await fetch(`https://investify-api.duckdns.org/api/transactions/user/${user._id}`);
       const data = await res.json();
 
       if (data.success && data.transactions) {
@@ -228,7 +228,7 @@ const DepositPage = () => {
     if (!user?._id) return;
 
     try {
-      const res = await fetch(`https://107.167.94.212/api/transactions/user/${user._id}`);
+      const res = await fetch(`https://investify-api.duckdns.org/api/transactions/user/${user._id}`);
       const data = await res.json();
 
       if (data.success && data.transactions) {
@@ -342,7 +342,7 @@ const DepositPage = () => {
     setSubmitting(true);
 
     try {
-      const res = await fetch("https://107.167.94.212/api/transactions/create", {
+      const res = await fetch("https://investify-api.duckdns.org/api/transactions/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -99,7 +99,7 @@ const SignUp = () => {
     const userRefCode = generateReferralCode();
 
     try {
-      const response = await axios.post("https://107.167.94.212/api/users/register", {
+      const response = await axios.post("https://investify-api.duckdns.org/api/users/register", {
         name, phone, password, referredBy,
         refCode: userRefCode,
       });

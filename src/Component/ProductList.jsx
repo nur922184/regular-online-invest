@@ -87,7 +87,7 @@ const ProductList = ({ user, onUserUpdate }) => {
       
       try {
         const res = await fetch(
-          `https://107.167.94.212/api/investments/user/${userId}`
+          `https://investify-api.duckdns.org/api/investments/user/${userId}`
         );
         const data = await res.json();
         
@@ -127,7 +127,7 @@ const ProductList = ({ user, onUserUpdate }) => {
 
         console.log("API থেকে ডাটা লোড করা হচ্ছে...");
         const res = await fetch(
-          "https://107.167.94.212/api/products/all"
+          "https://investify-api.duckdns.org/api/products/all"
         );
         const data = await res.json();
 
@@ -277,7 +277,7 @@ const ProductList = ({ user, onUserUpdate }) => {
       };
 
       const res = await fetch(
-        "https://107.167.94.212/api/investments/create",
+        "https://investify-api.duckdns.org/api/investments/create",
         {
           method: "POST",
           headers: {

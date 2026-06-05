@@ -38,7 +38,7 @@ const AdminPaymentMethods = () => {
   const loadMethods = async () => {
     try {
       setLoading(true);
-      const res = await fetch("https://107.167.94.212/api/payment-methods/all");
+      const res = await fetch("https://investify-api.duckdns.org/api/payment-methods/all");
       const data = await res.json();
       if (data.success) {
         setMethods(data.methods);
@@ -61,8 +61,8 @@ const AdminPaymentMethods = () => {
 
     try {
       const url = editingMethod 
-        ? `https://107.167.94.212/api/payment-methods/update/${editingMethod._id}`
-        : "https://107.167.94.212/api/payment-methods/create";
+        ? `https://investify-api.duckdns.org/api/payment-methods/update/${editingMethod._id}`
+        : "https://investify-api.duckdns.org/api/payment-methods/create";
       
       const method = editingMethod ? "PUT" : "POST";
       
@@ -113,7 +113,7 @@ const AdminPaymentMethods = () => {
 
     if (result.isConfirmed) {
       try {
-        const res = await fetch(`https://107.167.94.212/api/payment-methods/delete/${method._id}`, {
+        const res = await fetch(`https://investify-api.duckdns.org/api/payment-methods/delete/${method._id}`, {
           method: "DELETE"
         });
         
@@ -151,7 +151,7 @@ const AdminPaymentMethods = () => {
 
   const handleToggleStatus = async (method) => {
     try {
-      const res = await fetch(`https://107.167.94.212/api/payment-methods/update/${method._id}`, {
+      const res = await fetch(`https://investify-api.duckdns.org/api/payment-methods/update/${method._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...method, isActive: !method.isActive })

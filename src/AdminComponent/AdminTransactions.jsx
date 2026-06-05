@@ -39,7 +39,7 @@ const AdminTransactions = () => {
     try {
       setRefreshing(true);
       const res = await axios.get(
-        "https://107.167.94.212/api/transactions/all"
+        "https://investify-api.duckdns.org/api/transactions/all"
       );
       setTransactions(res.data.transactions || []);
     } catch (err) {
@@ -86,7 +86,7 @@ const AdminTransactions = () => {
     try {
       // ✅ adminId সহ রিকোয়েস্ট পাঠানো হচ্ছে
       const res = await axios.patch(
-        `https://107.167.94.212/api/transactions/approve/${id}`,
+        `https://investify-api.duckdns.org/api/transactions/approve/${id}`,
         {
           adminId: user?._id || "admin"  // এডমিন আইডি পাঠানো হচ্ছে
         }
@@ -161,7 +161,7 @@ const AdminTransactions = () => {
 
     try {
       await axios.patch(
-        `https://107.167.94.212/api/transactions/reject/${id}`,
+        `https://investify-api.duckdns.org/api/transactions/reject/${id}`,
         {
           adminId: user?._id || "admin"
         }

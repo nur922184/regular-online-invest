@@ -9,7 +9,7 @@ const ForgotPhone = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("https://107.167.94.212/api/auth/forgot-password-phone", {
+    const res = await fetch("https://investify-api.duckdns.org/api/auth/forgot-password-phone", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ phone })

@@ -96,7 +96,7 @@ const ChangePassword = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("https://107.167.94.212/api/users/change-password", {
+      const res = await fetch("https://investify-api.duckdns.org/api/users/change-password", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json"

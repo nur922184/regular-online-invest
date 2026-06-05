@@ -42,7 +42,7 @@ const WithdrawHistory = () => {
       else setRefreshing(true);
 
       const res = await fetch(
-        `https://107.167.94.212/api/withdrawals/user/${user._id}`
+        `https://investify-api.duckdns.org/api/withdrawals/user/${user._id}`
       );
       const json = await res.json();
 
