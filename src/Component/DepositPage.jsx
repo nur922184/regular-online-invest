@@ -635,7 +635,7 @@ const DepositPage = () => {
         {/* সাপোর্ট তথ্য */}
         <div className="text-center mt-4">
           <p className="text-gray-400 text-[9px]">
-            📞 সমস্যায়: 01745624188 (সাপোর্ট টিম)
+            📞 সমস্যায়:  (সাপোর্ট টিম)
           </p>
         </div>
 

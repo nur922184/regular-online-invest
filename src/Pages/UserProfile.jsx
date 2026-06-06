@@ -240,7 +240,8 @@ const UserProfile = () => {
     { icon: FaDatabase, label: "ডিপোজিট কন্ট্রোল", path: "/admin/deposit", color: "text-orange-600" },
     { icon: FaMoneyCheckAlt, label: "উত্তোলন অনুমোদন", path: "/admin/withdraw", color: "text-purple-600" },
     { icon: FaChartLine, label: "এনালিটিক্স", path: "/admin/analytics", color: "text-cyan-600" },
-    { icon: FaFileInvoiceDollar, label: "সব লেনদেন", path: "/admin/transactions", color: "text-pink-600" }
+    { icon: FaFileInvoiceDollar, label: "সব লেনদেন", path: "/admin/transactions", color: "text-pink-600" },
+    { icon: FaLock, label: "পাসওয়ার্ড পরিবর্তন", path: "/password_change", color: "text-amber-600" }
   ];
 
   // স্ট্যাটিসটিক্স ডাটা
