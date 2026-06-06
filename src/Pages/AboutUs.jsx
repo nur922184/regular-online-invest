@@ -150,7 +150,7 @@ const AboutUs = () => {
                 </div>
                 <span className="text-gray-700 text-xs">Level 1 (10 জন)</span>
               </div>
-              <span className="text-amber-600 font-bold text-sm">৳২5০</span>
+              <span className="text-amber-600 font-bold text-sm">৳250</span>
             </div>
             <div className="flex justify-between items-center p-2 bg-white rounded-lg">
               <div className="flex items-center gap-2">
@@ -159,7 +159,7 @@ const AboutUs = () => {
                 </div>
                 <span className="text-gray-700 text-xs">Level 2 (30 জন)</span>
               </div>
-              <span className="text-amber-600 font-bold text-sm">৳8০০</span>
+              <span className="text-amber-600 font-bold text-sm">৳400</span>
             </div>
             <div className="flex justify-between items-center p-2 bg-white rounded-lg">
               <div className="flex items-center gap-2">
