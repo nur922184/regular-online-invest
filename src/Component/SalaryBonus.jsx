@@ -34,11 +34,11 @@ const SalaryBonus = () => {
   const [claimingLevel, setClaimingLevel] = useState(null);
   const [bonusData, setBonusData] = useState({
     level1: {
-      required: 10,
+      required: 3,
       current: 0,
       completed: false,
       alreadyClaimed: false,
-      bonusAmount: 250,
+      bonusAmount: 200,
       cooldownDays: 7,
       lastClaimed: null,
       nextAvailable: null,
@@ -210,16 +210,16 @@ const SalaryBonus = () => {
         
         setBonusData({
           level1: {
-            required: 10,
+            required: 3,
             current: level1UsersWithDeposits.length,
-            completed: level1UsersWithDeposits.length >= 10,
+            completed: level1UsersWithDeposits.length >= 3,
             alreadyClaimed: claimedLevels.level1,
-            bonusAmount: 250,
+            bonusAmount: 200,
             cooldownDays: 7,
             lastClaimed: lastClaimTimes.level1,
             nextAvailable: level1NextAvailable,
             availableToClaim: isLevelAvailable('level1', lastClaimTimes.level1, 7),
-            progress: Math.min(100, (level1UsersWithDeposits.length / 10) * 100)
+            progress: Math.min(100, (level1UsersWithDeposits.length / 3) * 100)
           },
           level2: {
             required: 30,
@@ -273,7 +273,7 @@ const SalaryBonus = () => {
         
         // মোট আয় ক্যালকুলেশন
         let totalBonus = 0;
-        if (claimedLevels.level1 && lastClaimTimes.level1) totalBonus += 250;
+        if (claimedLevels.level1 && lastClaimTimes.level1) totalBonus += 200;
         if (claimedLevels.level2 && lastClaimTimes.level2) totalBonus += 800;
         if (claimedLevels.level3 && lastClaimTimes.level3) totalBonus += 1500;
         if (claimedLevels.level4 && lastClaimTimes.level4) totalBonus += 4000;
