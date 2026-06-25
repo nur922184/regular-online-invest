@@ -131,7 +131,7 @@ const MyInvestments = () => {
       
       // API থেকে ডাটা লোড করা
       // console.log("API থেকে ইনভেস্টমেন্ট ডাটা লোড করা হচ্ছে...");
-      const invRes = await axios.get(`https://investify-api.duckdns.org/api/investments/user/${user._id}`);
+      const invRes = await axios.get(`https://investify-backend.vercel.app/api/investments/user/${user._id}`);
       const userInvestments = invRes.data?.investments || [];
       setInvestments(userInvestments);
       
@@ -280,7 +280,7 @@ const MyInvestments = () => {
     try {
       setClaiming(prev => ({ ...prev, [investmentId]: true }));
 
-      const response = await axios.post(`https://investify-api.duckdns.org/api/investments/claim/${investmentId}`, {
+      const response = await axios.post(`https://investify-backend.vercel.app/api/investments/claim/${investmentId}`, {
         userId: user._id
       });
 

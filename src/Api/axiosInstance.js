@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-   baseURL: "https://investify-api.duckdns.org/api",  // ✅ বর্তমান URL এর সাথে /api যোগ করবে
+   baseURL: "https://investify-backend.vercel.app/api",  // ✅ বর্তমান URL এর সাথে /api যোগ করবে
   timeout: 10000,
 });
 

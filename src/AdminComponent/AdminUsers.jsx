@@ -31,7 +31,7 @@ const AdminUsers = () => {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const res = await fetch("https://investify-api.duckdns.org/api/users/all");
+      const res = await fetch("https://investify-backend.vercel.app/api/users/all");
       const data = await res.json();
       setUsers(data.users || []);
     } catch (error) {
@@ -68,7 +68,7 @@ const AdminUsers = () => {
 
     try {
       const res = await fetch(
-        `https://investify-api.duckdns.org/api/users/admin/block-user/${id}`,
+        `https://investify-backend.vercel.app/api/users/admin/block-user/${id}`,
         { method: "PUT" }
       );
 
@@ -111,7 +111,7 @@ const AdminUsers = () => {
 
     try {
       const res = await fetch(
-        `https://investify-api.duckdns.org/api/users/admin/delete-user/${id}`,
+        `https://investify-backend.vercel.app/api/users/admin/delete-user/${id}`,
         { method: "DELETE" }
       );
 
